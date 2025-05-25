@@ -9,7 +9,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.saborchef.model.UserRole
 import com.example.saborchef.ui.screens.FavoriteRecipesScreen
 import com.example.saborchef.ui.screens.FilterScreen
 import com.example.saborchef.ui.screens.RecipeDetailScreen
@@ -26,40 +25,10 @@ class MainActivity : ComponentActivity() {
             SaborChefTheme {
                 Surface {
                     val navController = rememberNavController()
-                    FavoriteRecipesScreen(
-                        navController    = navController,
-                        query            = "",               // texto inicial de búsqueda
-                        onQueryChange    = {},               // callback de cambio de texto
-                        onFilterClick    = {}                // callback de filtro
-                    )
-                    /*SearchScreen(
-                        navController     = navController,
-                        role              = UserRole.USUARIO,        // o ALUMNO, VISITANTE…
-                        uiState           = SearchUiState.Idle,       // o Suggest(...), NoResults, Results(...)
-                        query             = "",
-                        selectedTags      = emptyList(),
-                        onQueryChange     = {},
-                        onRemoveTag       = {},
-                        onCategorySelect  = { /* log o Toast */ },
-                        onSuggestionClick = {},
-                        onSortSelected    = {},
-                        onFilterClick     = { /* navController.navigate("filter") */ },
-                        onRecipeClick     = {}
-                    )*/
-                    /*NavHost(
+                    NavHost(
                         navController = navController,
                         startDestination = "splash"
                     ) {
-                        composable ("splash"){FilterScreen(
-                            navController = navController,
-                            selectedInclude = listOf("Huevo", "Tomate"),
-                            selectedExclude = listOf("Maní"),
-                            selectedUsers = "usuario42",
-                            onIncludeChange = {},
-                            onExcludeChange = {},
-                            onUserSelect = {},
-                            onApply = {}
-                        )  }
 
                         composable("splash") {
                             SplashScreen(
@@ -75,20 +44,11 @@ class MainActivity : ComponentActivity() {
                                 onContinueAsGuest = { /* TODO: navegar como invitado */ }
                             )
                         }
-                        composable(
-                            route = "recipe/{id}",
-                            arguments = listOf(navArgument("id") { type = NavType.StringType })
-                        ) { backStackEntry ->
-                            // aquí recibís el parámetro id y muestras tu detalle
-                            val recipeId = backStackEntry.arguments?.getString("id") ?: ""
-                            RecipeDetailScreen(
-                                recipeId = recipeId,
-                                onBack = { navController.popBackStack() }
-                            )
-                        }*/
+
                     }
                 }
             }
 
+        }
     }
 }

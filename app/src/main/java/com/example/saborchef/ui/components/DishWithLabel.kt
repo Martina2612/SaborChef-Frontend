@@ -3,29 +3,31 @@ package com.example.saborchef.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import com.example.saborchef.ui.components.CurvedTextAroundCircle
 import com.example.saborchef.ui.theme.Poppins
+import androidx.compose.foundation.shape.CircleShape
 
 @Composable
 fun DishWithLabel(
-    imageRes: Int,
+    imageUrl: String,
     label: String,
     imageOffsetX: Dp,
     imageOffsetY: Dp,
-    textOffsetX: Dp = 0.dp,           // ← desfase X para el texto
-    textOffsetY: Dp = 0.dp,           // ← desfase Y para el texto
+    textOffsetX: Dp = 0.dp,
+    textOffsetY: Dp = 0.dp,
     startAngle: Float,
     onClick: () -> Unit = {}
 ) {
@@ -36,9 +38,8 @@ fun DishWithLabel(
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        // 1) Imagen circular
         Image(
-            painter = painterResource(imageRes),
+            painter = rememberAsyncImagePainter(imageUrl),
             contentDescription = label,
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -47,11 +48,10 @@ fun DishWithLabel(
                 .border(2.dp, Color.White, CircleShape)
         )
 
-        // 2) Texto curvo con offset independiente
         CurvedTextAroundCircle(
             text = label,
             modifier = Modifier
-                .size(150.dp)                         // mismo tamaño que la imagen
+                .size(150.dp)
                 .offset(x = textOffsetX, y = textOffsetY),
             radius = 200f,
             centerX = 60f,
@@ -63,5 +63,3 @@ fun DishWithLabel(
         )
     }
 }
-
-
