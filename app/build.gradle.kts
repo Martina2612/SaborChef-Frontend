@@ -102,6 +102,9 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.converter.scalars)
 
+    implementation(libs.androidx.core)
+    implementation(libs.androidx.core.ktx)
+
 }
 
 val openApiOutputDir = file("$projectDir/src/main/java")

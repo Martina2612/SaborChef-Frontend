@@ -10,12 +10,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.saborchef.R
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.Poppins
 import com.example.saborchef.ui.components.AppButton
 import androidx.compose.material3.Text
-import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun SuccessScreen(

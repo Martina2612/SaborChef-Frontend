@@ -53,14 +53,17 @@ data class RecetaDetalleResponse (
     @SerializedName("fotoPrincipal")
     val fotoPrincipal: kotlin.String? = null,
 
-    @SerializedName("cantidadPersonas")
-    val cantidadPersonas: kotlin.Int? = null,
+    @SerializedName("porciones")
+    val porciones: kotlin.Int? = null,
 
     @SerializedName("tipo")
     val tipo: kotlin.String? = null,
 
     @SerializedName("nombreUsuario")
     val nombreUsuario: kotlin.String? = null,
+
+    @SerializedName("duracion")
+    val duracion: kotlin.Int? = null,
 
     @SerializedName("ingredientes")
     val ingredientes: kotlin.collections.List<IngredienteDetalle>? = null,

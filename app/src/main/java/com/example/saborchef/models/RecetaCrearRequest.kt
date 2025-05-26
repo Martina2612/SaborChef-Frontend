@@ -47,11 +47,14 @@ data class RecetaCrearRequest (
     @SerializedName("descripcionReceta")
     val descripcionReceta: kotlin.String? = null,
 
+    @SerializedName("duracion")
+    val duracion: kotlin.Int? = null,
+
     @SerializedName("fotoPrincipal")
     val fotoPrincipal: kotlin.String? = null,
 
-    @SerializedName("cantidadPersonas")
-    val cantidadPersonas: kotlin.Int? = null,
+    @SerializedName("porciones")
+    val porciones: kotlin.Int? = null,
 
     @SerializedName("tipo")
     val tipo: kotlin.String? = null,

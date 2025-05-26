@@ -41,9 +41,9 @@ fun WelcomeScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     val dishPositions = listOf(
-        DishPosition(imageOffsetX = (0).dp, imageOffsetY = (0).dp, textOffsetX = 70.dp, textOffsetY = 30.dp, startAngle = -60f),
-        DishPosition(imageOffsetX = (0).dp, imageOffsetY = 100.dp, textOffsetX = 35.dp, textOffsetY = 30.dp, startAngle = -130f),
-        DishPosition(imageOffsetX = 0.dp,   imageOffsetY = (0).dp, textOffsetX = 70.dp, textOffsetY = 30.dp, startAngle = -60f),
+        DishPosition(imageOffsetX = (-80).dp, imageOffsetY = (0).dp, textOffsetX = 40.dp, textOffsetY = 20.dp, startAngle = -80f),
+        DishPosition(imageOffsetX = (80).dp, imageOffsetY = 0.dp, textOffsetX = 15.dp, textOffsetY = 20.dp, startAngle = -160f),
+        DishPosition(imageOffsetX = (-80).dp,   imageOffsetY = (0).dp, textOffsetX = 40.dp, textOffsetY = 20.dp, startAngle = -80f),
     )
 
     // El fondo y el gradiente se mantienen constantes para todos los estados.
@@ -73,8 +73,7 @@ fun WelcomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween // Mantiene los botones abajo
         ) {
-            // Un espaciador superior para bajar el contenido.
-            Spacer(modifier = Modifier.height(40.dp))
+
 
             // --- ÁREA DE CONTENIDO DINÁMICO ---
             // Esta parte central cambiará según el UiState.
@@ -86,15 +85,11 @@ fun WelcomeScreen(
                 // Usamos 'when' para decidir qué Composable mostrar
                 when (val state = uiState) {
                     is UiState.Loading -> {
-                        // 1. ESTADO DE CARGA
                         CircularProgressIndicator(color = Color.White)
                     }
                     is UiState.Success -> {
-                        // 2. ESTADO DE ÉXITO
-                        // Mostramos las recetas como antes.
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            val featuredRecipes = state.recipes.take(3)
-                            featuredRecipes.forEachIndexed { index, recipe ->
+                            state.recipes.take(3).forEachIndexed { index, recipe ->
                                 val pos = dishPositions.getOrNull(index) ?: DishPosition()
                                 DishWithLabel(
                                     imageUrl = recipe.fotoPrincipal.toString(),
@@ -106,21 +101,18 @@ fun WelcomeScreen(
                                     startAngle = pos.startAngle,
                                     onClick = { navController?.navigate("recipe/${recipe.idReceta}") }
                                 )
-                                if (index < featuredRecipes.lastIndex) {
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                }
+                                Spacer(Modifier.height(16.dp))
                             }
                         }
                     }
                     is UiState.Error -> {
-                        // 3. ESTADO DE ERROR
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 text = state.message,
                                 color = Color.White,
                                 textAlign = TextAlign.Center
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(Modifier.height(16.dp))
                             Button(onClick = { viewModel.fetchLatestRecipes() }) {
                                 Text("Reintentar")
                             }
@@ -129,17 +121,18 @@ fun WelcomeScreen(
                 }
             }
 
-            // --- BOTONES INFERIORES ---
-            // Esta columna se mantiene siempre visible en la parte inferior.
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 30.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                RoundedWhiteButton("Continuar como usuario", onContinueAsUser)
-                RoundedWhiteButton("Continuar como invitado", onContinueAsGuest)
+            // Botones siempre en el fondo cuando éxito
+            if (uiState is UiState.Success) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 30.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    RoundedWhiteButton("Continuar como usuario", onContinueAsUser)
+                    RoundedWhiteButton("Continuar como invitado", onContinueAsGuest)
+                }
             }
         }
     }

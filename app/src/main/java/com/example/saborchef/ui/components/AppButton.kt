@@ -28,12 +28,12 @@ fun AppButton(
         onClick = onClick,
         modifier = modifier
             .height(48.dp)
-            .fillMaxWidth()        // ancho completo del slot que lo contenga
+            .fillMaxWidth()
             .padding(horizontal = 0.dp),
         shape = RoundedCornerShape(50),
         colors = ButtonDefaults.elevatedButtonColors(
             containerColor = container,
-            contentColor   = content
+            contentColor = content
         ),
         elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 8.dp)
     ) {
@@ -45,3 +45,4 @@ fun AppButton(
         )
     }
 }
+

@@ -1,7 +1,6 @@
 package com.example.saborchef.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Spacer
@@ -18,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,10 +25,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.saborchef.ui.components.AppButton
 import com.example.saborchef.ui.theme.BlueDark
-import com.example.saborchef.ui.theme.Orange
 import com.example.saborchef.ui.theme.OrangeDark
 import com.example.saborchef.ui.theme.OrangeLight
-import com.example.saborchef.ui.theme.OrangeSoft
 import com.example.saborchef.ui.theme.Poppins
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction

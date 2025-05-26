@@ -22,7 +22,7 @@ class WelcomeViewModel : ViewModel() {
     // --- Configuración del Cliente de API ---
     // Es mejor instanciarlo de forma "lazy" para que solo se cree cuando se necesite.
     private val recetasService: RecetaControllerApi by lazy {
-        val apiClient = ApiClient(baseUrl = "http://10.0.2.2:8080/")
+        val apiClient = ApiClient(baseUrl = "http://192.168.1.37:8080/")
         apiClient.createService(RecetaControllerApi::class.java)
     }
 

@@ -3,30 +3,43 @@ package com.example.saborchef.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.foundation.ScrollState
 import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.saborchef.mock.sampleRecipes
-import com.google.accompanist.pager.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.saborchef.models.RecetaDetalleResponse
 import com.example.saborchef.ui.theme.BlueDark
+import com.example.saborchef.viewmodel.RecipeDetailUiState
+import com.example.saborchef.viewmodel.RecipeDetailViewModel
+import com.google.accompanist.pager.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.shape.RoundedCornerShape
+import coil.compose.rememberAsyncImagePainter
+import androidx.compose.ui.unit.Dp
+import androidx.compose.material3.Button
+import androidx.navigation.NavController
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -34,50 +47,92 @@ fun RecipeDetailScreen(
     recipeId: String,
     onBack: () -> Unit = {}
 ) {
-    val recipe = sampleRecipes.find { it.id == recipeId } ?: return
+    val id = recipeId.toLongOrNull() ?: return
+    val viewModel: RecipeDetailViewModel = viewModel(
+        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                @Suppress("UNCHECKED_CAST")
+                return RecipeDetailViewModel(id) as T
+            }
+        }
+    )
+
+    val uiState by viewModel.uiState.collectAsState()
+
+    when (uiState) {
+        is RecipeDetailUiState.Loading -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = BlueDark)
+            }
+        }
+        is RecipeDetailUiState.Error -> {
+            val msg = (uiState as RecipeDetailUiState.Error).message
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(msg, color = Color.Red)
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = { viewModel.fetchRecipeDetail() }) {
+                        Text("Reintentar")
+                    }
+                }
+            }
+        }
+        is RecipeDetailUiState.Success -> {
+            val recipe = (uiState as RecipeDetailUiState.Success).recipe
+            RecipeDetailContent(recipe = recipe, onBack = onBack)
+        }
+    }
+}
+
+@OptIn(ExperimentalPagerApi::class)
+@Composable
+fun RecipeDetailContent(
+    recipe: RecetaDetalleResponse,
+    onBack: () -> Unit = {}
+) {
+    // Null-safe lists
+    val fotos = recipe.fotos.orEmpty()
+    val ingredientes = recipe.ingredientes.orEmpty()
+    val pasos = recipe.pasos.orEmpty()
+    val comentarios = recipe.comentarios.orEmpty()
 
     Column(
-        modifier = Modifier
+        Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(ScrollState(0))
     ) {
-
-
-        // 1) Carousel de imágenes principal
         val pagerState = rememberPagerState()
         Box {
             HorizontalPager(
-                count = recipe.images.size,
+                count = fotos.size,
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(260.dp)
             ) { page ->
                 Image(
-                    painter = painterResource(recipe.images[page]),
+                    painter = rememberAsyncImagePainter(fotos[page]),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            // Indicators
             Row(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(8.dp)
             ) {
-                repeat(recipe.images.size) { idx ->
-                    val color = if (idx == pagerState.currentPage) BlueDark else Color.Gray
+                repeat(fotos.size) { idx ->
+                    val color = if (idx == pagerState.currentPage) BlueDark else Color.LightGray
                     Box(
-                        modifier = Modifier
+                        Modifier
                             .size(8.dp)
                             .padding(4.dp)
                             .background(color, shape = CircleShape)
                     )
                 }
             }
-            // Flecha atrás
             IconButton(
                 onClick = onBack,
                 modifier = Modifier
@@ -86,16 +141,15 @@ fun RecipeDetailScreen(
                     .background(Color.White, shape = CircleShape)
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.Filled.ArrowBack,
                     contentDescription = "Atrás",
                     tint = BlueDark
                 )
             }
         }
 
-        // Título centrado
         Text(
-            text = recipe.title,
+            text = recipe.nombre.orEmpty(),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = BlueDark,
@@ -105,9 +159,8 @@ fun RecipeDetailScreen(
                 .padding(vertical = 16.dp)
         )
 
-        Spacer(Modifier.height(16.dp))
-
         // Fila: usuario (izq) y estrellas (der)
+        val rating = recipe.promedioCalificacion?.toInt() ?: 0
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -116,7 +169,7 @@ fun RecipeDetailScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = recipe.user,
+                text = recipe.nombreUsuario.orEmpty(),
                 fontSize = 16.sp,
                 color = BlueDark
             )
@@ -126,20 +179,15 @@ fun RecipeDetailScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 repeat(5) { idx ->
-                    val icon = if (idx < recipe.rating) {
-                        Icons.Filled.Star
-                    } else {
-                        Icons.Outlined.StarBorder
-                    }
+                    val icon = if (idx < rating) Icons.Filled.Star else Icons.Outlined.StarBorder
                     Icon(
                         imageVector = icon,
-                        contentDescription = if (idx < recipe.rating) "Estrella llena" else "Estrella vacía",
+                        contentDescription = null,
                         tint = BlueDark,
                         modifier = Modifier.size(20.dp)
                     )
                 }
             }
-
         }
 
         Spacer(Modifier.height(8.dp))
@@ -152,12 +200,12 @@ fun RecipeDetailScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "⏱ ${recipe.duration}",
+                text = "⏱ ${recipe.duracion} minutos",
                 fontSize = 16.sp,
                 color = BlueDark
             )
             Text(
-                text = "👥 ${recipe.portions}",
+                text = "👥 ${recipe.porciones} porciones",
                 fontSize = 16.sp,
                 color = BlueDark
             )
@@ -165,7 +213,8 @@ fun RecipeDetailScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        // Ingredientes
+
+    //Ingredientes
         Text(
             "Ingredientes",
             fontWeight = FontWeight.SemiBold,
@@ -173,32 +222,26 @@ fun RecipeDetailScreen(
             color = BlueDark,
             modifier = Modifier.padding(start = 16.dp)
         )
-        recipe.ingredients.forEach { ing ->
+        ingredientes.forEach { ing ->
+            val texto = listOfNotNull(ing.nombre, ing.cantidad?.toString(), ing.unidad)
+                .joinToString(" ")
             Text(
-                "• $ing",
+                "• $texto",
                 fontSize = 16.sp,
                 color = BlueDark,
                 modifier = Modifier.padding(start = 24.dp, top = 4.dp)
             )
         }
 
-        Spacer(Modifier.height(16.dp))
-
-        // Preparación
         Text(
             "Preparación",
             fontWeight = FontWeight.SemiBold,
             fontSize = 18.sp,
             color = BlueDark,
-            modifier = Modifier.padding(start = 16.dp)
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp)
         )
-        recipe.steps.forEachIndexed { index, step ->
-            Row(
-                modifier = Modifier
-                    .padding(start = 16.dp, top = 12.dp, end = 16.dp),
-                verticalAlignment = Alignment.Top
-            ) {
-                // Número en círculo
+        pasos.forEachIndexed { index, paso ->
+            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -212,39 +255,38 @@ fun RecipeDetailScreen(
                     )
                 }
                 Spacer(Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
+                Column(Modifier.weight(1f)) {
                     Text(
-                        text = step.description,
+                        text = paso.texto.orEmpty(),
                         fontSize = 16.sp,
                         color = BlueDark
                     )
-                    // Carousel de media
                     val stepPager = rememberPagerState()
                     HorizontalPager(
-                        count = step.media.size,
+                        count = paso.contenidos.orEmpty().size,
                         state = stepPager,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(140.dp)
                             .padding(top = 8.dp)
                     ) { page ->
+                        val url = paso.contenidos.orEmpty()[page].url.orEmpty()
                         Image(
-                            painter = painterResource(step.media[page]),
+                            painter = rememberAsyncImagePainter(url),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(MaterialTheme.shapes.medium)
+                                .clip(RoundedCornerShape(8.dp))
                         )
                     }
-                    // Indicators paso
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 4.dp)
                     ) {
-                        repeat(step.media.size) { idx2 ->
+                        repeat(paso.contenidos.orEmpty().size) { idx2 ->
                             val dotColor = if (idx2 == stepPager.currentPage) BlueDark else Color.LightGray
                             Box(
                                 modifier = Modifier
@@ -258,9 +300,6 @@ fun RecipeDetailScreen(
             }
         }
 
-        Spacer(Modifier.height(16.dp))
-
-        // Comentarios
         Text(
             "Comentarios",
             fontWeight = FontWeight.SemiBold,
@@ -268,10 +307,10 @@ fun RecipeDetailScreen(
             color = BlueDark,
             modifier = Modifier.padding(start = 16.dp, top = 16.dp)
         )
-        recipe.comments.forEach { (user, comment) ->
-            Column(modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)) {
-                Text(user, fontWeight = FontWeight.Medium, color = BlueDark)
-                Text(comment, fontSize = 16.sp)
+        comentarios.forEach { c ->
+            Column(Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)) {
+                Text(c.nombreUsuario.orEmpty(), fontWeight = FontWeight.Medium, color = BlueDark)
+                Text(c.texto.orEmpty(), fontSize = 16.sp, color = Color.DarkGray)
             }
         }
 
@@ -283,5 +322,6 @@ fun RecipeDetailScreen(
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun RecipeDetailScreenPreview() {
-    RecipeDetailScreen(recipeId = "1", onBack = {})
+    // Preview with dummy data if needed
+    RecipeDetailScreen(recipeId = "0", onBack = {})
 }

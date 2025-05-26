@@ -33,7 +33,7 @@ fun DishWithLabel(
 ) {
     Box(
         modifier = Modifier
-            .size(170.dp)
+            .size(140.dp)
             .offset(x = imageOffsetX, y = imageOffsetY)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
@@ -43,19 +43,19 @@ fun DishWithLabel(
             contentDescription = label,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(200.dp)
+                .size(140.dp)
                 .clip(CircleShape)
-                .border(2.dp, Color.White, CircleShape)
+                .border(3.dp, Color.White, CircleShape)
         )
 
         CurvedTextAroundCircle(
             text = label,
             modifier = Modifier
-                .size(150.dp)
+                .size(120.dp)
                 .offset(x = textOffsetX, y = textOffsetY),
-            radius = 200f,
-            centerX = 60f,
-            centerY = 60f,
+            radius = 140f,
+            centerX = 50f,
+            centerY = 50f,
             startAngle = startAngle,
             fontFamily = Poppins,
             fontSize = 20.sp,
