@@ -144,3 +144,5 @@ fun WelcomeScreenPreview() {
     // Para la preview, puedes simular un estado, pero por ahora lo dejamos así.
     WelcomeScreen()
 }
+
+

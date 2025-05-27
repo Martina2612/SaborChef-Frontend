@@ -12,6 +12,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import retrofit2.converter.gson.GsonConverterFactory
+import java.time.OffsetDateTime
 
 
 class ApiClient(
@@ -23,7 +24,14 @@ class ApiClient(
     ),
     private val converterFactories: List<Converter.Factory> = listOf(
         ScalarsConverterFactory.create(),
-        GsonConverterFactory.create(serializerBuilder.create()),
+        GsonConverterFactory.create(
+            serializerBuilder
+                .registerTypeAdapter(
+                    OffsetDateTime::class.java,
+                    OffsetDateTimeAdapter()
+                )
+                .create()
+        ),
     )
 ) {
     private val apiAuthorizations = mutableMapOf<String, Interceptor>()

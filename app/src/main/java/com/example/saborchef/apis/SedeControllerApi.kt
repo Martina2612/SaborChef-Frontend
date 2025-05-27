@@ -14,6 +14,7 @@ interface SedeControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param sede 
@@ -27,6 +28,7 @@ interface SedeControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @return [Call]<[kotlin.collections.List<Sede>]>
@@ -39,6 +41,7 @@ interface SedeControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param id 

@@ -19,17 +19,29 @@ class OffsetDateTimeAdapter(private val formatter: DateTimeFormatter = DateTimeF
     }
 
     @Throws(IOException::class)
-    override fun read(out: JsonReader?): OffsetDateTime? {
-        out ?: return null
+    override fun read(reader: JsonReader?): OffsetDateTime? {
+        reader ?: return null
 
-        when (out.peek()) {
+        return when (reader.peek()) {
             NULL -> {
-                out.nextNull()
-                return null
+                reader.nextNull()
+                null
             }
             else -> {
-                return OffsetDateTime.parse(out.nextString(), formatter)
+                val dateStr = reader.nextString()
+                try {
+                    OffsetDateTime.parse(dateStr, formatter)
+                } catch (e: Exception) {
+                    // Intentamos como LocalDateTime sin zona horaria
+                    try {
+                        val local = java.time.LocalDateTime.parse(dateStr)
+                        local.atOffset(java.time.ZoneOffset.UTC)
+                    } catch (e2: Exception) {
+                        throw IOException("Cannot parse date: $dateStr", e2)
+                    }
+                }
             }
         }
     }
+
 }

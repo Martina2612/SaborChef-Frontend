@@ -1,3 +1,5 @@
+package com.example.saborchef.ui.components;
+
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.BottomNavigation

@@ -1,6 +1,6 @@
 package com.example.saborchef.ui.screens
 
-import BottomBar
+import com.example.saborchef.ui.components.BottomBar
 import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility

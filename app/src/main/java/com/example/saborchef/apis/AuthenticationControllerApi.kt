@@ -16,6 +16,7 @@ interface AuthenticationControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param authenticationRequest 
@@ -29,6 +30,7 @@ interface AuthenticationControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param registerRequest 

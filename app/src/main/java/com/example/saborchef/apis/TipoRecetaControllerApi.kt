@@ -13,6 +13,7 @@ interface TipoRecetaControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @return [Call]<[kotlin.collections.List<kotlin.String>]>

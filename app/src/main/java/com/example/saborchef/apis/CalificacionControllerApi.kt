@@ -9,6 +9,7 @@ import com.google.gson.annotations.SerializedName
 import com.example.saborchef.models.CalificacionRequest
 import com.example.saborchef.models.ComentarioRequest
 import com.example.saborchef.models.ComentarioResponse
+import com.example.saborchef.models.TopRecetaResponse
 
 interface CalificacionControllerApi {
     /**
@@ -16,6 +17,7 @@ interface CalificacionControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param calificacionRequest 
@@ -29,6 +31,7 @@ interface CalificacionControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param comentarioRequest 
@@ -42,6 +45,7 @@ interface CalificacionControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param idReceta 
@@ -55,6 +59,7 @@ interface CalificacionControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param idReceta 
@@ -62,5 +67,19 @@ interface CalificacionControllerApi {
      */
     @GET("api/calificaciones/{idReceta}/promedio")
     fun obtenerPromedio(@Path("idReceta") idReceta: kotlin.Long): Call<kotlin.Double>
+
+    /**
+     * GET api/calificaciones/top
+     * 
+     * 
+     * Responses:
+     *  - 400: Bad Request
+     *  - 200: OK
+     *
+     * @param cantidad  (optional, default to 12)
+     * @return [Call]<[kotlin.collections.List<TopRecetaResponse>]>
+     */
+    @GET("api/calificaciones/top")
+    fun obtenerTopRecetas(@Query("cantidad") cantidad: kotlin.Int? = 12): Call<kotlin.collections.List<TopRecetaResponse>>
 
 }

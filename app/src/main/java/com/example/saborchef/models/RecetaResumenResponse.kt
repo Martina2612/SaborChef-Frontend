@@ -24,11 +24,12 @@ import com.google.gson.annotations.SerializedName
  * @param idReceta 
  * @param nombre 
  * @param fotoPrincipal 
- * @param cantidadPersonas 
+ * @param porciones 
  * @param promedioCalificacion 
  * @param tipo 
  * @param nombreUsuario 
  * @param fechaCreacion 
+ * @param duracion 
  */
 
 
@@ -43,8 +44,8 @@ data class RecetaResumenResponse (
     @SerializedName("fotoPrincipal")
     val fotoPrincipal: kotlin.String? = null,
 
-    @SerializedName("cantidadPersonas")
-    val cantidadPersonas: kotlin.Int? = null,
+    @SerializedName("porciones")
+    val porciones: kotlin.Int? = null,
 
     @SerializedName("promedioCalificacion")
     val promedioCalificacion: kotlin.Double? = null,
@@ -56,7 +57,10 @@ data class RecetaResumenResponse (
     val nombreUsuario: kotlin.String? = null,
 
     @SerializedName("fechaCreacion")
-    val fechaCreacion: java.time.OffsetDateTime? = null
+    val fechaCreacion: java.time.OffsetDateTime? = null,
+
+    @SerializedName("duracion")
+    val duracion: kotlin.Int? = null
 
 ) {
 

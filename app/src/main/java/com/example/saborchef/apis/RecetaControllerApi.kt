@@ -17,6 +17,7 @@ interface RecetaControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param id 
@@ -31,6 +32,7 @@ interface RecetaControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param recetaFiltroRequest 
@@ -44,6 +46,7 @@ interface RecetaControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param nombreIngrediente 
@@ -58,6 +61,7 @@ interface RecetaControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param nombre 
@@ -72,6 +76,7 @@ interface RecetaControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param tipo 
@@ -86,6 +91,7 @@ interface RecetaControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param nombre 
@@ -100,6 +106,7 @@ interface RecetaControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param nombreIngrediente 
@@ -114,6 +121,7 @@ interface RecetaControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param recetaCrearRequest 
@@ -127,6 +135,7 @@ interface RecetaControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param id 
@@ -136,10 +145,24 @@ interface RecetaControllerApi {
     fun eliminar(@Path("id") id: kotlin.Long): Call<Unit>
 
     /**
+     * GET api/recetas/ultimas
+     * 
+     * 
+     * Responses:
+     *  - 400: Bad Request
+     *  - 200: OK
+     *
+     * @return [Call]<[kotlin.collections.List<RecetaDetalleResponse>]>
+     */
+    @GET("api/recetas/ultimas")
+    fun getUltimasRecetas(): Call<kotlin.collections.List<RecetaDetalleResponse>>
+
+    /**
      * GET api/recetas
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param idUsuario  (optional)
@@ -155,6 +178,7 @@ interface RecetaControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @param id 
@@ -168,6 +192,7 @@ interface RecetaControllerApi {
      * 
      * 
      * Responses:
+     *  - 400: Bad Request
      *  - 200: OK
      *
      * @return [Call]<[kotlin.collections.List<RecetaDetalleResponse>]>

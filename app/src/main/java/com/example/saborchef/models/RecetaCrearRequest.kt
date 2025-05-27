@@ -28,7 +28,8 @@ import com.google.gson.annotations.SerializedName
  * @param nombreReceta 
  * @param descripcionReceta 
  * @param fotoPrincipal 
- * @param cantidadPersonas 
+ * @param duracion 
+ * @param porciones 
  * @param tipo 
  * @param ingredientes 
  * @param pasos 
@@ -47,11 +48,11 @@ data class RecetaCrearRequest (
     @SerializedName("descripcionReceta")
     val descripcionReceta: kotlin.String? = null,
 
-    @SerializedName("duracion")
-    val duracion: kotlin.Int? = null,
-
     @SerializedName("fotoPrincipal")
     val fotoPrincipal: kotlin.String? = null,
+
+    @SerializedName("duracion")
+    val duracion: kotlin.Int? = null,
 
     @SerializedName("porciones")
     val porciones: kotlin.Int? = null,
