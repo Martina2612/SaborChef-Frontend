@@ -35,23 +35,41 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.saborchef.R
 import com.example.saborchef.ui.components.AppButton
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.Orange
 import com.example.saborchef.ui.theme.Poppins
+import com.example.saborchef.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
     onBack: () -> Unit,
-    onLogin: (email: String, password: String, remember: Boolean) -> Unit,
+    onLoginSuccess: (token: String) -> Unit,
     onForgotPassword: () -> Unit,
-    onRegister: () -> Unit
+    onRegister: () -> Unit,
+    viewModel: LoginViewModel = viewModel()
 ) {
-    var email by remember { mutableStateOf("") }
+    var alias by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(false) }
+
+    val loginState by viewModel.loginState.collectAsState()
+
+    LaunchedEffect(loginState) {
+        when (val currentState = loginState) {
+            is LoginViewModel.LoginState.Success -> {
+                onLoginSuccess(currentState.token)
+            }
+            is LoginViewModel.LoginState.Error -> {
+                // Mostramos error con Snackbar, Toast, etc.
+                println("Login falló: ${currentState.message}")
+            }
+            else -> {}
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Flecha atrás
@@ -102,11 +120,11 @@ fun LoginScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // Campo Email con bordes redondeados
+            // Campo Alias con bordes redondeados
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email o alias", fontFamily = Poppins, fontSize = 14.sp) },
+                value = alias,
+                onValueChange = { alias = it },
+                label = { Text("Alias", fontFamily = Poppins, fontSize = 14.sp) },
                 leadingIcon = {
                     Icon(Icons.Default.Email, contentDescription = null, tint = BlueDark)
                 },
@@ -197,7 +215,9 @@ fun LoginScreen(
             // Botón Iniciar sesión
             AppButton(
                 text = "Iniciar sesión",
-                onClick = { onLogin(email, password, rememberMe) },
+                onClick = {
+                    viewModel.login(alias, password)
+                },
                 primary = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -232,7 +252,7 @@ fun LoginScreen(
 fun LoginScreenPreview() {
     LoginScreen(
         onBack = {},
-        onLogin = { _, _, _ -> },
+        onLoginSuccess = { _ -> },
         onForgotPassword = {},
         onRegister = {}
     )
