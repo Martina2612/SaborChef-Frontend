@@ -32,7 +32,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -42,6 +41,9 @@ import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.Orange
 import com.example.saborchef.ui.theme.Poppins
 import com.example.saborchef.viewmodel.LoginViewModel
+import androidx.compose.material.CircularProgressIndicator
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun LoginScreen(
@@ -57,15 +59,16 @@ fun LoginScreen(
     var rememberMe by remember { mutableStateOf(false) }
 
     val loginState by viewModel.loginState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(loginState) {
         when (val currentState = loginState) {
             is LoginViewModel.LoginState.Success -> {
+                Toast.makeText(context, "¡Login exitoso!", Toast.LENGTH_SHORT).show()
                 onLoginSuccess(currentState.token)
             }
             is LoginViewModel.LoginState.Error -> {
-                // Mostramos error con Snackbar, Toast, etc.
-                println("Login falló: ${currentState.message}")
+                Toast.makeText(context, "Error: ${currentState.message}", Toast.LENGTH_LONG).show()
             }
             else -> {}
         }
@@ -176,6 +179,27 @@ fun LoginScreen(
 
             Spacer(Modifier.height(20.dp))
 
+            // Mostrar loading indicator si está cargando
+            if (loginState is LoginViewModel.LoginState.Loading) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    CircularProgressIndicator(
+                        color = BlueDark,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        "Iniciando sesión...",
+                        fontFamily = Poppins,
+                        fontSize = 14.sp,
+                        color = BlueDark
+                    )
+                }
+                Spacer(Modifier.height(20.dp))
+            }
+
             // Olvidaste contraseña y debajo Recordarme
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -214,9 +238,13 @@ fun LoginScreen(
 
             // Botón Iniciar sesión
             AppButton(
-                text = "Iniciar sesión",
+                text = if (loginState is LoginViewModel.LoginState.Loading) "Cargando..." else "Iniciar sesión",
                 onClick = {
-                    viewModel.login(alias, password)
+                    if (alias.isNotBlank() && password.isNotBlank() && loginState !is LoginViewModel.LoginState.Loading) {
+                        viewModel.login(alias, password)
+                    } else if (alias.isBlank() || password.isBlank()) {
+                        Toast.makeText(context, "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 primary = true,
                 modifier = Modifier.fillMaxWidth()
@@ -245,15 +273,4 @@ fun LoginScreen(
             Spacer(Modifier.height(40.dp))
         }
     }
-}
-
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
-@Composable
-fun LoginScreenPreview() {
-    LoginScreen(
-        onBack = {},
-        onLoginSuccess = { _ -> },
-        onForgotPassword = {},
-        onRegister = {}
-    )
 }
