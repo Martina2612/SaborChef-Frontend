@@ -17,7 +17,7 @@ import androidx.navigation.navArgument
 import com.example.saborchef.ui.screens.AuthScreen
 import com.example.saborchef.ui.screens.FilterScreen
 import com.example.saborchef.ui.screens.HomeScreen
-import com.example.saborchef.ui.screens.PublishRecipeScreen
+//import com.example.saborchef.ui.screens.PublishRecipeScreen
 import com.example.saborchef.ui.screens.RecipeDetailScreen
 import com.example.saborchef.ui.screens.RegisterScreen
 import com.example.saborchef.ui.screens.SearchScreen
@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            SaborChefTheme {
+            /*SaborChefTheme {
                 Surface {
                     val navController = rememberNavController()
 
@@ -101,8 +101,8 @@ class MainActivity : ComponentActivity() {
 
                         composable("home") {
                             HomeScreen(navController)
-                        }
-            /*SaborChefTheme {
+                        }*/
+            SaborChefTheme {
                 Surface {
                     val navController = rememberNavController()
                     val searchViewModel: SearchViewModel = viewModel()
@@ -160,7 +160,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("filter") {
                             FilterScreen(navController = navController, viewModel = searchViewModel)
-                        }*/
+                        }
 
                     }
                 }

@@ -10,8 +10,6 @@ import com.example.saborchef.models.RecetaCrearRequest
 import com.example.saborchef.models.RecetaDetalleResponse
 import com.example.saborchef.models.RecetaFiltroRequest
 import com.example.saborchef.models.RecetaResumenResponse
-import com.example.saborchef.models.UrlResponse
-import okhttp3.MultipartBody
 
 interface RecetaControllerApi {
     /**
@@ -202,12 +200,4 @@ interface RecetaControllerApi {
     @GET("api/recetas/ultimas3")
     fun obtenerUltimas3Recetas(): Call<kotlin.collections.List<RecetaDetalleResponse>>
 
-    /**
-     * Sube un archivo (imagen o vídeo) y devuelve la URL donde quedó alojado
-     */
-    @Multipart
-    @POST("api/recetas/uploadFile")
-    fun uploadFile(
-        @Part file: MultipartBody.Part
-    ): Call<UrlResponse>
 }

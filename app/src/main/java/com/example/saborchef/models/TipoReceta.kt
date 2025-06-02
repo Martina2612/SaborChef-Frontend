@@ -39,13 +39,19 @@ data class TipoReceta (
     /**
      * 
      *
-     * Values: POSTRE,SALADO,VEGETARIANO,ENSALADA
+     * Values: POSTRE,SALADO,VEGETARIANO,ENSALADA,DESAYUNO,ALMUERZO,CENA,SNACKS,VEGANO,PASTAS
      */
     enum class Descripcion(val value: kotlin.String) {
         @SerializedName(value = "POSTRE") POSTRE("POSTRE"),
         @SerializedName(value = "SALADO") SALADO("SALADO"),
         @SerializedName(value = "VEGETARIANO") VEGETARIANO("VEGETARIANO"),
-        @SerializedName(value = "ENSALADA") ENSALADA("ENSALADA");
+        @SerializedName(value = "ENSALADA") ENSALADA("ENSALADA"),
+        @SerializedName(value = "DESAYUNO") DESAYUNO("DESAYUNO"),
+        @SerializedName(value = "ALMUERZO") ALMUERZO("ALMUERZO"),
+        @SerializedName(value = "CENA") CENA("CENA"),
+        @SerializedName(value = "SNACKS") SNACKS("SNACKS"),
+        @SerializedName(value = "VEGANO") VEGANO("VEGANO"),
+        @SerializedName(value = "PASTAS") PASTAS("PASTAS");
     }
 
 }

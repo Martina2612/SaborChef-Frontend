@@ -55,12 +55,13 @@ data class RegisterRequest (
     /**
      * 
      *
-     * Values: VISITANTE,ALUMNO,USUARIO
+     * Values: VISITANTE,ALUMNO,USUARIO,ADMIN
      */
     enum class Role(val value: kotlin.String) {
         @SerializedName(value = "VISITANTE") VISITANTE("VISITANTE"),
         @SerializedName(value = "ALUMNO") ALUMNO("ALUMNO"),
-        @SerializedName(value = "USUARIO") USUARIO("USUARIO");
+        @SerializedName(value = "USUARIO") USUARIO("USUARIO"),
+        @SerializedName(value = "ADMIN") ADMIN("ADMIN");
     }
 
 }

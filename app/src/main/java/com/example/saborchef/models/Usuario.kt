@@ -30,11 +30,12 @@ import com.google.gson.annotations.SerializedName
  * @param apellido 
  * @param rol 
  * @param habilitado 
+ * @param codigoConfirmacion 
  * @param enabled 
- * @param credentialsNonExpired 
- * @param accountNonExpired 
  * @param authorities 
  * @param username 
+ * @param credentialsNonExpired 
+ * @param accountNonExpired 
  * @param accountNonLocked 
  */
 
@@ -65,20 +66,23 @@ data class Usuario (
     @SerializedName("habilitado")
     val habilitado: kotlin.Boolean? = null,
 
+    @SerializedName("codigoConfirmacion")
+    val codigoConfirmacion: kotlin.String? = null,
+
     @SerializedName("enabled")
     val enabled: kotlin.Boolean? = null,
-
-    @SerializedName("credentialsNonExpired")
-    val credentialsNonExpired: kotlin.Boolean? = null,
-
-    @SerializedName("accountNonExpired")
-    val accountNonExpired: kotlin.Boolean? = null,
 
     @SerializedName("authorities")
     val authorities: kotlin.collections.List<GrantedAuthority>? = null,
 
     @SerializedName("username")
     val username: kotlin.String? = null,
+
+    @SerializedName("credentialsNonExpired")
+    val credentialsNonExpired: kotlin.Boolean? = null,
+
+    @SerializedName("accountNonExpired")
+    val accountNonExpired: kotlin.Boolean? = null,
 
     @SerializedName("accountNonLocked")
     val accountNonLocked: kotlin.Boolean? = null
@@ -88,12 +92,13 @@ data class Usuario (
     /**
      * 
      *
-     * Values: VISITANTE,ALUMNO,USUARIO
+     * Values: VISITANTE,ALUMNO,USUARIO,ADMIN
      */
     enum class Rol(val value: kotlin.String) {
         @SerializedName(value = "VISITANTE") VISITANTE("VISITANTE"),
         @SerializedName(value = "ALUMNO") ALUMNO("ALUMNO"),
-        @SerializedName(value = "USUARIO") USUARIO("USUARIO");
+        @SerializedName(value = "USUARIO") USUARIO("USUARIO"),
+        @SerializedName(value = "ADMIN") ADMIN("ADMIN");
     }
 
 }
