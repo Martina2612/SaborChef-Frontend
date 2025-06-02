@@ -39,11 +39,11 @@ class HomeViewModel(
 
     // --- Cliente de API lazy ---
     private val recetaService: RecetaControllerApi by lazy {
-        ApiClient(baseUrl = "http://192.168.1.37:8080/")
+        ApiClient(baseUrl = BuildConfig.BASE_URL)
             .createService(RecetaControllerApi::class.java)
     }
     private val calificacionService: CalificacionControllerApi by lazy {
-        ApiClient(baseUrl = "http://192.168.1.37:8080/")
+        ApiClient(baseUrl = BuildConfig.BASE_URL)
             .createService(CalificacionControllerApi::class.java)
     }
 

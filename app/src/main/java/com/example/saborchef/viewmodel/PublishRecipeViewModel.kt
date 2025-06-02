@@ -39,7 +39,7 @@ class PublishRecipeViewModel(
     val publishResult: StateFlow<PublishResult> = _publishResult
 
     private val api: RecetaControllerApi by lazy {
-        ApiClient(baseUrl = "http://192.168.1.37:8080/")
+        ApiClient(baseUrl = BuildConfig.BASE_URL)
             .createService(RecetaControllerApi::class.java)
     }
 

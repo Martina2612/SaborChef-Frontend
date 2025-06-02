@@ -26,7 +26,7 @@ class RegisterViewModel : ViewModel() {
     val uiState: StateFlow<RegisterUiState> = _uiState
 
     private val api by lazy {
-        ApiClient("http://192.168.1.37:8080/")
+        ApiClient(baseUrl = BuildConfig.BASE_URL)
             .createService(AuthenticationControllerApi::class.java)
     }
 

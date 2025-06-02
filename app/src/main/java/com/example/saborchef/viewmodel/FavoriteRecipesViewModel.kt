@@ -42,7 +42,7 @@ class FavoriteRecipesViewModel(
 ) : ViewModel() {
     // API client para favoritos
     private val favoritaService: FavoritaControllerApi by lazy {
-        ApiClient(baseUrl = "http://192.168.1.37:8080/")
+        ApiClient(baseUrl = BuildConfig.BASE_URL)
             .createService(FavoritaControllerApi::class.java)
     }
 
