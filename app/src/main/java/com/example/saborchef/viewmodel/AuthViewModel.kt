@@ -3,7 +3,7 @@ package com.example.saborchef.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.saborchef.BuildConfig
+import com.example.saborchef.data.url
 import com.example.saborchef.apis.AuthenticationControllerApi
 import com.example.saborchef.infrastructure.ApiClient
 import com.example.saborchef.models.AuthenticationRequest
@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Response
+
 
 sealed class AuthUiState {
     object Idle : AuthUiState()
@@ -28,7 +29,7 @@ class AuthViewModel : ViewModel() {
     val uiState: StateFlow<AuthUiState> = _uiState
 
     private val api by lazy {
-        ApiClient(baseUrl = BuildConfig.BASE_URL)
+        ApiClient(baseUrl = url)
             .createService(AuthenticationControllerApi::class.java)
     }
 

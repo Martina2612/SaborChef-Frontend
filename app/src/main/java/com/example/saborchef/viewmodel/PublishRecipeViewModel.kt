@@ -1,5 +1,5 @@
 package com.example.saborchef.viewmodel
-
+/*
 import android.content.ContentResolver
 import android.net.Uri
 import android.webkit.MimeTypeMap
@@ -146,3 +146,4 @@ class PublishRecipeViewModel(
         uploadResp.body()!!.url
     }
 }
+*/

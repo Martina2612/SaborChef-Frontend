@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.saborchef.models.RecetaDetalleResponse
 import com.example.saborchef.infrastructure.ApiClient
 import com.example.saborchef.apis.RecetaControllerApi
+import com.example.saborchef.data.url
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +28,7 @@ class RecipeDetailViewModel(
     val uiState: StateFlow<RecipeDetailUiState> = _uiState
 
     private val recetaApi: RecetaControllerApi by lazy {
-        ApiClient(baseUrl = BuildConfig.BASE_URL)
+        ApiClient(baseUrl = url)
             .createService(RecetaControllerApi::class.java)
     }
 

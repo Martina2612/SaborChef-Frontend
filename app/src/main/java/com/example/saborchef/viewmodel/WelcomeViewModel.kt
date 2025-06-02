@@ -12,8 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.example.saborchef.BuildConfig
-import com.example.saborchef.apis.RecetaControllerApi
+import com.example.saborchef.data.url
 
 class WelcomeViewModel : ViewModel() {
 
@@ -25,7 +24,7 @@ class WelcomeViewModel : ViewModel() {
     // --- Configuración del Cliente de API ---
     // Es mejor instanciarlo de forma "lazy" para que solo se cree cuando se necesite.
     private val recetasService: RecetaControllerApi by lazy {
-        val apiClient = ApiClient(baseUrl = BuildConfig.BASE_URL)
+        val apiClient = ApiClient(baseUrl = url)
         apiClient.createService(RecetaControllerApi::class.java)
     }
 

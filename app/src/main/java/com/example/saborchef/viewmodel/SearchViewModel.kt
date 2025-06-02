@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saborchef.apis.RecetaControllerApi
+import com.example.saborchef.data.url
 import com.example.saborchef.infrastructure.ApiClient
 import com.example.saborchef.models.RecetaFiltroRequest
 import com.example.saborchef.models.RecetaResumenResponse
@@ -32,7 +33,7 @@ class SearchViewModel : ViewModel() {
         private set
 
     private val api: RecetaControllerApi by lazy {
-        ApiClient(baseUrl = BuildConfig.BASE_URL)
+        ApiClient(baseUrl = url)
             .createService(RecetaControllerApi::class.java)
     }
 

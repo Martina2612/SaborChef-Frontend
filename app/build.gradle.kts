@@ -1,6 +1,5 @@
 import java.net.URI
 
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,6 +19,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Usar la misma URL en ambos lugares
         buildConfigField("String","BASE_URL","\"http://10.0.2.2:8080/\"")
     }
 
@@ -41,22 +41,63 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
-
+    // Core Android dependencies
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+
+    // Compose BOM y UI
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
     // Google Fonts para Poppins en Compose
     implementation("androidx.compose.ui:ui-text-google-fonts:1.5.0")
 
+    // Navigation
+    implementation("androidx.navigation:navigation-compose:2.7.6")
+
+    // Material Icons
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
+    implementation("androidx.compose.material3:material3:1.1.2")
+
+    // Accompanist Pager para carousels
+    implementation("com.google.accompanist:accompanist-pager:0.32.0")
+    implementation("com.google.accompanist:accompanist-pager-indicators:0.32.0")
+
+    // Compose Runtime y Lifecycle
+    implementation("androidx.compose.runtime:runtime-livedata:1.5.4")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+    implementation("androidx.compose.foundation:foundation:1.5.4")
+
+    // ViewModel y LiveData - VERSIONES CONSISTENTES
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+
+    // NETWORKING - VERSIONES CONSISTENTES Y ACTUALIZADAS
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // Image loading
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -64,62 +105,16 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
-    implementation ("androidx.navigation:navigation-compose:2.6.0")
-
-    // Accompanist Pager para carousels (HorizontalPager)
-    implementation("com.google.accompanist:accompanist-pager:0.30.1")
-    // Indicators (dots) para el Pager
-    implementation("com.google.accompanist:accompanist-pager-indicators:0.30.1")
-
-    implementation("androidx.compose.material:material-icons-extended:1.5.0")
-
-    implementation("androidx.compose.material3:material3:1.0.1")
-
-    implementation("androidx.compose.runtime:runtime-livedata:1.6.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
-    implementation("io.coil-kt:coil-compose:2.2.2")
-
-    implementation ("androidx.compose.foundation:foundation:1.5.0")
-
-    //DEPENDENCIAS PARA EMPEZAR A CONECTAR EL BACKEND
-    
-    // Retrofit y Gson converter
-    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
-
-    // Coroutines para llamadas asíncronas
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-
-    // ViewModel y LiveData (o StateFlow si usás)
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
-    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
-
-    // Para cargar imágenes desde URL en Compose
-    implementation ("io.coil-kt:coil-compose:2.2.2")
-    implementation(libs.retrofit)
-    implementation(libs.okhttp)
-    implementation(libs.converter.gson)
-    implementation(libs.logging.interceptor)
-    implementation(libs.converter.scalars)
-
-    implementation(libs.androidx.core)
-    implementation(libs.androidx.core.ktx)
-
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
-
-
-
 }
 
 val openApiOutputDir = file("$projectDir/src/main/java")
 
 val downloadOpenApiSpec by tasks.registering {
     val outputFile = layout.buildDirectory.file("tmp/openapi/api.json")
-
     outputs.file(outputFile)
 
     doLast {
+        // CAMBIO: Usar la misma URL que en BuildConfig pero adaptada para localhost
         val uri = URI("http://localhost:8080/v3/api-docs")
         val url = uri.toURL()
         val file = outputFile.get().asFile
@@ -137,7 +132,6 @@ val downloadOpenApiSpec by tasks.registering {
     }
 }
 
-
 tasks.named("openApiGenerate").configure {
     dependsOn(downloadOpenApiSpec)
     (this as org.openapitools.generator.gradle.plugin.tasks.GenerateTask).apply {
@@ -148,9 +142,11 @@ tasks.named("openApiGenerate").configure {
                 "library" to "jvm-retrofit2",
                 "serializationLibrary" to "gson",
                 "packageName" to "com.example.saborchef",
-                "apiPackage" to "com.example.saborchef.api",
+                "apiPackage" to "com.example.saborchef.apis", // Cambiado de "api" a "apis"
                 "modelPackage" to "com.example.saborchef.models",
-                "invokerPackage" to "com.example.saborchef.infrastructure"
+                "invokerPackage" to "com.example.saborchef.infrastructure",
+                // AGREGADO: Para generar suspend functions
+                "useCoroutines" to "true"
             )
         )
     }
@@ -180,15 +176,15 @@ val generateAPI by tasks.registering(Copy::class) {
                 .replace(
                     ".registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeAdapter())",
                     ""
-                ) // o lo que prefieras
+                )
                 .replace(
                     ".registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter())",
                     ""
-                ) // o lo que prefieras
+                )
                 .replace(
                     ".registerTypeAdapter(LocalDate::class.java, LocalDateAdapter())",
                     ""
-                ) // o lo que prefieras
+                )
         }
 
         exclude("**/DateTimeAdapter.kt")

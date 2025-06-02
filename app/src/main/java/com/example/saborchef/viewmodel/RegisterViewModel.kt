@@ -7,6 +7,7 @@ import com.example.saborchef.models.RegisterRequest
 import com.example.saborchef.models.AuthenticationResponse
 import com.example.saborchef.infrastructure.ApiClient
 import com.example.saborchef.apis.AuthenticationControllerApi
+import com.example.saborchef.data.url
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +27,7 @@ class RegisterViewModel : ViewModel() {
     val uiState: StateFlow<RegisterUiState> = _uiState
 
     private val api by lazy {
-        ApiClient(baseUrl = BuildConfig.BASE_URL)
+        ApiClient(baseUrl = url)
             .createService(AuthenticationControllerApi::class.java)
     }
 

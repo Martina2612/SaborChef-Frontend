@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.saborchef.apis.CalificacionControllerApi
 import com.example.saborchef.apis.RecetaControllerApi
 import com.example.saborchef.data.DataStoreManager
+import com.example.saborchef.data.url
 import com.example.saborchef.infrastructure.ApiClient
 import com.example.saborchef.models.RecetaDetalleResponse
 import com.example.saborchef.models.TopRecetaResponse
@@ -39,11 +40,11 @@ class HomeViewModel(
 
     // --- Cliente de API lazy ---
     private val recetaService: RecetaControllerApi by lazy {
-        ApiClient(baseUrl = BuildConfig.BASE_URL)
+        ApiClient(baseUrl = url)
             .createService(RecetaControllerApi::class.java)
     }
     private val calificacionService: CalificacionControllerApi by lazy {
-        ApiClient(baseUrl = BuildConfig.BASE_URL)
+        ApiClient(baseUrl = url)
             .createService(CalificacionControllerApi::class.java)
     }
 
