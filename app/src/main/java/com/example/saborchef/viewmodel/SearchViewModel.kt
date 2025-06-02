@@ -190,4 +190,12 @@ class SearchViewModel : ViewModel() {
             SearchUiState.Error("Error del servidor: ${response.code()}")
         }
     }
+
+    /** Llamar a esto para limpiar vista cuando entremos de nuevo */
+    fun resetSearch() {
+        query = ""
+        uiState = SearchUiState.Idle
+
+    }
+
 }

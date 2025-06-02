@@ -1,6 +1,8 @@
+// File: app/src/main/java/com/example/saborchef/ui/components/RecipeCard.kt
 package com.example.saborchef.ui.components
 
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,6 +42,8 @@ fun RecipeCard(
     user: String,
     onClick: (String) -> Unit
 ) {
+    val isPreview = LocalInspectionMode.current
+
     Card(
         shape = RoundedCornerShape(16.dp),
         elevation = 4.dp,
@@ -47,26 +54,45 @@ fun RecipeCard(
             .clickable { onClick(id) }
     ) {
         Row(Modifier.fillMaxSize()) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = title,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(120.dp)
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = 16.dp,
-                            bottomStart = 16.dp
+            if (isPreview) {
+                Image(
+                    painter = painterResource(R.drawable.img_cena),
+                    contentDescription = title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(120.dp)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 16.dp,
+                                bottomStart = 16.dp
+                            )
                         )
-                    )
-            )
+                )
+            } else {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(120.dp)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 16.dp,
+                                bottomStart = 16.dp
+                            )
+                        )
+                )
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(12.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Título y rating
+                // Título
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
@@ -79,26 +105,26 @@ fun RecipeCard(
                         color = BlueDark,
                         modifier = Modifier.weight(1f)
                     )
-
                 }
+
                 // Duración y porciones
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector=Icons.Default.AccessTime,
+                        imageVector = Icons.Default.AccessTime,
                         contentDescription = null,
                         tint = BlueDark,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        text = "$duration",
+                        text = duration,
                         fontFamily = Poppins,
                         fontSize = 12.sp,
                         color = BlueDark
                     )
-                    Spacer(Modifier.width(94.dp))
+                    Spacer(Modifier.weight(1f))
                     Icon(
                         imageVector = Icons.Default.PersonOutline,
                         contentDescription = null,
@@ -113,17 +139,18 @@ fun RecipeCard(
                         color = BlueDark
                     )
                 }
+
+                // Usuario y estrellas
                 Row(
                     verticalAlignment = Alignment.CenterVertically
-                ){
-                // Usuario
-                Text(
-                    text = user,
-                    fontFamily = Poppins,
-                    fontSize = 12.sp,
-                    color = BlueDark
-                )
-                    Spacer(Modifier.width(90.dp))
+                ) {
+                    Text(
+                        text = user,
+                        fontFamily = Poppins,
+                        fontSize = 12.sp,
+                        color = BlueDark
+                    )
+                    Spacer(Modifier.weight(1f))
                     Row {
                         repeat(rating) {
                             Icon(
@@ -154,7 +181,7 @@ fun PreviewRecipeCard() {
     RecipeCard(
         id = "1",
         title = "Ensalada de caballa y verduras",
-        imageUrl = Uri.parse("android.resource://com.example.saborchef/" + R.drawable.img_step1),
+        imageUrl = Uri.parse("android.resource://com.example.saborchef/${R.drawable.img_cena}"),
         duration = "15 min",
         portions = 3,
         rating = 4,

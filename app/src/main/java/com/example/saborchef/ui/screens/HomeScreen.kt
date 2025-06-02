@@ -33,9 +33,12 @@ import com.example.saborchef.viewmodel.HomeViewModel
 import com.example.saborchef.viewmodel.HomeViewModelFactory
 
 import com.example.saborchef.ui.theme.OrangeDark
+import com.example.saborchef.viewmodel.SearchViewModel
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    navController: NavController
+) {
     val context = LocalContext.current
     val dm = remember { DataStoreManager(context) }
     val vm: HomeViewModel = viewModel(factory = HomeViewModelFactory(dm))
@@ -105,7 +108,10 @@ fun BaseHome(
         },
 
 
-        bottomBar = { BottomBar(navController = navController, role = role) },
+        bottomBar = { BottomBar(
+            navController = navController,
+            role = role
+        ) },
         floatingActionButton = {
             if (role != UserRole.VISITANTE) {
                 FloatingActionButton(onClick = { /* Navegar a CrearRecetaScreen */ }) {

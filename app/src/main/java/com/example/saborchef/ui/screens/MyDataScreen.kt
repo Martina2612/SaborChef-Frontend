@@ -36,7 +36,7 @@ import com.example.saborchef.ui.theme.Poppins
  * - Al “Guardar” se deshabilitan y se emite onSave con todos los datos.
  */
 @Composable
-fun MisDatosScreen(
+fun MyDataScreen(
     existingNombre: String,
     existingApellido: String,
     existingUsername: String,
@@ -242,7 +242,7 @@ fun LabeledTextField(
 fun MisDatosPreview() {
     SaborChefTheme {
         Surface {
-            MisDatosScreen(
+            MyDataScreen(
                 existingNombre = "Juan",
                 existingApellido = "Pérez",
                 existingUsername = "tizoCrist2025",

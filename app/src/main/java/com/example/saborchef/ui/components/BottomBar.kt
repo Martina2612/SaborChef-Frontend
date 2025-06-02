@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import com.example.saborchef.viewmodel.SearchViewModel
 
 // 1) Modelo de Tab
 sealed class TabItem(val route: String, val icon: ImageVector) {
@@ -59,8 +60,8 @@ fun BottomBar(
     role: UserRole
 ) {
     val items = tabsForRole(role)
-    val backStack = navController.currentBackStackEntryAsState().value
-    val currentRoute = backStack?.destination?.route
+    val backStackEntry = navController.currentBackStackEntryAsState().value
+    val currentRoute = backStackEntry?.destination?.route
 
     BottomNavigation(
         backgroundColor = Color.White,
@@ -84,9 +85,10 @@ fun BottomBar(
                 onClick = {
                     if (tab.route != currentRoute) {
                         navController.navigate(tab.route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            // Poppeo todo hasta "home", pero sin eliminar "home" (inclusive = false)
+                            popUpTo("home") { saveState = true }
                             launchSingleTop = true
-                            restoreState = true
+                            restoreState = false
                         }
                     }
                 }
@@ -95,28 +97,5 @@ fun BottomBar(
     }
 }
 
-@Preview(name = "BottomBar - Alumno (Search Selected)", widthDp = 360)
-@Composable
-fun PreviewBottomBarAlumno() {
-    val navController = rememberNavController()
-    // Simulamos que estamos en la pantalla "search"
-    LaunchedEffect(Unit) { navController.navigate("search") }
 
-    BottomBar(
-        navController = navController,
-        role = UserRole.ALUMNO
-    )
-}
 
-@Preview(name = "BottomBar - Visitante (Home Selected)", widthDp = 360)
-@Composable
-fun PreviewBottomBarVisitante() {
-    val navController = rememberNavController()
-    // Simulamos que estamos en la pantalla "home"
-    LaunchedEffect(Unit) { navController.navigate("home") }
-
-    BottomBar(
-        navController = navController,
-        role = UserRole.VISITANTE
-    )
-}

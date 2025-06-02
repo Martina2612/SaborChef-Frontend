@@ -38,7 +38,7 @@ fun CategoryCard(
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = 4.dp,
-        modifier = Modifier
+        modifier = modifier
             .clickable { onClick(label) }
     ) {
         Box {
@@ -46,7 +46,6 @@ fun CategoryCard(
             Image(
                 painter = imagePainter,
                 contentDescription = label,
-                modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
 

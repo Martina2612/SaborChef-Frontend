@@ -111,7 +111,6 @@ fun FavoriteRecipesScreen(
         bottomBar = { BottomBar(navController, role) }
     ) {
         Column(Modifier.fillMaxSize()) {
-            SearchBar(query, onQueryChange, onFilterClick)
 
             LazyColumn(
                 modifier = Modifier

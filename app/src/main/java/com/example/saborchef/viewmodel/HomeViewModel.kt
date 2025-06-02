@@ -69,7 +69,7 @@ class HomeViewModel(
                     calificacionService.obtenerTopRecetas(12).execute()
                 }
                 val ultimasCall = withContext(Dispatchers.IO) {
-                    recetaService.obtenerUltimas3Recetas().execute()
+                    recetaService.getUltimasRecetas().execute()
                 }
 
                 if (!topCall.isSuccessful) {
