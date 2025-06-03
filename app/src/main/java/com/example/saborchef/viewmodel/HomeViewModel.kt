@@ -11,7 +11,7 @@ import com.example.saborchef.data.url
 import com.example.saborchef.infrastructure.ApiClient
 import com.example.saborchef.models.RecetaDetalleResponse
 import com.example.saborchef.models.TopRecetaResponse
-import com.example.saborchef.model.UserRole
+import com.example.saborchef.model.Rol
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +23,7 @@ import kotlinx.coroutines.withContext
 sealed class HomeUiState {
     object Loading : HomeUiState()
     data class Success(
-        val role: UserRole,
+        val role: Rol,
         val topRecetas: List<TopRecetaResponse>,
         val ultimasRecetas: List<RecetaDetalleResponse>
     ) : HomeUiState()
@@ -62,8 +62,8 @@ class HomeViewModel(
                 }
                 val role = roleString
                     ?.uppercase()
-                    ?.let { UserRole.valueOf(it) }
-                    ?: UserRole.VISITANTE
+                    ?.let { Rol.valueOf(it) }
+                    ?: Rol.VISITANTE
 
                 // 2) Hacemos las llamadas de red en I/O
                 val topCall = withContext(Dispatchers.IO) {

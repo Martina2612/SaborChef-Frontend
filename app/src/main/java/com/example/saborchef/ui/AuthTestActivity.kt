@@ -1,3 +1,5 @@
+// app/src/main/java/com/example/saborchef/ui/AuthTestActivity.kt
+
 package com.example.saborchef.ui
 
 import android.os.Bundle
@@ -12,9 +14,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.saborchef.ui.theme.SaborChefTheme
+import com.example.saborchef.viewmodel.LoginState       // <-- Importamos la clase sellada de primer nivel
 import com.example.saborchef.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
 
+/**
+ * Esta Activity permite probar el flujo de login contra el backend.
+ * Muestra dos campos (alias + password) y un botón “Login”.
+ * Luego despliega el estado (Idle, Loading, Success(token) o Error(mensaje)).
+ */
 class AuthTestActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +46,7 @@ fun AuthTestScreen(
     var alias by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    // Ahora sí recogemos loginState como StateFlow<LoginState>
     val loginState by viewModel.loginState.collectAsState()
     val scope = rememberCoroutineScope()
 
@@ -50,8 +59,8 @@ fun AuthTestScreen(
     ) {
         Text(
             text = "Test de Login",
-            style = MaterialTheme.typography.h4,
-            modifier = Modifier.padding(bottom = 32.dp)
+            style = MaterialTheme.typography.h5,
+            modifier = Modifier.padding(bottom = 24.dp)
         )
 
         OutlinedTextField(
@@ -60,7 +69,7 @@ fun AuthTestScreen(
             label = { Text("Alias") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 12.dp)
         )
 
         OutlinedTextField(
@@ -80,10 +89,12 @@ fun AuthTestScreen(
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = loginState !is LoginViewModel.LoginState.Loading
+            // Aquí ya no referenciamos LoginViewModel.LoginState.Loading,
+            // sino LoginState.Loading (la clase sellada de nivel superior).
+            enabled = loginState !is LoginState.Loading
         ) {
             when (loginState) {
-                is LoginViewModel.LoginState.Loading -> {
+                is LoginState.Loading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
                         color = MaterialTheme.colors.onPrimary
@@ -97,23 +108,25 @@ fun AuthTestScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Mostramos un texto según el estado actual
         when (val currentState = loginState) {
-            is LoginViewModel.LoginState.Success -> {
+            is LoginState.Success -> {
+                // currentState.token es el String que vino del servidor
                 Text(
                     text = "¡Login exitoso! Token: ${currentState.token.take(20)}...",
                     color = MaterialTheme.colors.primary
                 )
             }
-            is LoginViewModel.LoginState.Error -> {
+            is LoginState.Error -> {
                 Text(
                     text = "Error: ${currentState.message}",
                     color = MaterialTheme.colors.error
                 )
             }
-            is LoginViewModel.LoginState.Loading -> {
+            is LoginState.Loading -> {
                 Text("Cargando...")
             }
-            else -> {
+            is LoginState.Idle -> {
                 Text("Ingresa tus credenciales")
             }
         }

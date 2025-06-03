@@ -1,5 +1,6 @@
 package com.example.saborchef.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,16 +8,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Switch
-import androidx.compose.material.SwitchDefaults
-import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -26,21 +20,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.saborchef.R
+import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.components.AppButton
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.Orange
 import com.example.saborchef.ui.theme.Poppins
+import com.example.saborchef.viewmodel.LoginState                // IMPORTA la clase LoginState de nivel superior
 import com.example.saborchef.viewmodel.LoginViewModel
 
 @Composable
@@ -56,23 +51,26 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(false) }
 
+    // Recoge el StateFlow<LoginState> desde el ViewModel
     val loginState by viewModel.loginState.collectAsState()
+    val context = LocalContext.current
 
+    // Cuando cambie loginState, reaccionamos (por ejemplo, mostrando Toast o navegando)
     LaunchedEffect(loginState) {
         when (val currentState = loginState) {
-            is LoginViewModel.LoginState.Success -> {
-                onLoginSuccess(currentState.token)
+            is LoginState.Success -> {
+                Toast.makeText(context, "¡Login exitoso!", Toast.LENGTH_SHORT).show()
+                onLoginSuccess(currentState.token) // currentState.token existe en LoginState.Success
             }
-            is LoginViewModel.LoginState.Error -> {
-                // Mostramos error con Snackbar, Toast, etc.
-                println("Login falló: ${currentState.message}")
+            is LoginState.Error -> {
+                Toast.makeText(context, "Error: ${currentState.message}", Toast.LENGTH_LONG).show()
             }
             else -> {}
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Flecha atrás
+        // Flecha atrás en la esquina superior izquierda
         IconButton(
             onClick = onBack,
             modifier = Modifier
@@ -95,7 +93,7 @@ fun LoginScreen(
         ) {
             Spacer(Modifier.height(60.dp))
 
-            // Imagen circular
+            // Imagen circular (chef_login)
             Image(
                 painter = painterResource(R.drawable.chef_login),
                 contentDescription = null,
@@ -113,20 +111,18 @@ fun LoginScreen(
                 fontFamily = Poppins,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 24.sp,
-                color = BlueDark,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                color = BlueDark
             )
 
             Spacer(Modifier.height(32.dp))
 
-            // Campo Alias con bordes redondeados
+            // Campo “Alias”
             OutlinedTextField(
                 value = alias,
                 onValueChange = { alias = it },
                 label = { Text("Alias", fontFamily = Poppins, fontSize = 14.sp) },
                 leadingIcon = {
-                    Icon(Icons.Default.Email, contentDescription = null, tint = BlueDark)
+                    Icon(Icons.Default.Visibility, contentDescription = null, tint = BlueDark)
                 },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
@@ -144,7 +140,7 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Campo Contraseña con bordes redondeados
+            // Campo “Contraseña”
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -153,7 +149,7 @@ fun LoginScreen(
                     Icon(Icons.Default.Lock, contentDescription = null, tint = BlueDark)
                 },
                 trailingIcon = {
-                    val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                    val icon = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(icon, contentDescription = null, tint = BlueDark)
                     }
@@ -176,7 +172,28 @@ fun LoginScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // Olvidaste contraseña y debajo Recordarme
+            // Si está en Loading, mostramos indicador
+            if (loginState is LoginState.Loading) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    CircularProgressIndicator(
+                        color = BlueDark,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        "Iniciando sesión...",
+                        fontFamily = Poppins,
+                        fontSize = 14.sp,
+                        color = BlueDark
+                    )
+                }
+                Spacer(Modifier.height(20.dp))
+            }
+
+            // “Olvidaste tu contraseña?” y “Recordarme”
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.End
@@ -212,11 +229,16 @@ fun LoginScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // Botón Iniciar sesión
+            // Botón “Iniciar sesión”
             AppButton(
-                text = "Iniciar sesión",
+                text = if (loginState is LoginState.Loading) "Cargando..." else "Iniciar sesión",
                 onClick = {
-                    viewModel.login(alias, password)
+                    // Solo se invoca viewModel.login si no está en Loading
+                    if (alias.isNotBlank() && password.isNotBlank() && loginState !is LoginState.Loading) {
+                        viewModel.login(alias, password)
+                    } else if (alias.isBlank() || password.isBlank()) {
+                        Toast.makeText(context, "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 primary = true,
                 modifier = Modifier.fillMaxWidth()
@@ -224,7 +246,7 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Link Registrarse
+            // Link “Registrate”
             Row {
                 Text(
                     "¿No tenés una cuenta? ",
@@ -245,15 +267,4 @@ fun LoginScreen(
             Spacer(Modifier.height(40.dp))
         }
     }
-}
-
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
-@Composable
-fun LoginScreenPreview() {
-    LoginScreen(
-        onBack = {},
-        onLoginSuccess = { _ -> },
-        onForgotPassword = {},
-        onRegister = {}
-    )
 }

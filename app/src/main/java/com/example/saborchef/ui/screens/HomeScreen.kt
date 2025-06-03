@@ -24,16 +24,14 @@ import com.example.saborchef.R.drawable.logo_topbar
 import com.example.saborchef.data.DataStoreManager
 import com.example.saborchef.models.RecetaDetalleResponse
 import com.example.saborchef.models.TopRecetaResponse
-import com.example.saborchef.model.UserRole
+import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.components.BottomBar
 import com.example.saborchef.ui.components.RecipeCarouselSection
 import com.example.saborchef.ui.components.TopCarouselSection
 import com.example.saborchef.viewmodel.HomeUiState
 import com.example.saborchef.viewmodel.HomeViewModel
 import com.example.saborchef.viewmodel.HomeViewModelFactory
-
 import com.example.saborchef.ui.theme.OrangeDark
-import com.example.saborchef.viewmodel.SearchViewModel
 
 @Composable
 fun HomeScreen(
@@ -46,11 +44,11 @@ fun HomeScreen(
 
     when (uiState) {
         is HomeUiState.Loading -> FullScreenLoading()
-        is HomeUiState.Error   -> FullScreenError((uiState as HomeUiState.Error).message)
+        is HomeUiState.Error -> FullScreenError((uiState as HomeUiState.Error).message)
         is HomeUiState.Success -> {
             val data = uiState as HomeUiState.Success
             BaseHome(
-                role = data.role,
+                role = data.role, // Asegurate que HomeUiState.Success tenga `role: UserRole`
                 topRecetas = data.topRecetas,
                 ultimasRecetas = data.ultimasRecetas,
                 navController = navController
@@ -62,7 +60,7 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BaseHome(
-    role: UserRole,
+    role: Rol,
     topRecetas: List<TopRecetaResponse>,
     ultimasRecetas: List<RecetaDetalleResponse>,
     navController: NavController
@@ -72,8 +70,7 @@ fun BaseHome(
             TopAppBar(
                 title = {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
@@ -97,7 +94,6 @@ fun BaseHome(
                     }
                 },
                 actions = {
-                    // Este espacio vacío "simula" el espacio de la flecha para centrar visualmente el logo
                     Spacer(modifier = Modifier.width(48.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -106,14 +102,11 @@ fun BaseHome(
                 scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
             )
         },
-
-
-        bottomBar = { BottomBar(
-            navController = navController,
-            role = role
-        ) },
+        bottomBar = {
+            BottomBar(navController = navController, role = role)
+        },
         floatingActionButton = {
-            if (role != UserRole.VISITANTE) {
+            if (role != Rol.VISITANTE) {
                 FloatingActionButton(onClick = { /* Navegar a CrearRecetaScreen */ }) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Añadir")
                 }
