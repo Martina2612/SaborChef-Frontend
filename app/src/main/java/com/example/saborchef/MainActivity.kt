@@ -1,20 +1,19 @@
 package com.example.saborchef
 
-import com.example.saborchef.ui.screens.VerificationCodeScreen
+import androidx.navigation.navArgument
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import androidx.navigation.compose.*
 import com.example.saborchef.ui.screens.*
 import com.example.saborchef.ui.theme.SaborChefTheme
+import com.example.saborchef.viewmodel.LoginViewModel
+import com.example.saborchef.viewmodel.LoginState
 import com.example.saborchef.viewmodel.SearchViewModel
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,11 +23,14 @@ class MainActivity : ComponentActivity() {
                 Surface {
                     val navController = rememberNavController()
                     val searchViewModel: SearchViewModel = viewModel()
+                    val loginViewModel: LoginViewModel = viewModel()
 
-                    NavHost(
-                        navController = navController,
-                        startDestination = "splash"
-                    ) {
+                    var alias by remember { mutableStateOf("") }
+                    var password by remember { mutableStateOf("") }
+                    val loginState by loginViewModel.loginState.collectAsState()
+
+                    NavHost(navController = navController, startDestination = "splash") {
+
                         composable("splash") {
                             SplashScreen(navController = navController)
                         }
@@ -43,9 +45,32 @@ class MainActivity : ComponentActivity() {
 
                         composable("auth") {
                             AuthScreen(
-                                onLogin = { /* luego podés poner navController.navigate("home") */ },
+                                onLogin = { navController.navigate("login") },
                                 onRegister = { navController.navigate("register") },
                                 onBack = { navController.popBackStack() }
+                            )
+                        }
+
+                        composable("login") {
+                            LoginScreen(
+                                aliasValue = alias,
+                                passwordValue = password,
+                                loginState = loginState,
+                                onAliasChange = { alias = it },
+                                onPasswordChange = { password = it },
+                                onLoginClick = { a, p -> loginViewModel.login(a, p) },
+                                onBack = { navController.popBackStack() },
+                                onLoginSuccess = {
+                                    navController.navigate("home") {
+                                        popUpTo("auth") { inclusive = true }
+                                    }
+                                },
+                                onForgotPassword = {
+                                    navController.navigate("password_email")
+                                },
+                                onRegister = {
+                                    navController.navigate("register")
+                                }
                             )
                         }
 
@@ -59,6 +84,17 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        composable("password_email") {
+                            PasswordEmailScreen(
+                                email = "",
+                                onEmailChange = {},
+                                isLoading = false,
+                                errorMessage = null,
+                                onSubmit = {},
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+
                         composable(
                             route = "verify/{email}",
                             arguments = listOf(navArgument("email") { type = NavType.StringType })
@@ -68,9 +104,7 @@ class MainActivity : ComponentActivity() {
                                 email = email,
                                 onBack = { navController.popBackStack() },
                                 onNext = { navController.navigate("success") },
-                                onResendCode = {
-                                    // Aquí podrías reutilizar el viewModel para reenviar el código
-                                }
+                                onResendCode = {}
                             )
                         }
 
@@ -81,16 +115,6 @@ class MainActivity : ComponentActivity() {
                                         popUpTo("auth") { inclusive = true }
                                     }
                                 }
-                            )
-                        }
-
-                        composable(
-                            route = "recipe/{id}",
-                            arguments = listOf(navArgument("id") { type = NavType.StringType })
-                        ) { backStackEntry ->
-                            RecipeDetailScreen(
-                                recipeId = backStackEntry.arguments?.getString("id") ?: "0",
-                                onBack = { navController.popBackStack() }
                             )
                         }
 
@@ -109,6 +133,16 @@ class MainActivity : ComponentActivity() {
                             FilterScreen(
                                 navController = navController,
                                 viewModel = searchViewModel
+                            )
+                        }
+
+                        composable(
+                            route = "recipe/{id}",
+                            arguments = listOf(navArgument("id") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            RecipeDetailScreen(
+                                recipeId = backStackEntry.arguments?.getString("id") ?: "0",
+                                onBack = { navController.popBackStack() }
                             )
                         }
                     }

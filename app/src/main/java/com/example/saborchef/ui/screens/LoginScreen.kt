@@ -33,20 +33,38 @@ import com.example.saborchef.ui.components.AppButton
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.Orange
 import com.example.saborchef.ui.theme.Poppins
+import com.example.saborchef.viewmodel.LoginState
 
 @Composable
 fun LoginScreen(
+    aliasValue: String,
+    passwordValue: String,
+    loginState: LoginState,
+    onAliasChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLoginClick: (alias: String, password: String) -> Unit,
     onBack: () -> Unit,
     onLoginSuccess: (token: String) -> Unit,
     onForgotPassword: () -> Unit,
     onRegister: () -> Unit,
 ) {
-    var alias by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val context = LocalContext.current
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
+    // Escucha y actúa según el estado del login
+    LaunchedEffect(loginState) {
+        when (loginState) {
+            is LoginState.Success -> {
+                Toast.makeText(context, "Login exitoso", Toast.LENGTH_SHORT).show()
+                onLoginSuccess(loginState.token)
+            }
+            is LoginState.Error -> {
+                Toast.makeText(context, loginState.message, Toast.LENGTH_LONG).show()
+            }
+            else -> {}
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         IconButton(
@@ -82,28 +100,20 @@ fun LoginScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            Text(
-                "¡Bienvenido!",
-                fontFamily = Poppins,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 24.sp,
-                color = BlueDark
-            )
+            Text("¡Bienvenido!", fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, color = BlueDark)
 
             Spacer(Modifier.height(32.dp))
 
             OutlinedTextField(
-                value = alias,
-                onValueChange = { alias = it },
+                value = aliasValue,
+                onValueChange = onAliasChange,
                 label = { Text("Alias", fontFamily = Poppins, fontSize = 14.sp) },
                 leadingIcon = {
                     Icon(Icons.Default.Visibility, contentDescription = null, tint = BlueDark)
                 },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = TextFieldDefaults.textFieldColors(
                     textColor = Color.Black,
                     focusedIndicatorColor = BlueDark,
@@ -116,8 +126,8 @@ fun LoginScreen(
             Spacer(Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
+                value = passwordValue,
+                onValueChange = onPasswordChange,
                 label = { Text("Contraseña", fontFamily = Poppins, fontSize = 14.sp) },
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null, tint = BlueDark)
@@ -132,9 +142,7 @@ fun LoginScreen(
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = TextFieldDefaults.textFieldColors(
                     textColor = Color.Black,
                     focusedIndicatorColor = BlueDark,
@@ -150,13 +158,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.End
             ) {
-                Text(
-                    "Olvidaste tu contraseña?",
-                    fontFamily = Poppins,
-                    fontSize = 14.sp,
-                    color = BlueDark,
-                    modifier = Modifier.clickable(onClick = onForgotPassword)
-                )
+                Text("Olvidaste tu contraseña?", fontFamily = Poppins, fontSize = 14.sp, color = BlueDark, modifier = Modifier.clickable(onClick = onForgotPassword))
                 Spacer(Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Switch(
@@ -169,13 +171,7 @@ fun LoginScreen(
                         )
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text(
-                        "Recordarme",
-                        fontFamily = Poppins,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = BlueDark
-                    )
+                    Text("Recordarme", fontFamily = Poppins, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = BlueDark)
                 }
             }
 
@@ -184,10 +180,8 @@ fun LoginScreen(
             AppButton(
                 text = "Iniciar sesión",
                 onClick = {
-                    if (alias.isNotBlank() && password.isNotBlank()) {
-                        // Acá deberías invocar el login real si se va a usar
-                        Toast.makeText(context, "Login simulado: $alias", Toast.LENGTH_SHORT).show()
-                        onLoginSuccess("fake-token-$alias")
+                    if (aliasValue.isNotBlank() && passwordValue.isNotBlank()) {
+                        onLoginClick(aliasValue, passwordValue)
                     } else {
                         Toast.makeText(context, "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
                     }
@@ -199,20 +193,8 @@ fun LoginScreen(
             Spacer(Modifier.height(16.dp))
 
             Row {
-                Text(
-                    "¿No tenés una cuenta? ",
-                    fontFamily = Poppins,
-                    fontSize = 14.sp,
-                    color = BlueDark
-                )
-                Text(
-                    "Registrate",
-                    fontFamily = Poppins,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    color = Orange,
-                    modifier = Modifier.clickable(onClick = onRegister)
-                )
+                Text("¿No tenés una cuenta? ", fontFamily = Poppins, fontSize = 14.sp, color = BlueDark)
+                Text("Registrate", fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Orange, modifier = Modifier.clickable(onClick = onRegister))
             }
 
             Spacer(Modifier.height(40.dp))

@@ -16,24 +16,24 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
-        <!-- MainActivity sin intent-filter (ya no arranca primero) -->
+        <!-- ✅ MainActivity ahora es la pantalla de inicio -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.SaborChef" />
-
-        <!-- NUEVA AuthTestActivity como pantalla de inicio -->
-        <activity
-            android:name=".ui.AuthTestActivity"
-            android:exported="true"
-            android:label="Auth Test"
             android:theme="@style/Theme.SaborChef">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- ✅ AuthTestActivity sigue disponible, pero ya no inicia la app -->
+        <activity
+            android:name=".ui.AuthTestActivity"
+            android:exported="true"
+            android:label="Auth Test"
+            android:theme="@style/Theme.SaborChef" />
 
     </application>
 
