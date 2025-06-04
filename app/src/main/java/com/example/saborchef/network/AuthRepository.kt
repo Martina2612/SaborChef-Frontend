@@ -11,13 +11,10 @@ import retrofit2.HttpException
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.Body
-import retrofit2.http.POST
-import retrofit2.http.GET
-import retrofit2.http.Query
+import com.example.saborchef.network.LoginRequest
 
-// DATA CLASSES
-data class LoginRequest(val alias: String, val password: String)
+// Data classes (pueden ir en archivos separados si preferís)
+
 data class LoginResponse(val token: String, val user: User? = null)
 data class User(val id: Long, val email: String, val name: String? = null)
 
@@ -28,29 +25,8 @@ data class NewPasswordRequest(val email: String, val nuevaPassword: String)
 data class PasswordResetResponse(val message: String, val success: Boolean)
 data class VerifyCodeResponse(val success: Boolean, val message: String)
 
-// INTERFACE API
-interface AuthApiService {
-    @POST("auth/authenticate")
-    suspend fun login(@Body request: LoginRequest): Response<AuthenticationResponse>
-
-    @POST("auth/register")
-    suspend fun register(@Body request: RegisterRequest): Response<AuthenticationResponse>
-
-    @POST("usuarios/password/send-code")
-    suspend fun sendPasswordResetEmail(@Body request: PasswordResetRequest): Response<PasswordResetResponse>
-
-    @POST("usuarios/password/verify-code")
-    suspend fun verifyResetCode(@Body request: VerifyCodeRequest): Response<VerifyCodeResponse>
-
-    @POST("usuarios/password/reset")
-    suspend fun resetPassword(@Body request: NewPasswordRequest): PasswordResetResponse
-
-    @POST("usuarios/confirmar-codigo")
-    suspend fun confirmarCuenta(@Body dto: ConfirmacionCodigoDTO): Response<Void>
-}
-
-// REPOSITORY
 object AuthRepository {
+
     private val api: AuthApiService by lazy {
         val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
         val client = OkHttpClient.Builder().addInterceptor(logging).build()
