@@ -28,15 +28,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.saborchef.R
-import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.components.AppButton
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.Orange
 import com.example.saborchef.ui.theme.Poppins
-import com.example.saborchef.viewmodel.LoginState                // IMPORTA la clase LoginState de nivel superior
-import com.example.saborchef.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
@@ -44,33 +40,15 @@ fun LoginScreen(
     onLoginSuccess: (token: String) -> Unit,
     onForgotPassword: () -> Unit,
     onRegister: () -> Unit,
-    viewModel: LoginViewModel = viewModel()
 ) {
     var alias by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(false) }
 
-    // Recoge el StateFlow<LoginState> desde el ViewModel
-    val loginState by viewModel.loginState.collectAsState()
     val context = LocalContext.current
 
-    // Cuando cambie loginState, reaccionamos (por ejemplo, mostrando Toast o navegando)
-    LaunchedEffect(loginState) {
-        when (val currentState = loginState) {
-            is LoginState.Success -> {
-                Toast.makeText(context, "¡Login exitoso!", Toast.LENGTH_SHORT).show()
-                onLoginSuccess(currentState.token) // currentState.token existe en LoginState.Success
-            }
-            is LoginState.Error -> {
-                Toast.makeText(context, "Error: ${currentState.message}", Toast.LENGTH_LONG).show()
-            }
-            else -> {}
-        }
-    }
-
     Box(modifier = Modifier.fillMaxSize()) {
-        // Flecha atrás en la esquina superior izquierda
         IconButton(
             onClick = onBack,
             modifier = Modifier
@@ -93,7 +71,6 @@ fun LoginScreen(
         ) {
             Spacer(Modifier.height(60.dp))
 
-            // Imagen circular (chef_login)
             Image(
                 painter = painterResource(R.drawable.chef_login),
                 contentDescription = null,
@@ -105,7 +82,6 @@ fun LoginScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Título
             Text(
                 "¡Bienvenido!",
                 fontFamily = Poppins,
@@ -116,7 +92,6 @@ fun LoginScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // Campo “Alias”
             OutlinedTextField(
                 value = alias,
                 onValueChange = { alias = it },
@@ -140,7 +115,6 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Campo “Contraseña”
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -172,28 +146,6 @@ fun LoginScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // Si está en Loading, mostramos indicador
-            if (loginState is LoginState.Loading) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    CircularProgressIndicator(
-                        color = BlueDark,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        "Iniciando sesión...",
-                        fontFamily = Poppins,
-                        fontSize = 14.sp,
-                        color = BlueDark
-                    )
-                }
-                Spacer(Modifier.height(20.dp))
-            }
-
-            // “Olvidaste tu contraseña?” y “Recordarme”
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.End
@@ -229,14 +181,14 @@ fun LoginScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // Botón “Iniciar sesión”
             AppButton(
-                text = if (loginState is LoginState.Loading) "Cargando..." else "Iniciar sesión",
+                text = "Iniciar sesión",
                 onClick = {
-                    // Solo se invoca viewModel.login si no está en Loading
-                    if (alias.isNotBlank() && password.isNotBlank() && loginState !is LoginState.Loading) {
-                        viewModel.login(alias, password)
-                    } else if (alias.isBlank() || password.isBlank()) {
+                    if (alias.isNotBlank() && password.isNotBlank()) {
+                        // Acá deberías invocar el login real si se va a usar
+                        Toast.makeText(context, "Login simulado: $alias", Toast.LENGTH_SHORT).show()
+                        onLoginSuccess("fake-token-$alias")
+                    } else {
                         Toast.makeText(context, "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
                     }
                 },
@@ -246,7 +198,6 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Link “Registrate”
             Row {
                 Text(
                     "¿No tenés una cuenta? ",

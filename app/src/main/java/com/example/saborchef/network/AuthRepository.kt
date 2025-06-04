@@ -4,46 +4,71 @@ import android.util.Log
 import com.example.saborchef.model.ConfirmacionCodigoDTO
 import com.example.saborchef.model.RegisterRequest
 import com.example.saborchef.models.AuthenticationResponse
+import com.google.gson.Gson
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.HttpException
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.POST
+import retrofit2.http.GET
+import retrofit2.http.Query
 
-/**
- * Singleton que expone:
- *   - registerUser(...)        → Result<AuthenticationResponse>
- *   - confirmarCuenta(...)     → Result<Unit>
- *   - login(...)               → Result<String> (token)
- *
- * Revisa que la baseUrl termine en “/api/”.
- */
+// DATA CLASSES
+data class LoginRequest(val alias: String, val password: String)
+data class LoginResponse(val token: String, val user: User? = null)
+data class User(val id: Long, val email: String, val name: String? = null)
+
+data class PasswordResetRequest(val email: String)
+data class VerifyCodeRequest(val email: String, val codigo: String)
+data class NewPasswordRequest(val email: String, val nuevaPassword: String)
+
+data class PasswordResetResponse(val message: String, val success: Boolean)
+data class VerifyCodeResponse(val success: Boolean, val message: String)
+
+// INTERFACE API
+interface AuthApiService {
+    @POST("auth/authenticate")
+    suspend fun login(@Body request: LoginRequest): Response<AuthenticationResponse>
+
+    @POST("auth/register")
+    suspend fun register(@Body request: RegisterRequest): Response<AuthenticationResponse>
+
+    @POST("usuarios/password/send-code")
+    suspend fun sendPasswordResetEmail(@Body request: PasswordResetRequest): Response<PasswordResetResponse>
+
+    @POST("usuarios/password/verify-code")
+    suspend fun verifyResetCode(@Body request: VerifyCodeRequest): Response<VerifyCodeResponse>
+
+    @POST("usuarios/password/reset")
+    suspend fun resetPassword(@Body request: NewPasswordRequest): PasswordResetResponse
+
+    @POST("usuarios/confirmar-codigo")
+    suspend fun confirmarCuenta(@Body dto: ConfirmacionCodigoDTO): Response<Void>
+}
+
+// REPOSITORY
 object AuthRepository {
-
-    // 1) Creamos retrofit + AuthApiService con interceptor de logging para ver peticiones
     private val api: AuthApiService by lazy {
         val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
         val client = OkHttpClient.Builder().addInterceptor(logging).build()
 
         Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/api/")   // Asegúrate de que coincide con tu configuración real
+            .baseUrl("http://10.0.2.2:8080/api/")
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
             .create(AuthApiService::class.java)
     }
 
-    /**
-     * Registra usuario en el backend. Retorna Result<AuthenticationResponse> con el token, userId, role, email.
-     */
     suspend fun registerUser(request: RegisterRequest): Result<AuthenticationResponse> {
         return try {
-            val response: Response<AuthenticationResponse> = api.register(request)
+            val response = api.register(request)
             if (response.isSuccessful) {
-                response.body()?.let {
-                    Result.success(it)
-                } ?: Result.failure(Exception("El cuerpo de la respuesta es null"))
+                response.body()?.let { Result.success(it) }
+                    ?: Result.failure(Exception("El cuerpo de la respuesta es null"))
             } else {
                 Result.failure(HttpException(response))
             }
@@ -53,12 +78,9 @@ object AuthRepository {
         }
     }
 
-    /**
-     * Envía el DTO de confirmación de código al backend. Retorna Result<Unit>.
-     */
     suspend fun confirmarCuenta(dto: ConfirmacionCodigoDTO): Result<Unit> {
         return try {
-            val response: Response<Void> = api.confirmarCuenta(dto)
+            val response = api.confirmarCuenta(dto)
             if (response.isSuccessful) {
                 Result.success(Unit)
             } else {
@@ -70,13 +92,9 @@ object AuthRepository {
         }
     }
 
-    /**
-     * Hace login contra el endpoint “auth/authenticate”.
-     * Si es exitoso, extrae body.accessToken y lo devuelve en Result.success(token).
-     */
     suspend fun login(alias: String, password: String): Result<String> {
         return try {
-            val response: Response<AuthenticationResponse> = api.login(LoginRequest(alias, password))
+            val response = api.login(LoginRequest(alias, password))
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && !body.accessToken.isNullOrEmpty()) {
@@ -90,6 +108,51 @@ object AuthRepository {
         } catch (e: Exception) {
             Log.e("AuthRepository", "Error en login", e)
             Result.failure(e)
+        }
+    }
+
+    suspend fun sendPasswordResetEmailRaw(request: PasswordResetRequest): Response<PasswordResetResponse> {
+        return api.sendPasswordResetEmail(request)
+    }
+
+    suspend fun verifyResetCode(request: VerifyCodeRequest): VerifyCodeResponse {
+        return try {
+            val response = api.verifyResetCode(request)
+            if (response.isSuccessful) {
+                response.body() ?: VerifyCodeResponse(false, "Respuesta vacía del servidor")
+            } else {
+                val errorBody = response.errorBody()?.string()
+                val message = when (response.code()) {
+                    400 -> Gson().fromJson(errorBody, VerifyCodeResponse::class.java)?.message ?: "Código inválido"
+                    403 -> "Código expirado o sin permisos"
+                    404 -> "No se encontró la sesión"
+                    429 -> "Demasiados intentos"
+                    500 -> "Error interno del servidor"
+                    else -> "Error del servidor (${response.code()})"
+                }
+                VerifyCodeResponse(false, message)
+            }
+        } catch (e: Exception) {
+            VerifyCodeResponse(false, "Error de conexión: ${e.message}")
+        }
+    }
+
+    suspend fun resetPassword(request: NewPasswordRequest): PasswordResetResponse {
+        return try {
+            api.resetPassword(request)
+        } catch (e: Exception) {
+            PasswordResetResponse(
+                message = when (e) {
+                    is retrofit2.HttpException -> when (e.code()) {
+                        400 -> "Datos inválidos"
+                        404 -> "Sesión expirada"
+                        else -> "Error del servidor"
+                    }
+                    is java.net.UnknownHostException -> "Error de conexión"
+                    else -> "Error inesperado: ${e.message}"
+                },
+                success = false
+            )
         }
     }
 }

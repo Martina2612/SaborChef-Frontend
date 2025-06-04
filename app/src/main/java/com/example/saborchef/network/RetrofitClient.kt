@@ -12,4 +12,8 @@ object RetrofitClient {
         .build()
 
     val recetaApi: RecetaApi = retrofit.create(RecetaApi::class.java)
+
+
+    val usuarioApi: UsuarioApi = retrofit.create(UsuarioApi::class.java)
 }
+
