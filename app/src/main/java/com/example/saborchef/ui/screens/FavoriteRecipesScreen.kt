@@ -13,15 +13,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -32,9 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.saborchef.R
-import com.example.saborchef.model.UserRole
+import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.components.RecipeCard
-import com.example.saborchef.ui.components.SearchBar
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.Orange
 import com.example.saborchef.ui.theme.Poppins
@@ -50,7 +45,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun FavoriteRecipesScreen(
     navController: NavController,
-    role: UserRole,
+    role: Rol,
     query: String,
     onQueryChange: (String) -> Unit,
     onFilterClick: () -> Unit,
@@ -285,7 +280,7 @@ private fun DeletedPopup() {
 fun PreviewFavoriteRecipesDefault() {
     FavoriteRecipesScreen(
         navController = /* navController stub */ NavController(LocalContext.current),
-        role = UserRole.USUARIO,
+        role = Rol.USUARIO,
         query = "",
         onQueryChange = {},
         onFilterClick = {},
@@ -299,7 +294,7 @@ fun PreviewFavoriteRecipesDefault() {
 fun PreviewFavoriteRecipesConfirmSheet() {
     FavoriteRecipesScreen(
         navController = NavController(LocalContext.current),
-        role = UserRole.USUARIO,
+        role = Rol.USUARIO,
         query = "",
         onQueryChange = {},
         onFilterClick = {},
@@ -313,7 +308,7 @@ fun PreviewFavoriteRecipesConfirmSheet() {
 fun PreviewFavoriteRecipesDeletedPopup() {
     FavoriteRecipesScreen(
         navController = NavController(LocalContext.current),
-        role = UserRole.USUARIO,
+        role = Rol.USUARIO,
         query = "",
         onQueryChange = {},
         onFilterClick = {},

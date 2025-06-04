@@ -24,7 +24,7 @@ import com.example.saborchef.R.drawable.logo_topbar
 import com.example.saborchef.data.DataStoreManager
 import com.example.saborchef.models.RecetaDetalleResponse
 import com.example.saborchef.models.TopRecetaResponse
-import com.example.saborchef.model.UserRole
+import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.components.BottomBar
 import com.example.saborchef.ui.components.RecipeCarouselSection
 import com.example.saborchef.ui.components.TopCarouselSection
@@ -33,7 +33,6 @@ import com.example.saborchef.viewmodel.HomeViewModel
 import com.example.saborchef.viewmodel.HomeViewModelFactory
 
 import com.example.saborchef.ui.theme.OrangeDark
-import com.example.saborchef.viewmodel.SearchViewModel
 
 @Composable
 fun HomeScreen(
@@ -62,7 +61,7 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BaseHome(
-    role: UserRole,
+    role: Rol,
     topRecetas: List<TopRecetaResponse>,
     ultimasRecetas: List<RecetaDetalleResponse>,
     navController: NavController
@@ -113,7 +112,7 @@ fun BaseHome(
             role = role
         ) },
         floatingActionButton = {
-            if (role != UserRole.VISITANTE) {
+            if (role != Rol.VISITANTE) {
                 FloatingActionButton(onClick = { /* Navegar a CrearRecetaScreen */ }) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Añadir")
                 }

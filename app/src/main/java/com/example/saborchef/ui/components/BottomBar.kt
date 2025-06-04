@@ -17,15 +17,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.saborchef.ui.theme.OrangeDark
 import com.example.saborchef.ui.theme.BlueLight
-import com.example.saborchef.model.UserRole
+import com.example.saborchef.model.Rol
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.rememberNavController
-import com.example.saborchef.viewmodel.SearchViewModel
 
 // 1) Modelo de Tab
 sealed class TabItem(val route: String, val icon: ImageVector) {
@@ -36,10 +32,10 @@ sealed class TabItem(val route: String, val icon: ImageVector) {
 }
 
 // 2) Lista dinámica según rol
-fun tabsForRole(role: UserRole): List<TabItem> =
+fun tabsForRole(role: Rol): List<TabItem> =
     when(role) {
-        UserRole.ALUMNO,
-        UserRole.USUARIO -> listOf(
+        Rol.ALUMNO,
+        Rol.USUARIO -> listOf(
             TabItem.Home,
             TabItem.Videos,
             TabItem.Bookmarks,
@@ -57,7 +53,7 @@ fun tabsForRole(role: UserRole): List<TabItem> =
 @Composable
 fun BottomBar(
     navController: NavController,
-    role: UserRole
+    role: Rol
 ) {
     val items = tabsForRole(role)
     val backStackEntry = navController.currentBackStackEntryAsState().value

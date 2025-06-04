@@ -1,7 +1,8 @@
 package com.example.saborchef.model
 
-enum class UserRole {
+enum class Rol {
     VISITANTE,
+    ALUMNO,
     USUARIO,
-    ALUMNO
+    ADMIN
 }
