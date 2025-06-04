@@ -1,6 +1,5 @@
 package com.example.saborchef
 
-import androidx.navigation.navArgument
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,11 +8,18 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import com.example.saborchef.network.AuthRepository
+import com.example.saborchef.network.PasswordResetRequest
+import com.example.saborchef.network.NewPasswordRequest
 import com.example.saborchef.ui.screens.*
 import com.example.saborchef.ui.theme.SaborChefTheme
-import com.example.saborchef.viewmodel.LoginViewModel
 import com.example.saborchef.viewmodel.LoginState
+import com.example.saborchef.viewmodel.LoginViewModel
 import com.example.saborchef.viewmodel.SearchViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,6 +34,12 @@ class MainActivity : ComponentActivity() {
                     var alias by remember { mutableStateOf("") }
                     var password by remember { mutableStateOf("") }
                     val loginState by loginViewModel.loginState.collectAsState()
+
+                    var recoveryEmail by remember { mutableStateOf("") }
+                    var recoveryPassword by remember { mutableStateOf("") }
+                    var isLoading by remember { mutableStateOf(false) }
+                    var errorMessage by remember { mutableStateOf<String?>(null) }
+                    val scope = rememberCoroutineScope()
 
                     NavHost(navController = navController, startDestination = "splash") {
 
@@ -86,11 +98,34 @@ class MainActivity : ComponentActivity() {
 
                         composable("password_email") {
                             PasswordEmailScreen(
-                                email = "",
-                                onEmailChange = {},
-                                isLoading = false,
-                                errorMessage = null,
-                                onSubmit = {},
+                                email = recoveryEmail,
+                                onEmailChange = { recoveryEmail = it },
+                                isLoading = isLoading,
+                                errorMessage = errorMessage,
+                                onSubmit = {
+                                    isLoading = true
+                                    errorMessage = null
+                                    scope.launch(Dispatchers.IO) {
+                                        try {
+                                            val response = AuthRepository.sendPasswordResetEmailRaw(
+                                                PasswordResetRequest(recoveryEmail)
+                                            )
+                                            withContext(Dispatchers.Main) {
+                                                isLoading = false
+                                                if (response.isSuccessful) {
+                                                    navController.navigate("verify/$recoveryEmail")
+                                                } else {
+                                                    errorMessage = "Error HTTP ${response.code()}"
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            withContext(Dispatchers.Main) {
+                                                isLoading = false
+                                                errorMessage = "Excepción: ${e.message}"
+                                            }
+                                        }
+                                    }
+                                },
                                 onBack = { navController.popBackStack() }
                             )
                         }
@@ -103,15 +138,56 @@ class MainActivity : ComponentActivity() {
                             VerificationCodeScreen(
                                 email = email,
                                 onBack = { navController.popBackStack() },
-                                onNext = { navController.navigate("success") },
+                                onNext = {
+                                    navController.navigate("password_new/$email")
+                                },
                                 onResendCode = {}
                             )
                         }
 
-                        composable("success") {
-                            SuccessfulRegisterScreen(
-                                onContinue = {
-                                    navController.navigate("home") {
+                        composable(
+                            route = "password_new/{email}",
+                            arguments = listOf(navArgument("email") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val email = backStackEntry.arguments?.getString("email") ?: ""
+
+                            PasswordNewScreen(
+                                password = recoveryPassword,
+                                onPasswordChange = { recoveryPassword = it },
+                                isLoading = isLoading,
+                                errorMessage = errorMessage,
+                                onSubmit = {
+                                    isLoading = true
+                                    errorMessage = null
+                                    scope.launch(Dispatchers.IO) {
+                                        try {
+                                            val response = AuthRepository.resetPassword(
+                                                NewPasswordRequest(email, recoveryPassword)
+                                            )
+                                            withContext(Dispatchers.Main) {
+                                                isLoading = false
+                                                if (response.success) {
+                                                    navController.navigate("password_success")
+                                                } else {
+                                                    errorMessage = response.message
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            withContext(Dispatchers.Main) {
+                                                isLoading = false
+                                                errorMessage = "Excepción: ${e.message}"
+                                            }
+                                        }
+                                    }
+                                },
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+
+                        composable("password_success") {
+                            PasswordSuccessScreen(
+                                onBackToLogin = {
+                                    navController.navigate("login") {
                                         popUpTo("auth") { inclusive = true }
                                     }
                                 }
@@ -151,3 +227,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
