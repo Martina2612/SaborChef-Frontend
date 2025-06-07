@@ -32,23 +32,24 @@ fun VerificationCodeScreen(
     onBack: () -> Unit,
     onNext: () -> Unit,
     onResendCode: () -> Unit,
+    resetTrigger: Int, // 🆕
     modifier: Modifier = Modifier,
     viewModel: RegisterViewModel = viewModel()
 ) {
     var code by remember { mutableStateOf(List(4) { "" }) }
-    var timeLeft by remember { mutableLongStateOf(86400L) } // 24hs en segundos
+    var timeLeft by remember(resetTrigger) { mutableLongStateOf(86400L) } // 🆕 24hs en segundos
+
     val uiState by viewModel.uiState.collectAsState()
 
-    // Disminuir tiempo
-    LaunchedEffect(Unit) {
-        while (timeLeft > 0) {
+    // Disminuir tiempo cada segundo
+    LaunchedEffect(timeLeft) {
+        if (timeLeft > 0) {
             delay(1000)
             timeLeft--
         }
-        onResendCode() // opcional: reintentar o notificar
     }
 
-    // Si se confirmó exitosamente
+    // Ir a siguiente si se confirma
     LaunchedEffect(uiState) {
         if (uiState is RegisterUiState.SuccessUnit) {
             onNext()
@@ -66,6 +67,7 @@ fun VerificationCodeScreen(
             IconButton(onClick = onBack, modifier = Modifier.padding(16.dp).size(36.dp).background(Color.White, CircleShape)) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = BlueDark)
             }
+
             Text("Revisa tu mail", fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 24.sp, color = BlueDark)
             Spacer(Modifier.height(8.dp))
             Text("Por favor, ingresa el código que enviamos a tu mail (duración máx. 24hs)", textAlign = TextAlign.Center, fontFamily = Poppins, fontSize = 14.sp, color = BlueDark)
@@ -102,3 +104,4 @@ fun VerificationCodeScreen(
         }
     }
 }
+

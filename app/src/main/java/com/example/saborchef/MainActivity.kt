@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.navigation.navArgument
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,6 +41,7 @@ class MainActivity : ComponentActivity() {
                     var isLoading by remember { mutableStateOf(false) }
                     var errorMessage by remember { mutableStateOf<String?>(null) }
                     val scope = rememberCoroutineScope()
+                    var resetTimerTrigger by remember { mutableStateOf(0) }
 
                     NavHost(navController = navController, startDestination = "splash") {
 
@@ -135,15 +137,27 @@ class MainActivity : ComponentActivity() {
                             arguments = listOf(navArgument("email") { type = NavType.StringType })
                         ) { backStackEntry ->
                             val email = backStackEntry.arguments?.getString("email") ?: ""
+                            val resendScope = rememberCoroutineScope()
+                            var resendError by remember { mutableStateOf<String?>(null) }
+
                             VerificationCodeScreen(
                                 email = email,
                                 onBack = { navController.popBackStack() },
                                 onNext = {
                                     navController.navigate("password_new/$email")
                                 },
-                                onResendCode = {}
+                                onResendCode = {
+                                    resetTimerTrigger++ // 🆕 reinicia el contador
+                                    scope.launch(Dispatchers.IO) {
+                                        try {
+                                            AuthRepository.sendPasswordResetEmailRaw(PasswordResetRequest(email))
+                                        } catch (_: Exception) {}
+                                    }
+                                },
+                                resetTrigger = resetTimerTrigger // 🆕
                             )
                         }
+
 
                         composable(
                             route = "password_new/{email}",
