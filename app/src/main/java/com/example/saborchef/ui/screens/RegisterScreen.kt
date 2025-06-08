@@ -1,4 +1,4 @@
-// src/main/java/com/example/saborchef/ui/screens/RegisterScreen.kt
+// RegisterScreen.kt
 package com.example.saborchef.ui.screens
 
 import android.util.Log
@@ -32,17 +32,13 @@ import com.example.saborchef.R
 import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.components.AppButton
 import com.example.saborchef.ui.components.UserTypeToggle
-import com.example.saborchef.ui.theme.BlueDark
-import com.example.saborchef.ui.theme.BlueLight
-import com.example.saborchef.ui.theme.Orange
-import com.example.saborchef.ui.theme.Poppins
-import com.example.saborchef.viewmodel.FieldState
-import com.example.saborchef.viewmodel.RegisterUiState
-import com.example.saborchef.viewmodel.RegisterViewModel
+import com.example.saborchef.ui.theme.*
+import com.example.saborchef.viewmodel.*
 
 @Composable
 fun RegisterScreen(
     navController: NavController,
+    sharedAlumnoViewModel: SharedAlumnoViewModel,
     onRegisterSuccess: (email: String) -> Unit
 ) {
     val viewModel: RegisterViewModel = viewModel()
@@ -61,19 +57,48 @@ fun RegisterScreen(
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf<String?>(null) }
 
-    // cuando uiState cambia
+    var aliasChecked by remember { mutableStateOf("") }
+    var emailChecked by remember { mutableStateOf("") }
+    var lastCheckedAlias by remember { mutableStateOf("") }
+
+    LaunchedEffect(alias) {
+        if (alias != aliasChecked) {
+            lastCheckedAlias = alias
+            viewModel.checkAlias(alias)
+            aliasChecked = alias
+        }
+    }
+
+    LaunchedEffect(email) {
+        if (email != emailChecked) {
+            emailChecked = email
+            viewModel.checkEmail(email)
+            emailChecked = email
+        }
+    }
+
     LaunchedEffect(uiState) {
-        when (uiState) {
+        when (val state = uiState) {
             is RegisterUiState.Success -> {
-                // auth.email es String? por eso el ?: ""
-                val resultEmail = (uiState as RegisterUiState.Success).auth.email ?: ""
-                onRegisterSuccess(resultEmail)
+                val resultEmail = state.auth.email ?: ""
+                sharedAlumnoViewModel.setUserInfo(
+                    nombre.trim(),
+                    apellido.trim(),
+                    alias.trim(),
+                    resultEmail,
+                    password,
+                    userType
+                )
+                if (state.auth.role == "ALUMNO") {
+                    navController.navigate("upload_dni")
+                } else {
+                    onRegisterSuccess(resultEmail)
+                }
             }
             is RegisterUiState.Error -> {
-                // demás errores ya los muestra aliasState/emailState o passwordError
-                Log.e("RegisterScreen","Error en registro: ${(uiState as RegisterUiState.Error).message}")
+                Log.e("RegisterScreen", "Error en registro: ${state.message}")
             }
-            else -> { /* Idle o Loading */ }
+            else -> {}
         }
     }
 
@@ -97,12 +122,7 @@ fun RegisterScreen(
                 contentScale = ContentScale.Fit
             )
             Spacer(Modifier.height(12.dp))
-            Text(
-                "Descubre más de 49.000 recetas",
-                fontFamily = Poppins,
-                fontSize = 16.sp,
-                color = BlueLight
-            )
+            Text("Descubre más de 49.000 recetas", fontFamily = Poppins, fontSize = 16.sp, color = BlueLight)
             Spacer(Modifier.height(24.dp))
 
             UserTypeToggle(selected = userType.name) {
@@ -110,7 +130,6 @@ fun RegisterScreen(
             }
             Spacer(Modifier.height(16.dp))
 
-            // Nombre
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
@@ -121,7 +140,6 @@ fun RegisterScreen(
             )
             Spacer(Modifier.height(12.dp))
 
-            // Apellido
             OutlinedTextField(
                 value = apellido,
                 onValueChange = { apellido = it },
@@ -132,13 +150,9 @@ fun RegisterScreen(
             )
             Spacer(Modifier.height(12.dp))
 
-            // Alias
             OutlinedTextField(
                 value = alias,
-                onValueChange = {
-                    alias = it
-                    viewModel.checkAlias(it)
-                },
+                onValueChange = { alias = it },
                 label = { Text("Alias") },
                 isError = aliasState is FieldState.Taken || aliasState is FieldState.Error,
                 singleLine = true,
@@ -146,23 +160,24 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 modifier = Modifier.fillMaxWidth()
             )
+
             when (aliasState) {
                 is FieldState.Taken -> {
                     Text("Alias no disponible", color = Color.Red, fontSize = 12.sp)
                     Card(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                        Modifier.fillMaxWidth().padding(vertical = 8.dp),
                         elevation = 4.dp,
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Column {
-                            (aliasState as FieldState.Taken).suggestions.forEach { s ->
+                            (aliasState as FieldState.Taken).suggestions.forEach { suggestion ->
                                 Text(
-                                    s,
+                                    suggestion,
                                     Modifier
                                         .fillMaxWidth()
-                                        .clickable { alias = s; viewModel.checkAlias(s) }
+                                        .clickable {
+                                            alias = suggestion
+                                        }
                                         .padding(12.dp)
                                 )
                             }
@@ -174,15 +189,12 @@ fun RegisterScreen(
                 }
                 else -> {}
             }
+
             Spacer(Modifier.height(12.dp))
 
-            // Email
             OutlinedTextField(
                 value = email,
-                onValueChange = {
-                    email = it
-                    viewModel.checkEmail(it)
-                },
+                onValueChange = { email = it },
                 label = { Text("Email") },
                 isError = emailState is FieldState.Taken || emailState is FieldState.Error,
                 singleLine = true,
@@ -197,9 +209,9 @@ fun RegisterScreen(
                     Text((emailState as FieldState.Error).message, color = Color.Red, fontSize = 12.sp)
                 else -> {}
             }
+
             Spacer(Modifier.height(12.dp))
 
-            // Contraseña
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it; passwordError = null },
@@ -219,9 +231,9 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth()
             )
+
             Spacer(Modifier.height(12.dp))
 
-            // Confirmar contraseña
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = {
@@ -244,28 +256,40 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth()
             )
+
             passwordError?.let {
                 Text(it, color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
             }
+
             Spacer(Modifier.height(24.dp))
 
-            // Botón Siguiente
             AppButton(
                 text = if (uiState is RegisterUiState.Loading) "Registrando..." else "Siguiente",
                 onClick = {
-                    if (password != confirmPassword) {
-                        passwordError = "Las contraseñas no coinciden"
-                    } else {
-                        viewModel.register(
-                            nombre.trim(),
-                            apellido.trim(),
-                            alias.trim(),
-                            email.trim(),
-                            password,
-                            userType
-                        )
+                    when {
+                        password != confirmPassword -> {
+                            passwordError = "Las contraseñas no coinciden"
+                        }
+                        aliasState !is FieldState.Valid -> {
+                            passwordError = "Alias inválido o no verificado"
+                        }
+                        emailState !is FieldState.Valid -> {
+                            passwordError = "Email inválido o no verificado"
+                        }
+                        else -> {
+                            Log.d("RegisterScreen", "Intentando registrar $alias - $email")
+                            viewModel.register(
+                                nombre.trim(),
+                                apellido.trim(),
+                                alias.trim(),
+                                email.trim(),
+                                password,
+                                userType
+                            )
+                        }
                     }
-                },
+                }
+                ,
                 enabled = uiState !is RegisterUiState.Loading,
                 primary = true,
                 modifier = Modifier.fillMaxWidth()
@@ -283,7 +307,6 @@ fun RegisterScreen(
             Spacer(Modifier.height(40.dp))
         }
 
-        // Flecha “Up”
         IconButton(
             onClick = { navController.popBackStack() },
             modifier = Modifier
@@ -296,3 +319,5 @@ fun RegisterScreen(
         }
     }
 }
+
+

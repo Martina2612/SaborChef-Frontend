@@ -32,6 +32,7 @@ sealed class FieldState {
     object Valid : FieldState()
     data class Taken(val suggestions: List<String> = emptyList()) : FieldState()
     data class Error(val message: String) : FieldState()
+    object Loading : FieldState()
 }
 
 class RegisterViewModel : ViewModel() {

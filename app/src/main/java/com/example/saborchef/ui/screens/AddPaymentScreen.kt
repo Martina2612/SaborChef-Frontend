@@ -32,13 +32,12 @@ import com.example.saborchef.ui.theme.SaborChefTheme
  */
 @Composable
 fun AddPaymentScreen(
-    onConfirm: (cardNumber: String, securityCode: String, expiryDate: String, cardHolderName: String) -> Unit
+    onConfirm: (cardNumber: String, securityCode: String, expiryDate: String, tipoTarjeta: String) -> Unit
 ) {
-    // Estados locales: hoisted para cada campo
     var cardNumber by remember { mutableStateOf("") }
     var securityCode by remember { mutableStateOf("") }
     var expiryDate by remember { mutableStateOf("") }
-    var cardHolderName by remember { mutableStateOf("") }
+    var tipoTarjeta by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -48,7 +47,6 @@ fun AddPaymentScreen(
     ) {
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Ícono circular superior con signo $ en blanco
         Box(
             modifier = Modifier
                 .size(72.dp)
@@ -78,30 +76,29 @@ fun AddPaymentScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // --- Componente con todos los campos, editables desde el inicio (showEditIcons = false) ---
         PaymentCardSection(
             modifier = Modifier.fillMaxWidth(),
             cardNumberValue = cardNumber,
             onCardNumberChange = { cardNumber = it },
-            isCardNumberEditable = true,         // no se usa porque showEditIcons=false
-            onCardNumberEditClick = {},          // no se usa
+            isCardNumberEditable = true,
+            onCardNumberEditClick = {},
 
             securityCodeValue = securityCode,
             onSecurityCodeChange = { securityCode = it },
-            isSecurityCodeEditable = true,       // no se usa
-            onSecurityCodeEditClick = {},        // no se usa
+            isSecurityCodeEditable = true,
+            onSecurityCodeEditClick = {},
 
             expiryDateValue = expiryDate,
             onExpiryDateChange = { expiryDate = it },
-            isExpiryDateEditable = true,         // no se usa
-            onExpiryDateEditClick = {},          // no se usa
+            isExpiryDateEditable = true,
+            onExpiryDateEditClick = {},
 
-            cardHolderNameValue = cardHolderName,
-            onCardHolderNameChange = { cardHolderName = it },
-            isCardHolderNameEditable = true,     // no se usa
-            onCardHolderNameEditClick = {},      // no se usa
+            cardHolderNameValue = tipoTarjeta, // ahora representa tipoTarjeta
+            onCardHolderNameChange = { tipoTarjeta = it },
+            isCardHolderNameEditable = true,
+            onCardHolderNameEditClick = {},
 
-            showEditIcons = false                 // oculta los lápices y fuerza enabled=true
+            showEditIcons = false
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -109,8 +106,7 @@ fun AddPaymentScreen(
         AppButton(
             text = "Confirmar",
             onClick = {
-                // Al confirmar devolvemos todos los datos al caller
-                onConfirm(cardNumber, securityCode, expiryDate, cardHolderName)
+                onConfirm(cardNumber, securityCode, expiryDate, tipoTarjeta)
             },
             primary = true,
             modifier = Modifier
@@ -120,12 +116,3 @@ fun AddPaymentScreen(
     }
 }
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
-@Composable
-fun AddPaymentPreview() {
-    SaborChefTheme {
-        Surface {
-            AddPaymentScreen { _, _, _, _ -> /* callback vacío para preview */ }
-        }
-    }
-}
