@@ -32,13 +32,18 @@ import com.example.saborchef.ui.theme.SaborChefTheme
  */
 @Composable
 fun AddPaymentScreen(
-    onConfirm: (cardNumber: String, securityCode: String, expiryDate: String, cardHolderName: String) -> Unit
+    onConfirm: (
+        cardNumber: String,
+        cardType: String,
+        expiry: String,
+        securityCode: String
+    ) -> Unit
 ) {
     // Estados locales: hoisted para cada campo
     var cardNumber by remember { mutableStateOf("") }
     var securityCode by remember { mutableStateOf("") }
-    var expiryDate by remember { mutableStateOf("") }
-    var cardHolderName by remember { mutableStateOf("") }
+    var expiry by remember { mutableStateOf("") }
+    var cardType by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -91,13 +96,13 @@ fun AddPaymentScreen(
             isSecurityCodeEditable = true,       // no se usa
             onSecurityCodeEditClick = {},        // no se usa
 
-            expiryDateValue = expiryDate,
-            onExpiryDateChange = { expiryDate = it },
+            expiryDateValue = expiry,
+            onExpiryDateChange = { expiry = it },
             isExpiryDateEditable = true,         // no se usa
             onExpiryDateEditClick = {},          // no se usa
 
-            cardHolderNameValue = cardHolderName,
-            onCardHolderNameChange = { cardHolderName = it },
+            cardHolderNameValue = cardType,
+            onCardHolderNameChange = { cardType = it },
             isCardHolderNameEditable = true,     // no se usa
             onCardHolderNameEditClick = {},      // no se usa
 
@@ -110,7 +115,7 @@ fun AddPaymentScreen(
             text = "Confirmar",
             onClick = {
                 // Al confirmar devolvemos todos los datos al caller
-                onConfirm(cardNumber, securityCode, expiryDate, cardHolderName)
+                onConfirm(cardNumber, securityCode, expiry, cardType)
             },
             primary = true,
             modifier = Modifier

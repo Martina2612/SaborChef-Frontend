@@ -107,7 +107,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = aliasValue,
                 onValueChange = onAliasChange,
-                label = { Text("Alias", fontFamily = Poppins, fontSize = 14.sp) },
+                label = { Text("Alias", fontFamily = Poppins, fontSize = 14.sp, color=BlueDark) },
                 leadingIcon = {
                     Icon(Icons.Default.Visibility, contentDescription = null, tint = BlueDark)
                 },
@@ -115,7 +115,7 @@ fun LoginScreen(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = TextFieldDefaults.textFieldColors(
-                    textColor = Color.Black,
+                    textColor = BlueDark,
                     focusedIndicatorColor = BlueDark,
                     unfocusedIndicatorColor = Color.LightGray,
                     cursorColor = BlueDark,
@@ -128,7 +128,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = passwordValue,
                 onValueChange = onPasswordChange,
-                label = { Text("Contraseña", fontFamily = Poppins, fontSize = 14.sp) },
+                label = { Text("Contraseña", fontFamily = Poppins, fontSize = 14.sp, color=BlueDark) },
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null, tint = BlueDark)
                 },

@@ -39,11 +39,17 @@ data class AlumnoActualizarDTO (
     @SerializedName("dniDorso")
     val dniDorso: kotlin.String? = null,
 
-    @SerializedName("cuentaCorriente")
-    val cuentaCorriente: kotlin.String? = null
+    @SerializedName("tipoTarjeta")
+    val tipoTarjeta: kotlin.String? = null,
 
-) {
+    @SerializedName("vencimiento")
+    val vencimiento: kotlin.String? = null,
 
+    @SerializedName("codigoSeguridad")
+    val codigoSeguridad: kotlin.String? = null,
 
-}
+    @SerializedName("numeroTramite")
+    val numeroTramite: kotlin.String? = null
+
+)
 

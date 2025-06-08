@@ -125,12 +125,14 @@ fun DniUploadScreen(
             ) {
                 FileSlot(
                     uri = frontUri,
+                    label = "DNI Frente",
                     placeholder = "Seleccionar archivos",
                     onClickPlaceholder = { pickFront.launch("*/*") },
                     onRemove = { frontUri = null }
                 )
                 FileSlot(
                     uri = backUri,
+                    label = "DNI Dorso",
                     placeholder = "Seleccionar archivos",
                     onClickPlaceholder = { pickBack.launch("*/*") },
                     onRemove = { backUri = null }

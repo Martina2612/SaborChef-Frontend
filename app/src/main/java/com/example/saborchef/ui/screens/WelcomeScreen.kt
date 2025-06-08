@@ -41,9 +41,9 @@ fun WelcomeScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     val dishPositions = listOf(
-        DishPosition(imageOffsetX = (-80).dp, imageOffsetY = (0).dp, textOffsetX = 40.dp, textOffsetY = 20.dp, startAngle = -80f),
-        DishPosition(imageOffsetX = (80).dp, imageOffsetY = 0.dp, textOffsetX = 15.dp, textOffsetY = 20.dp, startAngle = -160f),
-        DishPosition(imageOffsetX = (-80).dp,   imageOffsetY = (0).dp, textOffsetX = 40.dp, textOffsetY = 20.dp, startAngle = -80f),
+        DishPosition(imageOffsetX = (-80).dp, imageOffsetY = (0).dp, textOffsetX = 41.dp, textOffsetY = 40.dp, startAngle = -40f),
+        DishPosition(imageOffsetX = (80).dp, imageOffsetY = 0.dp, textOffsetX = 40.dp, textOffsetY = 40.dp, startAngle = -40f),
+        DishPosition(imageOffsetX = (-80).dp,   imageOffsetY = (0).dp, textOffsetX = 40.dp, textOffsetY = 40.dp, startAngle = -130f),
     )
 
     // El fondo y el gradiente se mantienen constantes para todos los estados.
@@ -114,7 +114,7 @@ fun WelcomeScreen(
                             )
                             Spacer(Modifier.height(16.dp))
                             Button(onClick = { viewModel.fetchLatestRecipes() }) {
-                                Text("Reintentar")
+                                Text(text="Reintentar", color=Color.White)
                             }
                         }
                     }

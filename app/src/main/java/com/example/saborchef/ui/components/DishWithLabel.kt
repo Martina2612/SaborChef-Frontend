@@ -53,7 +53,7 @@ fun DishWithLabel(
             modifier = Modifier
                 .size(120.dp)
                 .offset(x = textOffsetX, y = textOffsetY),
-            radius = 140f,
+            radius = 220f,
             centerX = 50f,
             centerY = 50f,
             startAngle = startAngle,

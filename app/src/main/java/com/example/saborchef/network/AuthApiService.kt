@@ -26,4 +26,7 @@ interface AuthApiService {
 
     @POST("usuarios/password/reset")
     suspend fun resetPassword(@Body request: NewPasswordRequest): PasswordResetResponse
+
+    @POST("usuarios/convertir-alumno")
+    suspend fun convertToStudent(@Body request: ConvertToStudentRequest): Response<ConvertToStudentResponse>
 }

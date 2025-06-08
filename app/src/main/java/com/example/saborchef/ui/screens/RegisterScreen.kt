@@ -7,8 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.IconButton
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -18,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -26,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.saborchef.R
+import com.example.saborchef.models.RegistrationResult
 import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.components.AppButton
 import com.example.saborchef.ui.components.UserTypeSelector
@@ -41,7 +45,7 @@ import kotlin.random.Random
 fun RegisterScreen(
     onBack: () -> Unit,
     onLoginClick: () -> Unit,
-    onRegisterSuccess: (email: String) -> Unit
+    onRegisterSuccess: (RegistrationResult) -> Unit
 ) {
     val viewModel: RegisterViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -73,7 +77,11 @@ fun RegisterScreen(
                 .size(36.dp)
                 .background(Color.White, shape = CircleShape)
         ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = null, tint = BlueDark)
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = "Atrás",
+                tint = BlueDark
+            )
         }
 
         Column(
@@ -87,6 +95,7 @@ fun RegisterScreen(
             Text(
                 "Registro",
                 fontFamily = Poppins,
+                fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
                 color = BlueDark
             )
@@ -118,12 +127,15 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
-                label = { Text("Nombre") },
+                label = { Text("Nombre", fontFamily = Poppins, fontSize = 14.sp, color=BlueDark)},
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint=BlueDark) },
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
+
+
             )
 
             Spacer(Modifier.height(12.dp))
@@ -132,12 +144,13 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = apellido,
                 onValueChange = { apellido = it },
-                label = { Text("Apellido") },
+                label = { Text("Apellido", fontFamily = Poppins, fontSize = 14.sp, color = BlueDark) },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = BlueDark) },
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
             )
 
             Spacer(Modifier.height(12.dp))
@@ -150,12 +163,13 @@ fun RegisterScreen(
                     aliasError = null
                     suggestedAlias = null
                 },
-                label = { Text("Alias") },
+                label = { Text("Alias", fontFamily = Poppins, fontSize = 14.sp, color = BlueDark) },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = BlueDark) },
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
             )
             aliasError?.let {
                 Text(it, color = Color.Red, fontSize = 12.sp)
@@ -180,12 +194,13 @@ fun RegisterScreen(
                     email = it
                     emailError = null
                 },
-                label = { Text("Email") },
+                label = { Text("Email", fontFamily = Poppins, fontSize = 14.sp, color = BlueDark) },
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = BlueDark) },
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
             emailError?.let { Text(it, color = Color.Red, fontSize = 12.sp) }
@@ -199,26 +214,26 @@ fun RegisterScreen(
                     password = it
                     passwordError = null
                 },
-                label = { Text("Contraseña") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                label = { Text("Contraseña", fontFamily = Poppins, fontSize = 14.sp, color = BlueDark) },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = BlueDark) },
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = BlueDark
                         )
                     }
                 },
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None
                 else PasswordVisualTransformation()
             )
-
             Spacer(Modifier.height(12.dp))
-
             // Confirmar contraseña
             OutlinedTextField(
                 value = confirmPassword,
@@ -226,20 +241,22 @@ fun RegisterScreen(
                     confirmPassword = it
                     passwordError = null
                 },
-                label = { Text("Confirmar contraseña") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                label = { Text("Confirmar contraseña", fontFamily = Poppins, fontSize = 14.sp, color = BlueDark) },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = BlueDark) },
                 trailingIcon = {
                     IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                         Icon(
                             if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = BlueDark
                         )
                     }
                 },
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                singleLine = true,
                 visualTransformation = if (confirmPasswordVisible) VisualTransformation.None
                 else PasswordVisualTransformation()
             )
@@ -266,6 +283,10 @@ fun RegisterScreen(
                             passwordError = "Contraseña debe ser alfanumérica y mínimo 6 caracteres"
                             Log.d("RegistroDebug", "Contraseña inválida: $password")
                         }
+                        nombre.isBlank() || apellido.isBlank() || alias.isBlank() -> {
+                            aliasError = "Completá todos los campos"
+                        }
+
                         else -> {
                             Log.d(
                                 "RegistroDebug",
@@ -304,14 +325,23 @@ fun RegisterScreen(
                         Text(text = msg, color = Color.Red, modifier = Modifier.padding(top = 8.dp))
                     }
                 }
+
                 is RegisterUiState.Success -> {
-                    // El backend devolvió accessToken, user_id, role y email.
-                    // Aquí podrías guardar en DataStore, etc., pero por simplicidad te redirijo directamente:
                     LaunchedEffect(Unit) {
-                        onRegisterSuccess((uiState as RegisterUiState.Success).auth.email ?: "")
+                        val authResponse = (uiState as RegisterUiState.Success).auth
+                        onRegisterSuccess(
+                            RegistrationResult(
+                                email = authResponse.email ?: email,
+                                userId = authResponse.userId ?: 0L,
+                                accessToken = authResponse.accessToken ?: "",
+                                userRole = userType.name // "ALUMNO" o "USUARIO"
+                            )
+                        )
                     }
                 }
-                else -> { /* Idle o Loading: no mostrar nada extra */ }
+
+                else -> { /* Idle o Loading: no mostrar nada extra */
+                }
             }
 
             Spacer(Modifier.height(40.dp))

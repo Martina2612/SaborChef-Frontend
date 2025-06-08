@@ -1,5 +1,7 @@
 package com.example.saborchef.network
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import com.example.saborchef.model.ConfirmacionCodigoDTO
 import com.example.saborchef.model.RegisterRequest
@@ -25,6 +27,26 @@ data class NewPasswordRequest(val email: String, val nuevaPassword: String)
 data class PasswordResetResponse(val message: String, val success: Boolean)
 data class VerifyCodeResponse(val success: Boolean, val message: String)
 
+data class ConvertToStudentRequest(
+    val userId: Long,
+    val numeroTarjeta: String,
+    val dniFrente: String, // En producción sería la URL del archivo subido
+    val dniDorso: String,  // En producción sería la URL del archivo subido
+    val cuentaCorriente: String
+)
+data class ConvertToStudentResponse(
+    val success: Boolean,
+    val message: String,
+    val alumno: StudentData? = null
+)
+data class StudentData(
+    val idAlumno: Long,
+    val numeroTarjeta: String,
+    val dniFrente: String,
+    val dniDorso: String,
+    val cuentaCorriente: String
+)
+
 object AuthRepository {
 
     private val api: AuthApiService by lazy {
@@ -32,7 +54,7 @@ object AuthRepository {
         val client = OkHttpClient.Builder().addInterceptor(logging).build()
 
         Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/api/")
+            .baseUrl("http://192.168.1.37:8080/api/")
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
@@ -130,5 +152,34 @@ object AuthRepository {
                 success = false
             )
         }
+    }
+
+    suspend fun convertToStudent(request: ConvertToStudentRequest): Result<ConvertToStudentResponse> {
+        return try {
+            val response = api.convertToStudent(request)
+            if (response.isSuccessful) {
+                response.body()?.let { Result.success(it) }
+                    ?: Result.failure(Exception("El cuerpo de la respuesta es null"))
+            } else {
+                Result.failure(HttpException(response))
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Error en convertToStudent", e)
+            Result.failure(e)
+        }
+    }
+
+    // Método helper para subir archivos (DNI)
+    suspend fun uploadDniFiles(
+        frontUri: Uri,
+        backUri: Uri,
+        context: Context
+    ): Pair<String, String> {
+        // Aquí implementarías la lógica para subir archivos
+        // Por ahora retorno URLs simuladas
+        return Pair(
+            "https://storage.example.com/dni/front_${System.currentTimeMillis()}.jpg",
+            "https://storage.example.com/dni/back_${System.currentTimeMillis()}.jpg"
+        )
     }
 }
