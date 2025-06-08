@@ -24,7 +24,7 @@ fun PasswordEmailScreen(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color.White // 👉 Fondo completamente blanco
+        color = Color.White
     ) {
         Column(
             modifier = Modifier

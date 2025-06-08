@@ -1,6 +1,5 @@
 package com.example.saborchef
 
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,16 +16,11 @@ import com.example.saborchef.ui.theme.SaborChefTheme
 import com.example.saborchef.viewmodel.LoginState
 import com.example.saborchef.viewmodel.LoginViewModel
 import com.example.saborchef.viewmodel.SearchViewModel
-import com.example.saborchef.viewmodel.StudentViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.navigation.navArgument
-import com.example.saborchef.models.AlumnoActualizarDTO
-import com.example.saborchef.models.RegistrationResult
-import com.example.saborchef.models.StudentRegistrationData
-import com.example.saborchef.network.ConvertToStudentRequest
-import com.example.saborchef.viewmodel.StudentUiState
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,8 +31,6 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     val searchViewModel: SearchViewModel = viewModel()
                     val loginViewModel: LoginViewModel = viewModel()
-                    val studentVm: StudentViewModel = viewModel()
-                    val uiState by studentVm.uiState.collectAsState()
 
                     var alias by remember { mutableStateOf("") }
                     var password by remember { mutableStateOf("") }
@@ -49,7 +41,7 @@ class MainActivity : ComponentActivity() {
                     var isLoading by remember { mutableStateOf(false) }
                     var errorMessage by remember { mutableStateOf<String?>(null) }
                     val scope = rememberCoroutineScope()
-
+                    var resetTimerTrigger by remember { mutableStateOf(0) }
 
                     NavHost(navController = navController, startDestination = "splash") {
 
@@ -98,83 +90,11 @@ class MainActivity : ComponentActivity() {
 
                         composable("register") {
                             RegisterScreen(
-                                onBack = { "auth" },
-                                onRegisterSuccess = { result: RegistrationResult ->
-                                    if (result.userRole == "ALUMNO") {
-                                        studentVm.initWith(result)
-                                    }
-                                    navController.navigate("verify/${result.email}/${result.userRole}")
+                                onBack = { navController.popBackStack() },
+                                onRegisterSuccess = { email ->
+                                    navController.navigate("verify/$email")
                                 },
                                 onLoginClick = { navController.popBackStack() }
-                            )
-                        }
-
-                        composable(
-                            route = "verify/{email}/{role}",
-                            arguments = listOf(
-                                navArgument("email") { type = NavType.StringType },
-                                navArgument("role") { type = NavType.StringType }
-                            )
-                        ) { backStack ->
-                            val email = backStack.arguments!!.getString("email")!!
-                            val role = backStack.arguments!!.getString("role")!!
-
-                            VerificationCodeScreen(
-                                email = email,
-                                onBack = { navController.popBackStack() },
-                                onNext = {
-                                    if (role == "ALUMNO") {
-                                        navController.navigate("student_payment") {
-                                            popUpTo("register") { inclusive = true }
-                                        }
-                                    } else {
-                                        navController.navigate("login") {
-                                            popUpTo("register") { inclusive = true }
-                                        }
-                                    }
-                                },
-                                onResendCode = {}
-                            )
-                        }
-
-                        composable("student_payment") {
-                            AddPaymentScreen { number, type, expiry, cvv ->
-                                studentVm.updatePayment(number, type, expiry, cvv)
-                                navController.navigate("student_dni")
-                            }
-                        }
-
-                        composable("student_dni") {
-                            DniUploadScreen(
-                                onBack = { navController.popBackStack() },
-                                onFinish = { frontUri, backUri, tramite ->
-                                    // Asegurar que frontUri y backUri no sean null antes de subir
-                                    if (frontUri != null && backUri != null) {
-                                        scope.launch {
-                                            try {
-                                                val (frontUrl, backUrl) = withContext(Dispatchers.IO) {
-                                                    AuthRepository.uploadDniFiles(frontUri, backUri, this@MainActivity)
-                                                }
-                                                studentVm.updateDniUrls(frontUrl, backUrl, tramite)
-                                                navController.navigate("student_success")
-                                            } catch (e: Exception) {
-                                                errorMessage = "Error subiendo DNI: ${e.message}"
-                                            }
-                                        }
-                                    } else {
-                                        errorMessage = "Debés subir ambas caras del DNI."
-                                    } }) }
-                        composable("student_success") {
-                            RegistrationSuccessScreen(
-                                isLoading    = (uiState == StudentUiState.Loading),
-                                errorMessage = (uiState as? StudentUiState.Error)?.message ?: errorMessage,
-                                isSuccess    = uiState is StudentUiState.Success,
-                                onFinalize   = { studentVm.convertToStudent() },
-                                onSuccess    = {
-                                    navController.navigate("home") {
-                                        popUpTo("register") { inclusive = true }
-                                    }
-                                }
                             )
                         }
 
@@ -211,6 +131,33 @@ class MainActivity : ComponentActivity() {
                                 onBack = { navController.popBackStack() }
                             )
                         }
+
+                        composable(
+                            route = "verify/{email}",
+                            arguments = listOf(navArgument("email") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val email = backStackEntry.arguments?.getString("email") ?: ""
+                            val resendScope = rememberCoroutineScope()
+                            var resendError by remember { mutableStateOf<String?>(null) }
+
+                            VerificationCodeScreen(
+                                email = email,
+                                onBack = { navController.popBackStack() },
+                                onNext = {
+                                    navController.navigate("password_new/$email")
+                                },
+                                onResendCode = {
+                                    resetTimerTrigger++ // 🆕 reinicia el contador
+                                    scope.launch(Dispatchers.IO) {
+                                        try {
+                                            AuthRepository.sendPasswordResetEmailRaw(PasswordResetRequest(email))
+                                        } catch (_: Exception) {}
+                                    }
+                                },
+                                resetTrigger = resetTimerTrigger // 🆕
+                            )
+                        }
+
 
                         composable(
                             route = "password_new/{email}",
@@ -260,7 +207,6 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-
 
                         composable("home") {
                             HomeScreen(navController = navController)
