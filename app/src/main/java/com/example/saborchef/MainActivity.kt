@@ -135,6 +135,7 @@ class MainActivity : ComponentActivity() {
                         composable("successful_register") {
                             SuccessfulRegisterScreen(
                                 onContinue = {
+                                    alias = sharedAlumnoViewModel.alias
                                     navController.navigate("simple_home") {
                                         popUpTo("auth") { inclusive = true }
                                     }
