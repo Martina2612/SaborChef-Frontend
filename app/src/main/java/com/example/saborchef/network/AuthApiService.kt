@@ -6,6 +6,10 @@ import com.example.saborchef.models.AuthenticationResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
+import retrofit2.http.GET
+import retrofit2.http.Path
+import retrofit2.http.Query
+
 
 interface AuthApiService {
 
@@ -26,4 +30,10 @@ interface AuthApiService {
 
     @POST("usuarios/password/reset")
     suspend fun resetPassword(@Body request: NewPasswordRequest): PasswordResetResponse
+
+    @GET("usuarios/alias-exists/{alias}")
+    suspend fun aliasExists(@Path("alias") alias: String): Response<ExistsResponse>
+
+    @GET("usuarios/email-exists")
+    suspend fun emailExists(@Query("email") email: String): Response<ExistsResponse>
 }

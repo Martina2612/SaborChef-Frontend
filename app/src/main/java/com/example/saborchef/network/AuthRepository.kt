@@ -13,11 +13,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.example.saborchef.network.LoginRequest
 
-// Data classes (pueden ir en archivos separados si preferís)
 
 data class LoginResponse(val token: String, val user: User? = null)
 data class User(val id: Long, val email: String, val name: String? = null)
-
+data class ExistsResponse(val exists: Boolean)
 data class PasswordResetRequest(val email: String)
 data class VerifyCodeRequest(val email: String, val codigo: String)
 data class NewPasswordRequest(val email: String, val nuevaPassword: String)
@@ -37,6 +36,16 @@ object AuthRepository {
             .client(client)
             .build()
             .create(AuthApiService::class.java)
+    }
+    suspend fun isAliasAvailable(alias: String): Boolean {
+        val resp = api.aliasExists(alias)
+        // available == !exists
+        return resp.isSuccessful && resp.body()?.exists == false
+    }
+
+    suspend fun isEmailAvailable(email: String): Boolean {
+        val resp = api.emailExists(email)
+        return resp.isSuccessful && resp.body()?.exists == false
     }
 
     suspend fun registerUser(request: RegisterRequest): Result<AuthenticationResponse> {

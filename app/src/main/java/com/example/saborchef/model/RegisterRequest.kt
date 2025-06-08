@@ -1,8 +1,8 @@
 package com.example.saborchef.model
 
 /**
- * Este DTO debe coincidir exactamente con lo que espera tu controlador Spring Boot.
- * Ej.: en Java tenés algo como:
+ * Este DTO debe coincidir exactamente con lo que espera el controlador Spring Boot.
+ * Ej.: en Java tenemos algo como:
  *   public class RegisterRequest {
  *       private String nombre;
  *       private String apellido;

@@ -19,6 +19,7 @@ fun AppButton(
     text: String,
     onClick: () -> Unit,
     primary: Boolean = true,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val container = if (primary) OrangeDark else Color(0xFFF0EFEF)
@@ -26,6 +27,7 @@ fun AppButton(
 
     ElevatedButton(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier
             .height(48.dp)
             .fillMaxWidth()
