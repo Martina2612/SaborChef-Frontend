@@ -90,6 +90,18 @@ class RegisterViewModel : ViewModel() {
         }
     }
 
+    fun register(request: RegisterRequest) {
+        register(
+            nombre = request.nombre,
+            apellido = request.apellido,
+            alias = request.alias,
+            email = request.email,
+            password = request.password,
+            role = request.role
+        )
+    }
+
+
     /**
      *  Llama a AuthRepository.confirmarCuenta(...)
      */

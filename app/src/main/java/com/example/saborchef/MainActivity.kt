@@ -17,6 +17,7 @@ import com.example.saborchef.network.PasswordResetRequest
 import com.example.saborchef.ui.screens.*
 import com.example.saborchef.ui.theme.SaborChefTheme
 import com.example.saborchef.viewmodel.LoginViewModel
+import com.example.saborchef.viewmodel.RegisterViewModel
 import com.example.saborchef.viewmodel.SearchViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -45,6 +46,7 @@ class MainActivity : ComponentActivity() {
                     var errorMessage by remember { mutableStateOf<String?>(null) }
                     val scope = rememberCoroutineScope()
                     var resetTimerTrigger by remember { mutableIntStateOf(0) }
+                    val registerViewModel: RegisterViewModel = viewModel()
 
                     NavHost(navController = navController, startDestination = "splash") {
                         composable("splash") {
@@ -109,11 +111,9 @@ class MainActivity : ComponentActivity() {
 
                         composable("add_payment") {
                             AddPaymentScreen(
-                                onConfirm = { cardNum, code, expiry, name ->
-                                    sharedAlumnoViewModel.setCardInfo(cardNum, code, expiry, name)
-                                    val email = sharedAlumnoViewModel.email
-                                    navController.navigate("verify_registration/$email")
-                                }
+                                sharedAlumnoViewModel = sharedAlumnoViewModel,
+                                registerViewModel = registerViewModel,
+                                navController = navController
                             )
                         }
                         composable(

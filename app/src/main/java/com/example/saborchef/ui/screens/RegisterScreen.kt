@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -60,6 +61,8 @@ fun RegisterScreen(
     var aliasChecked by remember { mutableStateOf("") }
     var emailChecked by remember { mutableStateOf("") }
     var lastCheckedAlias by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
 
     LaunchedEffect(alias) {
         if (alias != aliasChecked) {
@@ -81,15 +84,8 @@ fun RegisterScreen(
         when (val state = uiState) {
             is RegisterUiState.Success -> {
                 val resultEmail = state.auth.email ?: ""
-                sharedAlumnoViewModel.setUserInfo(
-                    nombre.trim(),
-                    apellido.trim(),
-                    alias.trim(),
-                    resultEmail,
-                    password,
-                    userType
-                )
                 if (state.auth.role == "ALUMNO") {
+                    // no debería entrar acá desde RegisterScreen
                     navController.navigate("upload_dni")
                 } else {
                     onRegisterSuccess(resultEmail)
@@ -101,6 +97,7 @@ fun RegisterScreen(
             else -> {}
         }
     }
+
 
     BackHandler { navController.popBackStack() }
 
@@ -264,7 +261,7 @@ fun RegisterScreen(
             Spacer(Modifier.height(24.dp))
 
             AppButton(
-                text = if (uiState is RegisterUiState.Loading) "Registrando..." else "Siguiente",
+                text = "Siguiente",
                 onClick = {
                     when {
                         password != confirmPassword -> {
@@ -277,8 +274,7 @@ fun RegisterScreen(
                             passwordError = "Email inválido o no verificado"
                         }
                         else -> {
-                            Log.d("RegisterScreen", "Intentando registrar $alias - $email")
-                            viewModel.register(
+                            sharedAlumnoViewModel.setUserInfo(
                                 nombre.trim(),
                                 apellido.trim(),
                                 alias.trim(),
@@ -286,14 +282,23 @@ fun RegisterScreen(
                                 password,
                                 userType
                             )
+
+                            if (userType == Rol.ALUMNO) {
+                                navController.navigate("upload_dni")
+                            } else {
+                                val request = sharedAlumnoViewModel.toRegisterRequest(context)
+
+                                viewModel.register(request)
+                            }
                         }
                     }
-                }
-                ,
+                },
                 enabled = uiState !is RegisterUiState.Loading,
                 primary = true,
                 modifier = Modifier.fillMaxWidth()
             )
+
+
 
             Spacer(Modifier.height(16.dp))
             Row {

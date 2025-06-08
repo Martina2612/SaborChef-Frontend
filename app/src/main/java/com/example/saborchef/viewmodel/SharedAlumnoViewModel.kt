@@ -39,6 +39,9 @@ class SharedAlumnoViewModel : ViewModel() {
         private set
     var cardHolderName: String = ""
         private set
+    var tipoTarjeta: String = ""
+        private set
+
 
     // --- SETTERS ---
     fun setUserInfo(nombre: String, apellido: String, alias: String, email: String, password: String, rol: Rol) {
@@ -60,12 +63,13 @@ class SharedAlumnoViewModel : ViewModel() {
         this.tramite = tramite
     }
 
-    fun setCardInfo(number: String, code: String, expiry: String, holder: String) {
+    fun setCardInfo(number: String, code: String, expiry: String, tipo: String) {
         this.cardNumber = number
         this.securityCode = code
         this.expiryDate = expiry
-        this.cardHolderName = holder
+        this.tipoTarjeta = tipo
     }
+
 
 
 
@@ -95,7 +99,7 @@ class SharedAlumnoViewModel : ViewModel() {
             numeroTarjeta = cardNumber,
             codigoSeguridad = securityCode,
             vencimiento = expiryDate,
-            tipoTarjeta = ""
+            tipoTarjeta = tipoTarjeta
         )
     }
 
