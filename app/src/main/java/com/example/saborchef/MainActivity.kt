@@ -1,3 +1,4 @@
+// MainActivity.kt
 package com.example.saborchef
 
 import android.os.Bundle
@@ -19,8 +20,8 @@ import com.example.saborchef.viewmodel.SearchViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.navigation.navArgument
 import kotlinx.coroutines.delay
+import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,11 +91,10 @@ class MainActivity : ComponentActivity() {
 
                         composable("register") {
                             RegisterScreen(
-                                onBack = { navController.popBackStack() },
+                                navController = navController,
                                 onRegisterSuccess = { email ->
                                     navController.navigate("verify/$email")
-                                },
-                                onLoginClick = { navController.popBackStack() }
+                                }
                             )
                         }
 
@@ -137,9 +137,6 @@ class MainActivity : ComponentActivity() {
                             arguments = listOf(navArgument("email") { type = NavType.StringType })
                         ) { backStackEntry ->
                             val email = backStackEntry.arguments?.getString("email") ?: ""
-                            val resendScope = rememberCoroutineScope()
-                            var resendError by remember { mutableStateOf<String?>(null) }
-
                             VerificationCodeScreen(
                                 email = email,
                                 onBack = { navController.popBackStack() },
@@ -147,17 +144,16 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("password_new/$email")
                                 },
                                 onResendCode = {
-                                    resetTimerTrigger++ // 🆕 reinicia el contador
+                                    resetTimerTrigger++
                                     scope.launch(Dispatchers.IO) {
                                         try {
                                             AuthRepository.sendPasswordResetEmailRaw(PasswordResetRequest(email))
                                         } catch (_: Exception) {}
                                     }
                                 },
-                                resetTrigger = resetTimerTrigger // 🆕
+                                resetTrigger = resetTimerTrigger
                             )
                         }
-
 
                         composable(
                             route = "password_new/{email}",
@@ -241,4 +237,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
