@@ -33,7 +33,6 @@ class MainActivity : ComponentActivity() {
                     val sharedAlumnoViewModel: SharedAlumnoViewModel = viewModel()
                     val scope = rememberCoroutineScope()
 
-                    // Estados para recuperación de contraseña
                     var alias by remember { mutableStateOf("") }
                     var password by remember { mutableStateOf("") }
                     var recoveryEmail by remember { mutableStateOf("") }
@@ -51,7 +50,9 @@ class MainActivity : ComponentActivity() {
                             WelcomeScreen(
                                 navController = navController,
                                 onContinueAsUser = { navController.navigate("auth") },
-                                onContinueAsGuest = { navController.navigate("home") }
+                                onContinueAsGuest = {
+                                    navController.navigate("simple_home")
+                                }
                             )
                         }
                         composable("auth") {
@@ -71,7 +72,7 @@ class MainActivity : ComponentActivity() {
                                 onLoginClick = { a, p -> loginViewModel.login(a, p) },
                                 onBack = { navController.popBackStack() },
                                 onLoginSuccess = {
-                                    navController.navigate("home") {
+                                    navController.navigate("simple_home") {
                                         popUpTo("auth") { inclusive = true }
                                     }
                                 },
@@ -110,8 +111,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = registerViewModel
                             )
                         }
-                        composable(
-                            "verify_registration/{email}",
+                        composable("verify_registration/{email}",
                             arguments = listOf(navArgument("email") { type = NavType.StringType })
                         ) { backStackEntry ->
                             val email = backStackEntry.arguments?.getString("email") ?: ""
@@ -135,7 +135,7 @@ class MainActivity : ComponentActivity() {
                         composable("successful_register") {
                             SuccessfulRegisterScreen(
                                 onContinue = {
-                                    navController.navigate("home") {
+                                    navController.navigate("simple_home") {
                                         popUpTo("auth") { inclusive = true }
                                     }
                                 }
@@ -174,8 +174,7 @@ class MainActivity : ComponentActivity() {
                                 onBack = { navController.popBackStack() }
                             )
                         }
-                        composable(
-                            "verify_recovery/{email}",
+                        composable("verify_recovery/{email}",
                             arguments = listOf(navArgument("email") { type = NavType.StringType })
                         ) { backStackEntry ->
                             val email = backStackEntry.arguments?.getString("email") ?: ""
@@ -196,8 +195,7 @@ class MainActivity : ComponentActivity() {
                                 resetTrigger = resetTimerTrigger
                             )
                         }
-                        composable(
-                            "password_new/{email}",
+                        composable("password_new/{email}",
                             arguments = listOf(navArgument("email") { type = NavType.StringType })
                         ) { backStackEntry ->
                             val email = backStackEntry.arguments?.getString("email") ?: ""
@@ -245,16 +243,16 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
                             HomeScreen(navController)
                         }
+                        composable("simple_home") {
+                            SimpleHomeScreen(nombre = alias.ifBlank { null })
+                        }
                         composable("search") {
                             SearchScreen(navController, viewModel = searchViewModel)
                         }
                         composable("filter") {
                             FilterScreen(navController, viewModel = searchViewModel)
                         }
-                        composable(
-                            "recipe/{id}",
-                            arguments = listOf(navArgument("id") { type = NavType.StringType })
-                        ) { backStackEntry ->
+                        composable("recipe/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) { backStackEntry ->
                             val id = backStackEntry.arguments?.getString("id") ?: "0"
                             RecipeDetailScreen(
                                 recipeId = id,
