@@ -9,19 +9,17 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.example.saborchef.network.AuthRepository
-import com.example.saborchef.network.PasswordResetRequest
 import com.example.saborchef.network.NewPasswordRequest
+import com.example.saborchef.network.PasswordResetRequest
 import com.example.saborchef.ui.screens.*
 import com.example.saborchef.ui.theme.SaborChefTheme
-import com.example.saborchef.viewmodel.LoginState
 import com.example.saborchef.viewmodel.LoginViewModel
 import com.example.saborchef.viewmodel.SearchViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.delay
-import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,6 +31,7 @@ class MainActivity : ComponentActivity() {
                     val searchViewModel: SearchViewModel = viewModel()
                     val loginViewModel: LoginViewModel = viewModel()
 
+                    // Estados compartidos
                     var alias by remember { mutableStateOf("") }
                     var password by remember { mutableStateOf("") }
                     val loginState by loginViewModel.loginState.collectAsState()
@@ -46,10 +45,10 @@ class MainActivity : ComponentActivity() {
 
                     NavHost(navController = navController, startDestination = "splash") {
 
+                        // --- Splash / Welcome / Auth ---
                         composable("splash") {
-                            SplashScreen(navController = navController)
+                            SplashScreen(navController)
                         }
-
                         composable("welcome") {
                             WelcomeScreen(
                                 navController = navController,
@@ -57,25 +56,25 @@ class MainActivity : ComponentActivity() {
                                 onContinueAsGuest = { navController.navigate("home") }
                             )
                         }
-
                         composable("auth") {
                             AuthScreen(
-                                onLogin = { navController.navigate("login") },
+                                onLogin    = { navController.navigate("login") },
                                 onRegister = { navController.navigate("register") },
-                                onBack = { navController.popBackStack() }
+                                onBack     = { navController.popBackStack() }
                             )
                         }
 
+                        // --- Login ---
                         composable("login") {
                             LoginScreen(
-                                aliasValue = alias,
-                                passwordValue = password,
-                                loginState = loginState,
-                                onAliasChange = { alias = it },
-                                onPasswordChange = { password = it },
-                                onLoginClick = { a, p -> loginViewModel.login(a, p) },
-                                onBack = { navController.popBackStack() },
-                                onLoginSuccess = {
+                                aliasValue      = alias,
+                                passwordValue   = password,
+                                loginState      = loginState,
+                                onAliasChange   = { alias = it },
+                                onPasswordChange= { password = it },
+                                onLoginClick    = { a, p -> loginViewModel.login(a, p) },
+                                onBack          = { navController.popBackStack() },
+                                onLoginSuccess  = {
                                     navController.navigate("home") {
                                         popUpTo("auth") { inclusive = true }
                                     }
@@ -83,41 +82,86 @@ class MainActivity : ComponentActivity() {
                                 onForgotPassword = {
                                     navController.navigate("password_email")
                                 },
-                                onRegister = {
+                                onRegister      = {
                                     navController.navigate("register")
                                 }
                             )
                         }
 
+                        // --- Register (datos) ---
                         composable("register") {
                             RegisterScreen(
                                 navController = navController,
                                 onRegisterSuccess = { email ->
-                                    navController.navigate("verify/$email")
+                                    navController.navigate("verify_registration/$email") {
+                                        popUpTo("register") { inclusive = true }
+                                    }
                                 }
                             )
                         }
 
+                        // --- Verify code para REGISTRO ---
+                        composable(
+                            route = "verify_registration/{email}",
+                            arguments = listOf(navArgument("email") {
+                                type = NavType.StringType
+                            })
+                        ) { back ->
+                            val email = back.arguments?.getString("email") ?: ""
+                            VerificationCodeScreen(
+                                email = email,
+                                onBack = { navController.popBackStack() },
+                                onNext = {
+                                    navController.navigate("successful_register") {
+                                        popUpTo("verify_registration/$email") { inclusive = true }
+                                    }
+                                },
+                                onResendCode = {
+                                    resetTimerTrigger++
+                                    scope.launch(Dispatchers.IO) {
+                                        try {
+                                            // reenvío de código de registro, ajusta si tu endpoint es otro
+                                            AuthRepository.sendPasswordResetEmailRaw(
+                                                PasswordResetRequest(email)
+                                            )
+                                        } catch (_: Exception) {}
+                                    }
+                                },
+                                resetTrigger = resetTimerTrigger
+                            )
+                        }
+
+                        // --- Pantalla de Éxito de REGISTRO ---
+                        composable("successful_register") {
+                            SuccessfulRegisterScreen(
+                                onContinue = {
+                                    navController.navigate("home") {
+                                        popUpTo("auth") { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
+
+                        // --- Recuperación de contraseña: email ---
                         composable("password_email") {
                             PasswordEmailScreen(
-                                email = recoveryEmail,
+                                email         = recoveryEmail,
                                 onEmailChange = { recoveryEmail = it },
-                                isLoading = isLoading,
-                                errorMessage = errorMessage,
-                                onSubmit = {
+                                isLoading     = isLoading,
+                                errorMessage  = errorMessage,
+                                onSubmit      = {
                                     isLoading = true
                                     errorMessage = null
                                     scope.launch(Dispatchers.IO) {
                                         try {
-                                            val response = AuthRepository.sendPasswordResetEmailRaw(
-                                                PasswordResetRequest(recoveryEmail)
-                                            )
+                                            val resp = AuthRepository
+                                                .sendPasswordResetEmailRaw(PasswordResetRequest(recoveryEmail))
                                             withContext(Dispatchers.Main) {
                                                 isLoading = false
-                                                if (response.isSuccessful) {
-                                                    navController.navigate("verify/$recoveryEmail")
+                                                if (resp.isSuccessful) {
+                                                    navController.navigate("verify_recovery/$recoveryEmail")
                                                 } else {
-                                                    errorMessage = "Error HTTP ${response.code()}"
+                                                    errorMessage = "Error HTTP ${resp.code()}"
                                                 }
                                             }
                                         } catch (e: Exception) {
@@ -132,11 +176,14 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        // --- Verify code para RECUPERACIÓN ---
                         composable(
-                            route = "verify/{email}",
-                            arguments = listOf(navArgument("email") { type = NavType.StringType })
-                        ) { backStackEntry ->
-                            val email = backStackEntry.arguments?.getString("email") ?: ""
+                            route = "verify_recovery/{email}",
+                            arguments = listOf(navArgument("email") {
+                                type = NavType.StringType
+                            })
+                        ) { back ->
+                            val email = back.arguments?.getString("email") ?: ""
                             VerificationCodeScreen(
                                 email = email,
                                 onBack = { navController.popBackStack() },
@@ -147,7 +194,9 @@ class MainActivity : ComponentActivity() {
                                     resetTimerTrigger++
                                     scope.launch(Dispatchers.IO) {
                                         try {
-                                            AuthRepository.sendPasswordResetEmailRaw(PasswordResetRequest(email))
+                                            AuthRepository.sendPasswordResetEmailRaw(
+                                                PasswordResetRequest(email)
+                                            )
                                         } catch (_: Exception) {}
                                     }
                                 },
@@ -155,31 +204,33 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        // --- Nueva contraseña (recovery) ---
                         composable(
                             route = "password_new/{email}",
-                            arguments = listOf(navArgument("email") { type = NavType.StringType })
-                        ) { backStackEntry ->
-                            val email = backStackEntry.arguments?.getString("email") ?: ""
-
+                            arguments = listOf(navArgument("email") {
+                                type = NavType.StringType
+                            })
+                        ) { back ->
+                            val email = back.arguments?.getString("email") ?: ""
                             PasswordNewScreen(
-                                password = recoveryPassword,
+                                password         = recoveryPassword,
                                 onPasswordChange = { recoveryPassword = it },
-                                isLoading = isLoading,
-                                errorMessage = errorMessage,
-                                onSubmit = {
+                                isLoading        = isLoading,
+                                errorMessage     = errorMessage,
+                                onSubmit         = {
                                     isLoading = true
                                     errorMessage = null
                                     scope.launch(Dispatchers.IO) {
                                         try {
-                                            val response = AuthRepository.resetPassword(
+                                            val r = AuthRepository.resetPassword(
                                                 NewPasswordRequest(email, recoveryPassword)
                                             )
                                             withContext(Dispatchers.Main) {
                                                 isLoading = false
-                                                if (response.success) {
+                                                if (r.success) {
                                                     navController.navigate("password_success")
                                                 } else {
-                                                    errorMessage = response.message
+                                                    errorMessage = r.message
                                                 }
                                             }
                                         } catch (e: Exception) {
@@ -194,6 +245,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        // --- Recovery success ---
                         composable("password_success") {
                             PasswordSuccessScreen(
                                 onBackToLogin = {
@@ -204,31 +256,26 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        // --- Pantallas principales ---
                         composable("home") {
-                            HomeScreen(navController = navController)
+                            HomeScreen(navController)
                         }
-
                         composable("search") {
-                            SearchScreen(
-                                navController = navController,
-                                viewModel = searchViewModel
-                            )
+                            SearchScreen(navController, viewModel = searchViewModel)
                         }
-
                         composable("filter") {
-                            FilterScreen(
-                                navController = navController,
-                                viewModel = searchViewModel
-                            )
+                            FilterScreen(navController, viewModel = searchViewModel)
                         }
-
                         composable(
                             route = "recipe/{id}",
-                            arguments = listOf(navArgument("id") { type = NavType.StringType })
-                        ) { backStackEntry ->
+                            arguments = listOf(navArgument("id") {
+                                type = NavType.StringType
+                            })
+                        ) { back ->
+                            val id = back.arguments?.getString("id") ?: "0"
                             RecipeDetailScreen(
-                                recipeId = backStackEntry.arguments?.getString("id") ?: "0",
-                                onBack = { navController.popBackStack() }
+                                recipeId = id,
+                                onBack   = { navController.popBackStack() }
                             )
                         }
                     }
