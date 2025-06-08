@@ -26,11 +26,11 @@ import com.example.saborchef.ui.theme.Poppins
 @Composable
 fun AddPaymentScreen(
     sharedAlumnoViewModel: SharedAlumnoViewModel,
-    registerViewModel: RegisterViewModel,
-    navController: NavController
+    navController: NavController,
+    viewModel: RegisterViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val context = LocalContext.current
-    val uiState by registerViewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
     var cardNum by remember { mutableStateOf("") }
     var code by remember { mutableStateOf("") }
@@ -63,6 +63,7 @@ fun AddPaymentScreen(
             tint = OrangeDark,
             modifier = Modifier.size(48.dp)
         )
+
         Spacer(Modifier.height(16.dp))
 
         Text(
@@ -72,6 +73,7 @@ fun AddPaymentScreen(
             color = BlueDark,
             textAlign = TextAlign.Center
         )
+
         Spacer(Modifier.height(32.dp))
 
         Card(
@@ -82,6 +84,7 @@ fun AddPaymentScreen(
                 Text("Tarjeta de Crédito", fontWeight = FontWeight.Bold, color = BlueDark)
 
                 Spacer(Modifier.height(12.dp))
+
                 OutlinedTextField(
                     value = cardNum,
                     onValueChange = { cardNum = it },
@@ -90,7 +93,11 @@ fun AddPaymentScreen(
                 )
 
                 Spacer(Modifier.height(12.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     OutlinedTextField(
                         value = code,
                         onValueChange = { code = it },
@@ -100,22 +107,24 @@ fun AddPaymentScreen(
                     OutlinedTextField(
                         value = expiry,
                         onValueChange = { expiry = it },
-                        label = { Text("Vencimiento") },
+                        label = { Text("Vencimiento (MM/AA)") },
                         modifier = Modifier.weight(1f)
                     )
                 }
 
                 Spacer(Modifier.height(12.dp))
+
                 OutlinedTextField(
                     value = tipoTarjeta,
                     onValueChange = { tipoTarjeta = it },
-                    label = { Text("Tipo Tarjeta") },
+                    label = { Text("Tipo de tarjeta") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
 
         Spacer(Modifier.height(24.dp))
+
         Button(
             onClick = {
                 if (cardNum.isBlank() || code.isBlank() || expiry.isBlank() || tipoTarjeta.isBlank()) {
@@ -124,14 +133,13 @@ fun AddPaymentScreen(
                 }
 
                 sharedAlumnoViewModel.setCardInfo(cardNum, code, expiry, tipoTarjeta)
-                val request = sharedAlumnoViewModel.toRegisterRequest(context)
 
-                if (request.role != Rol.ALUMNO) {
+                if (sharedAlumnoViewModel.rol != Rol.ALUMNO) {
                     errorMessage = "Solo los alumnos deben registrar tarjeta"
                     return@Button
                 }
 
-                registerViewModel.register(request)
+                viewModel.register(context, sharedAlumnoViewModel)
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -147,7 +155,3 @@ fun AddPaymentScreen(
         }
     }
 }
-
-
-
-

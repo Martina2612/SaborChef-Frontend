@@ -1,4 +1,3 @@
-// MainActivity.kt
 package com.example.saborchef
 
 import android.net.Uri
@@ -16,13 +15,10 @@ import com.example.saborchef.network.NewPasswordRequest
 import com.example.saborchef.network.PasswordResetRequest
 import com.example.saborchef.ui.screens.*
 import com.example.saborchef.ui.theme.SaborChefTheme
-import com.example.saborchef.viewmodel.LoginViewModel
-import com.example.saborchef.viewmodel.RegisterViewModel
-import com.example.saborchef.viewmodel.SearchViewModel
+import com.example.saborchef.viewmodel.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.example.saborchef.viewmodel.SharedAlumnoViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,20 +29,19 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     val searchViewModel: SearchViewModel = viewModel()
                     val loginViewModel: LoginViewModel = viewModel()
+                    val registerViewModel: RegisterViewModel = viewModel()
                     val sharedAlumnoViewModel: SharedAlumnoViewModel = viewModel()
+                    val scope = rememberCoroutineScope()
 
-                    // Estados compartidos
+                    // Estados para recuperación de contraseña
                     var alias by remember { mutableStateOf("") }
                     var password by remember { mutableStateOf("") }
-                    val loginState by loginViewModel.loginState.collectAsState()
-
                     var recoveryEmail by remember { mutableStateOf("") }
                     var recoveryPassword by remember { mutableStateOf("") }
                     var isLoading by remember { mutableStateOf(false) }
                     var errorMessage by remember { mutableStateOf<String?>(null) }
-                    val scope = rememberCoroutineScope()
                     var resetTimerTrigger by remember { mutableIntStateOf(0) }
-                    val registerViewModel: RegisterViewModel = viewModel()
+                    val loginState by loginViewModel.loginState.collectAsState()
 
                     NavHost(navController = navController, startDestination = "splash") {
                         composable("splash") {
@@ -108,19 +103,18 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-
                         composable("add_payment") {
                             AddPaymentScreen(
                                 sharedAlumnoViewModel = sharedAlumnoViewModel,
-                                registerViewModel = registerViewModel,
-                                navController = navController
+                                navController = navController,
+                                viewModel = registerViewModel
                             )
                         }
                         composable(
-                            route = "verify_registration/{email}",
+                            "verify_registration/{email}",
                             arguments = listOf(navArgument("email") { type = NavType.StringType })
-                        ) { back ->
-                            val email = back.arguments?.getString("email") ?: ""
+                        ) { backStackEntry ->
+                            val email = backStackEntry.arguments?.getString("email") ?: ""
                             VerificationCodeScreen(
                                 email = email,
                                 onBack = { navController.popBackStack() },
@@ -132,11 +126,7 @@ class MainActivity : ComponentActivity() {
                                 onResendCode = {
                                     resetTimerTrigger++
                                     scope.launch(Dispatchers.IO) {
-                                        try {
-                                            AuthRepository.sendPasswordResetEmailRaw(
-                                                PasswordResetRequest(email)
-                                            )
-                                        } catch (_: Exception) {}
+                                        AuthRepository.sendPasswordResetEmailRaw(PasswordResetRequest(email))
                                     }
                                 },
                                 resetTrigger = resetTimerTrigger
@@ -162,7 +152,9 @@ class MainActivity : ComponentActivity() {
                                     errorMessage = null
                                     scope.launch(Dispatchers.IO) {
                                         try {
-                                            val resp = AuthRepository.sendPasswordResetEmailRaw(PasswordResetRequest(recoveryEmail))
+                                            val resp = AuthRepository.sendPasswordResetEmailRaw(
+                                                PasswordResetRequest(recoveryEmail)
+                                            )
                                             withContext(Dispatchers.Main) {
                                                 isLoading = false
                                                 if (resp.isSuccessful) {
@@ -183,10 +175,10 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(
-                            route = "verify_recovery/{email}",
+                            "verify_recovery/{email}",
                             arguments = listOf(navArgument("email") { type = NavType.StringType })
-                        ) { back ->
-                            val email = back.arguments?.getString("email") ?: ""
+                        ) { backStackEntry ->
+                            val email = backStackEntry.arguments?.getString("email") ?: ""
                             VerificationCodeScreen(
                                 email = email,
                                 onBack = { navController.popBackStack() },
@@ -196,21 +188,19 @@ class MainActivity : ComponentActivity() {
                                 onResendCode = {
                                     resetTimerTrigger++
                                     scope.launch(Dispatchers.IO) {
-                                        try {
-                                            AuthRepository.sendPasswordResetEmailRaw(
-                                                PasswordResetRequest(email)
-                                            )
-                                        } catch (_: Exception) {}
+                                        AuthRepository.sendPasswordResetEmailRaw(
+                                            PasswordResetRequest(email)
+                                        )
                                     }
                                 },
                                 resetTrigger = resetTimerTrigger
                             )
                         }
                         composable(
-                            route = "password_new/{email}",
+                            "password_new/{email}",
                             arguments = listOf(navArgument("email") { type = NavType.StringType })
-                        ) { back ->
-                            val email = back.arguments?.getString("email") ?: ""
+                        ) { backStackEntry ->
+                            val email = backStackEntry.arguments?.getString("email") ?: ""
                             PasswordNewScreen(
                                 password = recoveryPassword,
                                 onPasswordChange = { recoveryPassword = it },
@@ -221,13 +211,15 @@ class MainActivity : ComponentActivity() {
                                     errorMessage = null
                                     scope.launch(Dispatchers.IO) {
                                         try {
-                                            val r = AuthRepository.resetPassword(NewPasswordRequest(email, recoveryPassword))
+                                            val resp = AuthRepository.resetPassword(
+                                                NewPasswordRequest(email, recoveryPassword)
+                                            )
                                             withContext(Dispatchers.Main) {
                                                 isLoading = false
-                                                if (r.success) {
+                                                if (resp.success) {
                                                     navController.navigate("password_success")
                                                 } else {
-                                                    errorMessage = r.message
+                                                    errorMessage = resp.message
                                                 }
                                             }
                                         } catch (e: Exception) {
@@ -260,10 +252,10 @@ class MainActivity : ComponentActivity() {
                             FilterScreen(navController, viewModel = searchViewModel)
                         }
                         composable(
-                            route = "recipe/{id}",
+                            "recipe/{id}",
                             arguments = listOf(navArgument("id") { type = NavType.StringType })
-                        ) { back ->
-                            val id = back.arguments?.getString("id") ?: "0"
+                        ) { backStackEntry ->
+                            val id = backStackEntry.arguments?.getString("id") ?: "0"
                             RecipeDetailScreen(
                                 recipeId = id,
                                 onBack = { navController.popBackStack() }
@@ -275,4 +267,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-

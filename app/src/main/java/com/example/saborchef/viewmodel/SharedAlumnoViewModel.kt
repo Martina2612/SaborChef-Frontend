@@ -37,11 +37,8 @@ class SharedAlumnoViewModel : ViewModel() {
         private set
     var expiryDate: String = ""
         private set
-    var cardHolderName: String = ""
-        private set
     var tipoTarjeta: String = ""
         private set
-
 
     // --- SETTERS ---
     fun setUserInfo(nombre: String, apellido: String, alias: String, email: String, password: String, rol: Rol) {
@@ -70,15 +67,14 @@ class SharedAlumnoViewModel : ViewModel() {
         this.tipoTarjeta = tipo
     }
 
-
-
-
-    fun uriToBase64(context: Context, uri: Uri): String? {
+    private fun uriToBase64(context: Context, uri: Uri?): String? {
         return try {
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val bytes = inputStream?.readBytes()
-            inputStream?.close()
-            Base64.encodeToString(bytes, Base64.NO_WRAP)
+            uri?.let {
+                val inputStream = context.contentResolver.openInputStream(it)
+                val bytes = inputStream?.readBytes()
+                inputStream?.close()
+                Base64.encodeToString(bytes, Base64.NO_WRAP)
+            }
         } catch (e: Exception) {
             null
         }
@@ -93,16 +89,13 @@ class SharedAlumnoViewModel : ViewModel() {
             email = email,
             password = password,
             role = rol,
-            dniFrente = frontUri?.let { uriToBase64(context, it) } ?: "",
-            dniDorso = backUri?.let { uriToBase64(context, it) } ?: "",
-            numeroTramite = tramite,
             numeroTarjeta = cardNumber,
-            codigoSeguridad = securityCode,
+            tipoTarjeta = tipoTarjeta,
             vencimiento = expiryDate,
-            tipoTarjeta = tipoTarjeta
+            codigoSeguridad = securityCode,
+            dniFrente = uriToBase64(context, frontUri),
+            dniDorso = uriToBase64(context, backUri),
+            numeroTramite = tramite
         )
     }
-
-
 }
-

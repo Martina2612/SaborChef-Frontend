@@ -1,4 +1,3 @@
-// RegisterScreen.kt
 package com.example.saborchef.ui.screens
 
 import android.util.Log
@@ -60,13 +59,10 @@ fun RegisterScreen(
 
     var aliasChecked by remember { mutableStateOf("") }
     var emailChecked by remember { mutableStateOf("") }
-    var lastCheckedAlias by remember { mutableStateOf("") }
     val context = LocalContext.current
-
 
     LaunchedEffect(alias) {
         if (alias != aliasChecked) {
-            lastCheckedAlias = alias
             viewModel.checkAlias(alias)
             aliasChecked = alias
         }
@@ -74,7 +70,6 @@ fun RegisterScreen(
 
     LaunchedEffect(email) {
         if (email != emailChecked) {
-            emailChecked = email
             viewModel.checkEmail(email)
             emailChecked = email
         }
@@ -85,7 +80,6 @@ fun RegisterScreen(
             is RegisterUiState.Success -> {
                 val resultEmail = state.auth.email ?: ""
                 if (state.auth.role == "ALUMNO") {
-                    // no debería entrar acá desde RegisterScreen
                     navController.navigate("upload_dni")
                 } else {
                     onRegisterSuccess(resultEmail)
@@ -97,7 +91,6 @@ fun RegisterScreen(
             else -> {}
         }
     }
-
 
     BackHandler { navController.popBackStack() }
 
@@ -172,9 +165,7 @@ fun RegisterScreen(
                                     suggestion,
                                     Modifier
                                         .fillMaxWidth()
-                                        .clickable {
-                                            alias = suggestion
-                                        }
+                                        .clickable { alias = suggestion }
                                         .padding(12.dp)
                                 )
                             }
@@ -200,10 +191,8 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             when (emailState) {
-                is FieldState.Taken ->
-                    Text("Email ya registrado", color = Color.Red, fontSize = 12.sp)
-                is FieldState.Error ->
-                    Text((emailState as FieldState.Error).message, color = Color.Red, fontSize = 12.sp)
+                is FieldState.Taken -> Text("Email ya registrado", color = Color.Red, fontSize = 12.sp)
+                is FieldState.Error -> Text((emailState as FieldState.Error).message, color = Color.Red, fontSize = 12.sp)
                 else -> {}
             }
 
@@ -211,7 +200,10 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it; passwordError = null },
+                onValueChange = {
+                    password = it
+                    passwordError = null
+                },
                 label = { Text("Contraseña") },
                 isError = passwordError != null,
                 singleLine = true,
@@ -286,9 +278,7 @@ fun RegisterScreen(
                             if (userType == Rol.ALUMNO) {
                                 navController.navigate("upload_dni")
                             } else {
-                                val request = sharedAlumnoViewModel.toRegisterRequest(context)
-
-                                viewModel.register(request)
+                                viewModel.register(context, sharedAlumnoViewModel)
                             }
                         }
                     }
@@ -297,8 +287,6 @@ fun RegisterScreen(
                 primary = true,
                 modifier = Modifier.fillMaxWidth()
             )
-
-
 
             Spacer(Modifier.height(16.dp))
             Row {
@@ -324,5 +312,3 @@ fun RegisterScreen(
         }
     }
 }
-
-

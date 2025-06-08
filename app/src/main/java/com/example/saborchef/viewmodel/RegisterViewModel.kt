@@ -1,5 +1,6 @@
 package com.example.saborchef.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -37,43 +38,24 @@ sealed class FieldState {
 
 class RegisterViewModel : ViewModel() {
 
-    // UI register/confirm state
     private val _uiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Idle)
     val uiState: StateFlow<RegisterUiState> = _uiState
 
-    // Alias validation
     private val _aliasState = MutableStateFlow<FieldState>(FieldState.Idle)
     val aliasState: StateFlow<FieldState> = _aliasState
     private var aliasJob: Job? = null
 
-    // Email validation
     private val _emailState = MutableStateFlow<FieldState>(FieldState.Idle)
     val emailState: StateFlow<FieldState> = _emailState
     private var emailJob: Job? = null
 
-    /**
-     *  Llama a AuthRepository.registerUser(...)
-     */
-    fun register(
-        nombre: String,
-        apellido: String,
-        alias: String,
-        email: String,
-        password: String,
-        role: Rol
-    ) {
+    // ✅ Nuevo método que usa SharedAlumnoViewModel y context
+    fun register(context: Context, sharedAlumnoViewModel: SharedAlumnoViewModel) {
         _uiState.value = RegisterUiState.Loading
 
         viewModelScope.launch {
             try {
-                val request = RegisterRequest(
-                    nombre = nombre,
-                    apellido = apellido,
-                    alias = alias,
-                    email = email,
-                    password = password,
-                    role = role
-                )
+                val request = sharedAlumnoViewModel.toRegisterRequest(context)
                 val result = withContext(Dispatchers.IO) {
                     AuthRepository.registerUser(request)
                 }
@@ -90,21 +72,7 @@ class RegisterViewModel : ViewModel() {
         }
     }
 
-    fun register(request: RegisterRequest) {
-        register(
-            nombre = request.nombre,
-            apellido = request.apellido,
-            alias = request.alias,
-            email = request.email,
-            password = request.password,
-            role = request.role
-        )
-    }
-
-
-    /**
-     *  Llama a AuthRepository.confirmarCuenta(...)
-     */
+    // Confirmar código
     fun confirmarCuenta(email: String, codigo: String) {
         _uiState.value = RegisterUiState.Loading
 
@@ -126,9 +94,6 @@ class RegisterViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Debounced alias availability check
-     */
     fun checkAlias(alias: String) {
         aliasJob?.cancel()
         _aliasState.value = FieldState.Idle
@@ -141,7 +106,6 @@ class RegisterViewModel : ViewModel() {
                 if (available) {
                     _aliasState.value = FieldState.Valid
                 } else {
-                    // Generar 3 sugerencias simples
                     val suggestions = List(3) { alias + (10..99).random() }
                     _aliasState.value = FieldState.Taken(suggestions)
                 }
@@ -153,9 +117,6 @@ class RegisterViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Debounced email availability check
-     */
     fun checkEmail(email: String) {
         emailJob?.cancel()
         _emailState.value = FieldState.Idle
