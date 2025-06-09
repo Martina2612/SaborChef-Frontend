@@ -52,17 +52,15 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(false) }
 
+    val errorMessage = remember(loginState) {
+        if (loginState is LoginState.Error) "Alias o contraseña incorrecto" else null
+    }
+
     // Escucha y actúa según el estado del login
     LaunchedEffect(loginState) {
-        when (loginState) {
-            is LoginState.Success -> {
-                Toast.makeText(context, "Login exitoso", Toast.LENGTH_SHORT).show()
-                onLoginSuccess(loginState.token)
-            }
-            is LoginState.Error -> {
-                Toast.makeText(context, loginState.message, Toast.LENGTH_LONG).show()
-            }
-            else -> {}
+        if (loginState is LoginState.Success) {
+            Toast.makeText(context, "Login exitoso", Toast.LENGTH_SHORT).show()
+            onLoginSuccess(loginState.token)
         }
     }
 
@@ -145,12 +143,25 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = TextFieldDefaults.textFieldColors(
                     textColor = Color.Black,
-                    focusedIndicatorColor = BlueDark,
-                    unfocusedIndicatorColor = Color.LightGray,
+                    focusedIndicatorColor = if (errorMessage != null) Color.Red else BlueDark,
+                    unfocusedIndicatorColor = if (errorMessage != null) Color.Red else Color.LightGray,
                     cursorColor = BlueDark,
                     backgroundColor = Color.Transparent
                 )
             )
+
+            if (errorMessage != null) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    fontFamily = Poppins,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp)
+                )
+            }
 
             Spacer(Modifier.height(20.dp))
 
