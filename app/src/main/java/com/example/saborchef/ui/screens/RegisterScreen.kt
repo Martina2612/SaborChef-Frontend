@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -103,7 +104,7 @@ fun RegisterScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(16.dp))
-            Text("Registro", fontFamily = Poppins, fontSize = 24.sp, color = BlueDark)
+            Text("Registro", fontFamily = Poppins, fontSize = 24.sp, color = BlueDark, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
             Image(
                 painter = painterResource(R.drawable.chef_register),
@@ -123,32 +124,89 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
-                label = { Text("Nombre") },
+                label = {
+                    Text(
+                        "Nombre",
+                        fontFamily = Poppins,
+                        fontSize = 14.sp,
+                        color = BlueDark
+                    )
+                },
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth()
+                leadingIcon = {
+                    Icon(Icons.Default.Person, contentDescription = null, tint = BlueDark)
+                },
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = TextFieldDefaults.textFieldColors(
+                    textColor = Color.Black,
+                    focusedIndicatorColor = BlueDark,
+                    unfocusedIndicatorColor = Color.LightGray,
+                    cursorColor = BlueDark,
+                    backgroundColor = Color.Transparent
+                )
             )
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = apellido,
                 onValueChange = { apellido = it },
-                label = { Text("Apellido") },
+                label = {
+                    Text(
+                        "Apellido",
+                        fontFamily = Poppins,
+                        fontSize = 14.sp,
+                        color = BlueDark
+                    )
+                },
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth()
+                leadingIcon = {
+                    Icon(Icons.Default.Person, contentDescription = null, tint = BlueDark)
+                },
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = TextFieldDefaults.textFieldColors(
+                    textColor = Color.Black,
+                    focusedIndicatorColor = BlueDark,
+                    unfocusedIndicatorColor = Color.LightGray,
+                    cursorColor = BlueDark,
+                    backgroundColor = Color.Transparent
+                )
             )
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = alias,
                 onValueChange = { alias = it },
-                label = { Text("Alias") },
+                label = {
+                    Text(
+                        "Alias",
+                        fontFamily = Poppins,
+                        fontSize = 14.sp,
+                        color = BlueDark
+                    )
+                },
                 isError = aliasState is FieldState.Taken || aliasState is FieldState.Error,
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                leadingIcon = {
+                    Icon(Icons.Default.Person, contentDescription = null, tint = BlueDark)
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = TextFieldDefaults.textFieldColors(
+                    textColor = Color.Black,
+                    focusedIndicatorColor = if (aliasState is FieldState.Taken || aliasState is FieldState.Error) Color.Red else BlueDark,
+                    unfocusedIndicatorColor = if (aliasState is FieldState.Taken || aliasState is FieldState.Error) Color.Red else Color.LightGray,
+                    cursorColor = BlueDark,
+                    backgroundColor = Color.Transparent
+                )
             )
 
             when (aliasState) {
@@ -183,12 +241,31 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = {
+                    Text(
+                        "Email",
+                        fontFamily = Poppins,
+                        fontSize = 14.sp,
+                        color = BlueDark
+                    )
+                },
                 isError = emailState is FieldState.Taken || emailState is FieldState.Error,
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                leadingIcon = {
+                    Icon(Icons.Default.Email, contentDescription = null, tint = BlueDark)
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = TextFieldDefaults.textFieldColors(
+                    textColor = Color.Black,
+                    focusedIndicatorColor = if (emailState is FieldState.Taken || emailState is FieldState.Error) Color.Red else BlueDark,
+                    unfocusedIndicatorColor = if (emailState is FieldState.Taken || emailState is FieldState.Error) Color.Red else Color.LightGray,
+                    cursorColor = BlueDark,
+                    backgroundColor = Color.Transparent
+                )
             )
             when (emailState) {
                 is FieldState.Taken -> Text("Email ya registrado", color = Color.Red, fontSize = 12.sp)
@@ -204,21 +281,41 @@ fun RegisterScreen(
                     password = it
                     passwordError = null
                 },
-                label = { Text("Contraseña") },
+                label = {
+                    Text(
+                        "Contraseña",
+                        fontFamily = Poppins,
+                        fontSize = 14.sp,
+                        color = BlueDark
+                    )
+                },
                 isError = passwordError != null,
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                leadingIcon = {
+                    Icon(Icons.Default.Lock, contentDescription = null, tint = BlueDark)
+                },
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = BlueDark
                         )
                     }
                 },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = TextFieldDefaults.textFieldColors(
+                    textColor = Color.Black,
+                    focusedIndicatorColor = if (passwordError != null) Color.Red else BlueDark,
+                    unfocusedIndicatorColor = if (passwordError != null) Color.Red else Color.LightGray,
+                    cursorColor = BlueDark,
+                    backgroundColor = Color.Transparent
+                )
             )
 
             Spacer(Modifier.height(12.dp))
@@ -229,22 +326,43 @@ fun RegisterScreen(
                     confirmPassword = it
                     passwordError = null
                 },
-                label = { Text("Confirmar contraseña") },
+                label = {
+                    Text(
+                        "Confirmar contraseña",
+                        fontFamily = Poppins,
+                        fontSize = 14.sp,
+                        color = BlueDark
+                    )
+                },
                 isError = passwordError != null,
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                leadingIcon = {
+                    Icon(Icons.Default.Lock, contentDescription = null, tint = BlueDark)
+                },
                 trailingIcon = {
                     IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                         Icon(
                             if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = BlueDark
                         )
                     }
                 },
                 visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = TextFieldDefaults.textFieldColors(
+                    textColor = Color.Black,
+                    focusedIndicatorColor = if (passwordError != null) Color.Red else BlueDark,
+                    unfocusedIndicatorColor = if (passwordError != null) Color.Red else Color.LightGray,
+                    cursorColor = BlueDark,
+                    backgroundColor = Color.Transparent
+                )
             )
+            Spacer(Modifier.height(24.dp))
 
             passwordError?.let {
                 Text(it, color = Color.Red, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))

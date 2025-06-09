@@ -38,20 +38,23 @@ import com.example.saborchef.ui.theme.Poppins
 @Composable
 fun DniUploadScreen(
     onBack: () -> Unit,
-    onFinish: (frontUri: Uri?, backUri: Uri?, tramite: String) -> Unit // ← BIEN
-)
- {
+    onFinish: (frontUri: Uri, backUri: Uri, tramite: String) -> Unit
+) {
     val context = LocalContext.current
 
     var frontUri by remember { mutableStateOf<Uri?>(null) }
     var backUri  by remember { mutableStateOf<Uri?>(null) }
     var tramite  by remember { mutableStateOf("") }
+    var tramiteError by remember { mutableStateOf<String?>(null) }
+    var imageError by remember { mutableStateOf<String?>(null) }
 
     val pickFront = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-        if (it != null) frontUri = it
+        frontUri = it
+        imageError = null
     }
     val pickBack = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-        if (it != null) backUri = it
+        backUri = it
+        imageError = null
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -86,7 +89,6 @@ fun DniUploadScreen(
             )
 
             Spacer(Modifier.height(16.dp))
-
             Text(
                 "¡Último paso!",
                 fontFamily = Poppins,
@@ -106,7 +108,6 @@ fun DniUploadScreen(
             )
 
             Spacer(Modifier.height(16.dp))
-
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxWidth(),
@@ -124,6 +125,18 @@ fun DniUploadScreen(
                     onRemove = { backUri = null }
                 )
             }
+            // Error si falta alguna imagen
+            imageError?.let {
+                Text(
+                    text = it,
+                    color = Color.Red,
+                    fontFamily = Poppins,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                )
+            }
 
             Spacer(Modifier.height(24.dp))
             Text(
@@ -136,28 +149,55 @@ fun DniUploadScreen(
 
             OutlinedTextField(
                 value = tramite,
-                onValueChange = { tramite = it },
+                onValueChange = {
+                    if (it.length <= 11 && it.all { ch -> ch.isDigit() }) {
+                        tramite = it
+                        tramiteError = null
+                    }
+                },
                 placeholder = { Text("00000000000", fontFamily = Poppins) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
+                isError = tramiteError != null,
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = BlueDark.copy(alpha = 0.6f),
-                    unfocusedBorderColor = BlueDark.copy(alpha = 0.3f),
+                    focusedBorderColor = if (tramiteError != null) Color.Red else BlueDark.copy(alpha = 0.6f),
+                    unfocusedBorderColor = if (tramiteError != null) Color.Red else BlueDark.copy(alpha = 0.3f),
                     cursorColor = OrangeDark,
                     placeholderColor = BlueDark.copy(alpha = 0.4f),
                     textColor = BlueDark
                 )
             )
+            tramiteError?.let {
+                Text(
+                    text = it,
+                    color = Color.Red,
+                    fontFamily = Poppins,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 4.dp)
+                )
+            }
 
             Spacer(Modifier.height(32.dp))
-
             AppButton(
                 text = "Finalizar",
                 onClick = {
-                    onFinish(frontUri, backUri, tramite)
-
+                    // Validaciones
+                    when {
+                        frontUri == null || backUri == null -> {
+                            imageError = "Debes subir las dos imágenes"
+                        }
+                        tramite.length < 11 -> {
+                            tramiteError = "El número debe tener 11 dígitos"
+                        }
+                        else -> {
+                            // Ambos URIs no null y trámite OK
+                            onFinish(frontUri!!, backUri!!, tramite)
+                        }
+                    }
                 },
                 primary = true,
                 modifier = Modifier
@@ -167,6 +207,8 @@ fun DniUploadScreen(
         }
     }
 }
+
+
 
 // Utilidad para convertir imagen Uri a base64
 fun uriToBase64(context: Context, uri: Uri): String? {

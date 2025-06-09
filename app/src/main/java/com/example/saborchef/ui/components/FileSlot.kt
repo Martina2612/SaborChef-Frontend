@@ -46,8 +46,7 @@ fun FileSlot(
     if (uri == null) {
         Box(
             modifier = Modifier
-                .height(100.dp)
-                .width(120.dp)
+                .size(width = 120.dp, height = 100.dp)
                 .border(
                     BorderStroke(1.dp, Color.LightGray),
                     shape = RoundedCornerShape(8.dp)
@@ -66,19 +65,17 @@ fun FileSlot(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "SELECCIONAR ARCHIVO",
+                    text = placeholder.uppercase(),
                     color = Color.Gray,
                     fontFamily = Poppins,
                     fontSize = 8.sp
                 )
             }
         }
-    }
-    else {
-        // Estado con archivo: nombre + check + X
+    } else {
         Card(
             modifier = Modifier
-                .height(56.dp),
+                .size(width = 120.dp, height = 100.dp),
             shape = RoundedCornerShape(8.dp),
             elevation = 2.dp
         ) {
@@ -86,16 +83,22 @@ fun FileSlot(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp)
+                    .padding(8.dp)
             ) {
+                Icon(
+                    Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = Color(0xFF4CAF50),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(4.dp))
                 Text(
                     text = uri.lastPathSegment ?: "archivo",
                     fontFamily = Poppins,
                     color = BlueDark,
+                    fontSize = 10.sp,
                     modifier = Modifier.weight(1f)
                 )
-                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF4CAF50))
-                Spacer(Modifier.width(8.dp))
                 Icon(
                     Icons.Default.Close,
                     contentDescription = "Eliminar",
@@ -108,6 +111,7 @@ fun FileSlot(
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

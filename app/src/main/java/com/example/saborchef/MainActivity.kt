@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
                                 navController = navController,
                                 onContinueAsUser = { navController.navigate("auth") },
                                 onContinueAsGuest = {
-                                    navController.navigate("simple_home")
+                                    navController.navigate("home")
                                 }
                             )
                         }
@@ -245,7 +245,8 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(navController)
                         }
                         composable("simple_home") {
-                            SimpleHomeScreen(nombre = alias.ifBlank { null })
+                            SimpleHomeScreen(nombre = alias.ifBlank { null },
+                                navController = navController )
                         }
                         composable("search") {
                             SearchScreen(navController, viewModel = searchViewModel)

@@ -21,6 +21,7 @@ import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.Orange
 import com.example.saborchef.ui.theme.Poppins
 import androidx.compose.ui.text.font.FontWeight
+import com.example.saborchef.ui.theme.OrangeDark
 
 @Composable
 fun UserTypeToggle(
@@ -42,7 +43,7 @@ fun UserTypeToggle(
             val isSelected = selected.equals(type, ignoreCase = true)
 
             val backgroundColor by animateColorAsState(
-                targetValue = if (isSelected) Orange else Color.Transparent
+                targetValue = if (isSelected) OrangeDark else Color.Transparent
             )
             val textColor by animateColorAsState(
                 targetValue = if (isSelected) Color.White else BlueDark

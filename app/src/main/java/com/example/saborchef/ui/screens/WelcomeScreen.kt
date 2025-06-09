@@ -41,9 +41,9 @@ fun WelcomeScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     val dishPositions = listOf(
-        DishPosition(imageOffsetX = (-80).dp, imageOffsetY = (0).dp, textOffsetX = 40.dp, textOffsetY = 20.dp, startAngle = -80f),
-        DishPosition(imageOffsetX = (80).dp, imageOffsetY = 0.dp, textOffsetX = 15.dp, textOffsetY = 20.dp, startAngle = -160f),
-        DishPosition(imageOffsetX = (-80).dp,   imageOffsetY = (0).dp, textOffsetX = 40.dp, textOffsetY = 20.dp, startAngle = -80f),
+        DishPosition(imageOffsetX = (-80).dp, imageOffsetY = (0).dp, textOffsetX = 40.dp, textOffsetY = 35.dp, startAngle = -80f),
+        DishPosition(imageOffsetX = (80).dp, imageOffsetY = 0.dp, textOffsetX = 40.dp, textOffsetY = 35.dp, startAngle = -80f),
+        DishPosition(imageOffsetX = (-80).dp,   imageOffsetY = (0).dp, textOffsetX = 40.dp, textOffsetY = 40    .dp, startAngle = -160f),
     )
 
     // El fondo y el gradiente se mantienen constantes para todos los estados.
@@ -144,5 +144,6 @@ fun WelcomeScreenPreview() {
     // Para la preview, puedes simular un estado, pero por ahora lo dejamos así.
     WelcomeScreen()
 }
+
 
 

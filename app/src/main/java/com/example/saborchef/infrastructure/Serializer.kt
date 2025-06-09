@@ -14,6 +14,14 @@ object Serializer {
         
         
         .registerTypeAdapter(ByteArray::class.java, ByteArrayAdapter())
+        .registerTypeAdapter(
+            LocalDateTime::class.java,
+            LocalDateTimeAdapter()
+        )
+        .registerTypeAdapter(
+            OffsetDateTime::class.java,
+            OffsetDateTimeAdapter()
+        )
 
     @JvmStatic
     val gson: Gson by lazy {
