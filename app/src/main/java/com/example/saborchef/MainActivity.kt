@@ -261,6 +261,11 @@ class MainActivity : ComponentActivity() {
                                 onBack = { navController.popBackStack() }
                             )
                         }
+
+                        composable("cursos") {
+                            CursosScreen(navController = navController)
+                        }
+
                     }
                 }
             }

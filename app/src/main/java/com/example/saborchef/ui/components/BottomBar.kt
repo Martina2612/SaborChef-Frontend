@@ -26,7 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 // 1) Modelo de Tab
 sealed class TabItem(val route: String, val icon: ImageVector) {
     object Home      : TabItem("home", Icons.Default.Home)
-    object Videos    : TabItem("course", Icons.Default.OndemandVideo)
+    object Videos    : TabItem("cursos", Icons.Default.OndemandVideo)
     object Bookmarks : TabItem("favs", Icons.Default.BookmarkBorder)
     object Search    : TabItem("search", Icons.Default.Search)
 }
