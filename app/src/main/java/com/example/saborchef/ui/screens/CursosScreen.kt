@@ -19,9 +19,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.saborchef.model.Nivel
+import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.BlueLight
 import com.example.saborchef.ui.theme.OrangeDark
+import com.example.saborchef.ui.components.SearchBar
+import com.example.saborchef.ui.components.BottomBar
 import com.example.saborchef.viewmodel.CursoUiState
 import com.example.saborchef.viewmodel.CursoViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -29,84 +32,151 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
 fun CursosScreen(
     navController: NavController,
-    viewModel: CursoViewModel = viewModel()
+    viewModel: CursoViewModel = viewModel(),
+    userRole: Rol = Rol.ALUMNO // Puedes pasar el rol del usuario desde donde llames esta función
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    when (val state = uiState) {
-        is CursoUiState.Loading -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        }
-        is CursoUiState.Error -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(state.message, color = MaterialTheme.colorScheme.error)
-            }
-        }
-        is CursoUiState.Success -> {
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+    // Estado para la búsqueda
+    var searchQuery by remember { mutableStateOf("") }
+
+    Scaffold(
+        topBar = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                items(state.cursos) { curso ->
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(12.dp)
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                SearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onSearch = {
+                        // Aquí puedes implementar la lógica de búsqueda
+                        // viewModel.searchCursos(searchQuery)
+                    },
+                    onFilterClick = {
+                        // Aquí puedes implementar la lógica de filtros
+                    }
+                )
+            }
+        },
+        bottomBar = {
+            BottomBar(
+                navController = navController,
+                role = userRole
+            )
+        }
+    ) { paddingValues ->
+        when (val state = uiState) {
+            is CursoUiState.Loading -> {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            is CursoUiState.Error -> {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(state.message, color = MaterialTheme.colorScheme.error)
+                }
+            }
+            is CursoUiState.Success -> {
+                LazyColumn(
+                    modifier = Modifier.padding(paddingValues),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(state.cursos) { curso ->
+                        Card(
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
-                            Image(
-                                painter = rememberAsyncImagePainter(curso.imagenUrl),
-                                contentDescription = curso.nombre,
-                                contentScale = ContentScale.Crop,
+                            Column(
                                 modifier = Modifier
-                                    .size(90.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                            )
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            ) {
+                                // Imagen del curso
+                                Image(
+                                    painter = rememberAsyncImagePainter(curso.imagenUrl),
+                                    contentDescription = curso.nombre,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(120.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                )
 
-                            Spacer(modifier = Modifier.width(12.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
 
-                            Column(modifier = Modifier.weight(1f)) {
+                                // Título del curso
                                 Text(
                                     text = curso.nombre,
-                                    fontSize = 18.sp,
+                                    fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = BlueDark
                                 )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                // Chef
                                 Text(
-                                    text = "Chef: ${curso.chef}",
-                                    fontSize = 14.sp,
-                                    color = Color.Black
-                                )
-                                Text(
-                                    text = "Nivel: ${nivelToText(curso.nivel)}",
-                                    fontSize = 14.sp,
-                                    color = BlueLight
+                                    text = "Chef ${curso.chef}",
+                                    fontSize = 16.sp,
+                                    color = Color.Gray
                                 )
 
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Button(
-                                    onClick = {},
-                                    colors = ButtonDefaults.buttonColors(containerColor = OrangeDark),
-                                    shape = RoundedCornerShape(10.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
+                                // Nivel
+                                Text(
+                                    text = nivelToText(curso.nivel),
+                                    fontSize = 16.sp,
+                                    color = Color.Gray
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                // Botones
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Text(curso.modalidad)
+                                    Button(
+                                        onClick = {},
+                                        colors = ButtonDefaults.buttonColors(containerColor = OrangeDark),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = curso.modalidad,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+
+                                    TextButton(
+                                        onClick = {
+                                            // navController.navigate("curso_detalle/${curso.id}")
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = "Ver",
+                                            color = OrangeDark,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
                                 }
-                            }
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            TextButton(onClick = {
-                                // navController.navigate("curso_detalle/${curso.id}")
-                            }) {
-                                Text("Ver", color = BlueLight)
                             }
                         }
                     }
