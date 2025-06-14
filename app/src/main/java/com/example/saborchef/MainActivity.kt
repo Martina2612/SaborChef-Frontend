@@ -6,10 +6,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import com.example.saborchef.data.DataStoreManager
 import com.example.saborchef.network.AuthRepository
 import com.example.saborchef.network.NewPasswordRequest
 import com.example.saborchef.network.PasswordResetRequest
@@ -26,9 +28,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             SaborChefTheme {
                 Surface {
+                    val context = LocalContext.current
+                    val dataStoreManager = remember { DataStoreManager(context) }
                     val navController = rememberNavController()
                     val searchViewModel: SearchViewModel = viewModel()
-                    val loginViewModel: LoginViewModel = viewModel()
+                    val loginViewModel: LoginViewModel = viewModel(
+                        factory = LoginViewModelFactory(dataStoreManager)
+                    )
                     val registerViewModel: RegisterViewModel = viewModel()
                     val sharedAlumnoViewModel: SharedAlumnoViewModel = viewModel()
                     val scope = rememberCoroutineScope()

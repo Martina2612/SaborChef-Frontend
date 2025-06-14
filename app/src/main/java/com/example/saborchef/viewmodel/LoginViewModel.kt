@@ -3,6 +3,7 @@ package com.example.saborchef.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.saborchef.data.DataStoreManager
 import com.example.saborchef.network.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,30 +23,33 @@ sealed class LoginState {
     data class Error(val message: String) : LoginState()
 }
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(private val dataStoreManager: DataStoreManager) : ViewModel() {
 
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState: StateFlow<LoginState> = _loginState
 
-    /**
-     * Llama a AuthRepository.login(...) y actualiza loginState según resultado.
-     */
     fun login(alias: String, password: String) {
         _loginState.value = LoginState.Loading
 
         viewModelScope.launch {
             try {
                 val result = AuthRepository.login(alias, password)
-                result.onSuccess { token ->
-                    _loginState.value = LoginState.Success(token)
-                }.onFailure { e ->
-                    Log.e("LoginViewModel", "Error haciendo login", e)
-                    _loginState.value = LoginState.Error(e.localizedMessage ?: "Error desconocido")
+                result.onSuccess { response ->
+                    // Guardamos token y datos
+                    dataStoreManager.saveLoginData(
+                        token = response.access_token,
+                        role = response.role.name,
+                        email = response.email,
+                        userId = response.user_id
+                    )
+                    _loginState.value = LoginState.Success(response.access_token)
+                }.onFailure {
+                    _loginState.value = LoginState.Error(it.localizedMessage ?: "Error desconocido")
                 }
             } catch (e: Exception) {
-                Log.e("LoginViewModel", "Excepción en login", e)
                 _loginState.value = LoginState.Error(e.localizedMessage ?: "Error inesperado")
             }
         }
     }
 }
+

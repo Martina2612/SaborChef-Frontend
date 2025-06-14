@@ -3,6 +3,7 @@ package com.example.saborchef.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.saborchef.model.AuthResponse
 import com.example.saborchef.model.Rol
 import com.example.saborchef.model.RegisterRequest
 import com.example.saborchef.models.AuthenticationResponse
@@ -14,7 +15,7 @@ import kotlinx.coroutines.launch
 sealed class RegisterAlumnoUiState {
     object Idle : RegisterAlumnoUiState()
     object Loading : RegisterAlumnoUiState()
-    data class Success(val auth: AuthenticationResponse) : RegisterAlumnoUiState()
+    data class Success(val auth: AuthResponse): RegisterAlumnoUiState()
     data class Error(val message: String) : RegisterAlumnoUiState()
 }
 

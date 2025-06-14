@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.saborchef.model.AuthResponse
 import com.example.saborchef.model.ConfirmacionCodigoDTO
 import com.example.saborchef.model.RegisterRequest
 import com.example.saborchef.model.Rol
@@ -22,7 +23,7 @@ import retrofit2.HttpException
 sealed class RegisterUiState {
     object Idle : RegisterUiState()
     object Loading : RegisterUiState()
-    data class Success(val auth: AuthenticationResponse) : RegisterUiState()
+    data class Success(val auth: AuthResponse) : RegisterUiState()
     data class SuccessUnit(val message: String) : RegisterUiState()
     data class Error(val message: String) : RegisterUiState()
 }

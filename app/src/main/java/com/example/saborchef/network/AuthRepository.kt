@@ -1,9 +1,10 @@
 package com.example.saborchef.network
 
 import android.util.Log
+import com.example.saborchef.model.AuthResponse
 import com.example.saborchef.model.ConfirmacionCodigoDTO
 import com.example.saborchef.model.RegisterRequest
-import com.example.saborchef.models.AuthenticationResponse
+
 import com.google.gson.Gson
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -14,7 +15,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import com.example.saborchef.network.LoginRequest
 
 
-data class LoginResponse(val token: String, val user: User? = null)
+
 data class User(val id: Long, val email: String, val name: String? = null)
 data class ExistsResponse(val exists: Boolean)
 data class PasswordResetRequest(val email: String)
@@ -48,7 +49,7 @@ object AuthRepository {
         return resp.isSuccessful && resp.body()?.exists == false
     }
 
-    suspend fun registerUser(request: RegisterRequest): Result<AuthenticationResponse> {
+    suspend fun registerUser(request: RegisterRequest): Result<AuthResponse>{
         return try {
             val response = api.register(request)
             if (response.isSuccessful) {
@@ -77,15 +78,16 @@ object AuthRepository {
         }
     }
 
-    suspend fun login(alias: String, password: String): Result<String> {
+    suspend fun login(alias: String, password: String): Result<AuthResponse> {
         return try {
             val response = api.login(LoginRequest(alias, password))
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && !body.accessToken.isNullOrEmpty()) {
-                    Result.success(body.accessToken!!)
+                if (body != null && body.access_token.isNotEmpty())
+                {
+                    Result.success(body)
                 } else {
-                    Result.failure(Exception("El accessToken viene nulo o vacío"))
+                    Result.failure(Exception("El body viene nulo o el access_token está vacío"))
                 }
             } else {
                 Result.failure(HttpException(response))
@@ -95,6 +97,7 @@ object AuthRepository {
             Result.failure(e)
         }
     }
+
 
     suspend fun sendPasswordResetEmailRaw(request: PasswordResetRequest): Response<PasswordResetResponse> {
         return api.sendPasswordResetEmail(request)

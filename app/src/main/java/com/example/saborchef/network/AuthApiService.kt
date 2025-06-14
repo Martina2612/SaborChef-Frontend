@@ -1,5 +1,6 @@
 package com.example.saborchef.network
 
+import com.example.saborchef.model.AuthResponse
 import com.example.saborchef.model.ConfirmacionCodigoDTO
 import com.example.saborchef.model.RegisterRequest
 import com.example.saborchef.models.AuthenticationResponse
@@ -14,10 +15,12 @@ import retrofit2.http.Query
 interface AuthApiService {
 
     @POST("auth/authenticate")
-    suspend fun login(@Body request: LoginRequest): Response<AuthenticationResponse>
+    suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
+
 
     @POST("auth/register")
-    suspend fun register(@Body request: RegisterRequest): Response<AuthenticationResponse>
+    suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
+
 
     @POST("usuarios/confirmar-codigo")
     suspend fun confirmarCuenta(@Body dto: ConfirmacionCodigoDTO): Response<Void>

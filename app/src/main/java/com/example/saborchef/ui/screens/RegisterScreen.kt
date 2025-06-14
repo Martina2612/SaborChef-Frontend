@@ -80,7 +80,7 @@ fun RegisterScreen(
         when (val state = uiState) {
             is RegisterUiState.Success -> {
                 val resultEmail = state.auth.email ?: ""
-                if (state.auth.role == "ALUMNO") {
+                if (state.auth.role.name == "ALUMNO"){
                     navController.navigate("upload_dni")
                 } else {
                     onRegisterSuccess(resultEmail)
