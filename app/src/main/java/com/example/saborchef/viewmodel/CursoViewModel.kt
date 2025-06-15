@@ -17,6 +17,19 @@ sealed class CursoUiState {
 class CursoViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<CursoUiState>(CursoUiState.Loading)
     val uiState: StateFlow<CursoUiState> = _uiState
+    private val _cursoDetalle = MutableStateFlow<Curso?>(null)
+    val cursoDetalle: StateFlow<Curso?> = _cursoDetalle
+
+    fun getCursoPorId(id: Long) {
+        viewModelScope.launch {
+            try {
+                val curso = CursoRepository.getCursoPorId(id)
+                _cursoDetalle.value = curso
+            } catch (e: Exception) {
+                _cursoDetalle.value = null
+            }
+        }
+    }
 
     init {
         fetchCursos()
@@ -32,4 +45,9 @@ class CursoViewModel : ViewModel() {
             }
         }
     }
+
+    suspend fun obtenerCursoPorId(id: Long): Curso {
+        return CursoRepository.getCursoPorId(id)
+    }
+
 }

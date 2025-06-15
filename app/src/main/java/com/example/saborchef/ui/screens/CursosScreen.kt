@@ -136,9 +136,19 @@ fun CursosScreen(
                                     ) {
                                         Text(text = curso.modalidad, color = Color.White, fontWeight = FontWeight.Medium)
                                     }
-                                    TextButton(onClick = {}, modifier = Modifier.weight(1f)) {
-                                        Text(text = "Ver", color = OrangeDark, fontWeight = FontWeight.Medium)
+                                    TextButton(
+                                        onClick = {
+                                            navController.navigate("curso_detalle/${curso.idCurso}")
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = "Ver",
+                                            color = OrangeDark,
+                                            fontWeight = FontWeight.Medium
+                                        )
                                     }
+
                                 }
                             }
                         }

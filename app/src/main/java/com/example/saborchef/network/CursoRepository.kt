@@ -8,6 +8,10 @@ import retrofit2.http.GET
 interface CursoApi {
     @GET("api/cursos")
     suspend fun getCursos(): List<Curso>
+
+    @GET("api/cursos/{id}")
+    suspend fun getCursoById(@retrofit2.http.Path("id") id: Long): retrofit2.Response<Curso>
+
 }
 
 object CursoRepository {
@@ -18,4 +22,14 @@ object CursoRepository {
         .create(CursoApi::class.java)
 
     suspend fun getAllCursos(): List<Curso> = api.getCursos()
+
+    suspend fun getCursoPorId(id: Long): Curso {
+        val response = api.getCursoById(id)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Curso no encontrado")
+        } else {
+            throw Exception("Error HTTP ${response.code()}")
+        }
+    }
+
 }

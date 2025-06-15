@@ -272,6 +272,30 @@ class MainActivity : ComponentActivity() {
                             CursosScreen(navController = navController)
                         }
 
+                        composable("curso_detalle/{id}",
+                            arguments = listOf(navArgument("id") { type = NavType.LongType })
+                        ) { backStackEntry ->
+                            val cursoId = backStackEntry.arguments?.getLong("id") ?: 0
+                            val cursoViewModel: CursoViewModel = viewModel()
+
+                            LaunchedEffect(cursoId) {
+                                cursoViewModel.getCursoPorId(cursoId)
+                            }
+
+                            val curso by cursoViewModel.cursoDetalle.collectAsState()
+
+                            curso?.let {
+                                CursoDetalleScreen(
+                                    cursoId = cursoId,
+                                    navController = navController,
+                                    viewModel = cursoViewModel
+                                )
+
+                            }
+                        }
+
+
+
                     }
                 }
             }
