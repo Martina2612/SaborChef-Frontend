@@ -11,6 +11,13 @@ data class Curso(
     val modalidad: String,
     val imagenUrl:String,
     val nivel:Nivel,
-    val chef:String
+    val chef:String,
+    val cronogramas: List<Cronograma>
+)
+
+data class Cronograma(
+    val fechaInicio: String,
+    val fechaFin: String,
+    val vacantesDisponibles: Int
 )
 
