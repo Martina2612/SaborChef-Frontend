@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
@@ -21,6 +22,15 @@ import com.example.saborchef.viewmodel.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import com.example.saborchef.ui.theme.OrangeDark
+import com.example.saborchef.model.Rol
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -278,21 +288,31 @@ class MainActivity : ComponentActivity() {
                             val cursoId = backStackEntry.arguments?.getLong("id") ?: 0
                             val cursoViewModel: CursoViewModel = viewModel()
 
-                            LaunchedEffect(cursoId) {
-                                cursoViewModel.getCursoPorId(cursoId)
+                            var rol by remember { mutableStateOf<Rol?>(null) }
+
+                            LaunchedEffect(Unit) {
+                                dataStoreManager.role.collect {
+                                    rol = it?.let { valor -> Rol.valueOf(valor) }
+                                }
                             }
 
                             val curso by cursoViewModel.cursoDetalle.collectAsState()
 
-                            curso?.let {
+                            if (rol != null) {
                                 CursoDetalleScreen(
                                     cursoId = cursoId,
                                     navController = navController,
-                                    viewModel = cursoViewModel
+                                    viewModel = cursoViewModel,
+                                    userRole = rol!!
                                 )
-
+                            } else {
+                                // Mostrar loading mientras carga el rol
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(color = OrangeDark)
+                                }
                             }
                         }
+
 
 
 

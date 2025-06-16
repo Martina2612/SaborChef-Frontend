@@ -39,20 +39,79 @@ fun CursoDetalleScreen(
     cursoId: Long,
     navController: NavController,
     viewModel: CursoViewModel,
-    userRole: Rol = Rol.ALUMNO // Agregar el rol del usuario
+    userRole: Rol = Rol.ALUMNO
 ) {
     val scope = rememberCoroutineScope()
-    var selectedTab by remember { mutableStateOf(0) } // 0 = Descripción, 1 = Cronograma
+    var selectedTab by remember { mutableStateOf(0) }
 
-    // Cargar el curso cuando se inicia la pantalla
     LaunchedEffect(cursoId) {
-        scope.launch {
-            viewModel.getCursoPorId(cursoId)
-        }
+        scope.launch { viewModel.getCursoPorId(cursoId) }
     }
 
-    // Observar el estado del curso
     val cursoDetalle by viewModel.cursoDetalle.collectAsState()
+
+    if (userRole == Rol.USUARIO) {
+        // Vista bloqueada para usuarios sin rol de alumno
+        Scaffold(
+            bottomBar = {
+                BottomBar(navController = navController, role = userRole)
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp)
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter("https://cdn-icons-png.flaticon.com/512/204/204074.png"),
+                        contentDescription = "Alumno requerido",
+                        modifier = Modifier
+                            .size(140.dp)
+                            .clip(CircleShape)
+                    )
+
+                    Spacer(Modifier.height(24.dp))
+
+                    Text(
+                        text = "Ups! Debes ser Alumno para poder inscribirte a un curso.",
+                        color = BlueLight,
+                        fontSize = 18.sp
+                    )
+
+                    Spacer(Modifier.height(32.dp))
+
+                    Button(
+                        onClick = { navController.navigate("upload_dni") },
+                        colors = ButtonDefaults.buttonColors(containerColor = OrangeDark),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Quiero ser Alumno", color = Color.White)
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    OutlinedButton(
+                        onClick = { navController.popBackStack() },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = OrangeDark),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Continuar viendo cursos")
+                    }
+                }
+            }
+        }
+        return
+    }
 
     // Mostrar el contenido o loading
     cursoDetalle?.let { curso ->

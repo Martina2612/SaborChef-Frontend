@@ -52,13 +52,7 @@ fun CursosScreen(
     }
 
     // Mostrar pantalla especial si el usuario es USUARIO
-    if (actualRol == Rol.USUARIO) {
-        MostrarPantallaSerAlumno(
-            onQuieroSerAlumno = { /* TODO: implementar conversión */ },
-            onContinuar = { }
-        )
-        return
-    }
+
 
     var searchQuery by remember { mutableStateOf("") }
 
