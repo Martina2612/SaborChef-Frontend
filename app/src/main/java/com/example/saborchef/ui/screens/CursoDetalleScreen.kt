@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.saborchef.model.Curso
@@ -28,6 +29,7 @@ import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.components.BottomBar
 import com.example.saborchef.ui.theme.*
 import com.example.saborchef.viewmodel.CursoViewModel
+import com.example.saborchef.viewmodel.SharedCursoViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -38,17 +40,20 @@ import java.util.Locale
 fun CursoDetalleScreen(
     cursoId: Long,
     navController: NavController,
-    viewModel: CursoViewModel,
-    userRole: Rol = Rol.ALUMNO
+    cursoViewModel: CursoViewModel,
+    userRole: Rol = Rol.ALUMNO,
+    sharedCursoViewModel: SharedCursoViewModel
 ) {
     val scope = rememberCoroutineScope()
     var selectedTab by remember { mutableStateOf(0) }
 
     LaunchedEffect(cursoId) {
-        scope.launch { viewModel.getCursoPorId(cursoId) }
+        scope.launch { cursoViewModel.getCursoPorId(cursoId) }
     }
 
-    val cursoDetalle by viewModel.cursoDetalle.collectAsState()
+    val cursoDetalle by cursoViewModel.cursoDetalle.collectAsState()
+
+
 
     if (userRole == Rol.USUARIO) {
         // Vista bloqueada para usuarios sin rol de alumno
@@ -365,8 +370,8 @@ fun CursoDetalleScreen(
                         // Botón de inscripción
                         Button(
                             onClick = {
-                                // TODO: Implementar lógica de inscripción
-                                println("Inscripción al curso: ${curso.nombre}")
+                                sharedCursoViewModel.cronogramas = curso.cronogramas
+                                navController.navigate("sedes_disponibles")
                             },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = Orange),
@@ -379,6 +384,7 @@ fun CursoDetalleScreen(
                                 modifier = Modifier.padding(vertical = 4.dp)
                             )
                         }
+
                     }
                 }
             }

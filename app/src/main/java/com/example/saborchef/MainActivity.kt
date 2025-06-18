@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.saborchef.ui.theme.OrangeDark
 import com.example.saborchef.model.Rol
+import com.example.saborchef.ui.theme.Orange
 
 
 class MainActivity : ComponentActivity() {
@@ -57,6 +58,8 @@ class MainActivity : ComponentActivity() {
                     var errorMessage by remember { mutableStateOf<String?>(null) }
                     var resetTimerTrigger by remember { mutableIntStateOf(0) }
                     val loginState by loginViewModel.loginState.collectAsState()
+                    val sharedCursoViewModel: SharedCursoViewModel = viewModel()
+
 
                     NavHost(navController = navController, startDestination = "splash") {
                         composable("splash") {
@@ -302,8 +305,9 @@ class MainActivity : ComponentActivity() {
                                 CursoDetalleScreen(
                                     cursoId = cursoId,
                                     navController = navController,
-                                    viewModel = cursoViewModel,
-                                    userRole = rol!!
+                                    cursoViewModel = cursoViewModel,
+                                    userRole = rol!!,
+                                    sharedCursoViewModel = sharedCursoViewModel
                                 )
                             } else {
                                 // Mostrar loading mientras carga el rol
@@ -312,6 +316,37 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
+
+                        composable("sedes_disponibles") {
+
+                            val cronogramas = sharedCursoViewModel.cronogramas
+
+                            SedesDisponiblesScreen(
+                                cronogramas = cronogramas,
+                                onVolver = { navController.popBackStack() },
+                                navController = navController
+                            )
+                        }
+
+                        composable(
+                            "sucursal_detalle/{sedeId}",
+                            arguments = listOf(
+                                navArgument("sedeId") { type = NavType.LongType },
+
+                            )
+                        ) { backStackEntry ->
+                            val sedeId = backStackEntry.arguments?.getLong("sedeId") ?: 0L
+                            SucursalDetalleScreen(sedeId = sedeId, navController = navController)
+                        }
+
+
+
+
+
+
+
+
+
 
 
 

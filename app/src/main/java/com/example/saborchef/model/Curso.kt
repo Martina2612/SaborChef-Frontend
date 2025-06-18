@@ -18,6 +18,22 @@ data class Curso(
 data class Cronograma(
     val fechaInicio: String,
     val fechaFin: String,
-    val vacantesDisponibles: Int
+    val vacantesDisponibles: Int,
+    val sede: Sede
 )
+
+data class Sede(
+    val idSede: Long,
+    val nombreSede: String,
+    val direccionSede: String,
+    val telefonoSede: String,
+    val mailSede: String,
+    val whatsapp: String,
+    val tipoBonificacion: String,
+    val bonificaCursos: Boolean,
+    val tipoPromocion: String,
+    val promocionCursos: String,
+    val imagenUrl: String
+)
+
 

@@ -109,7 +109,9 @@ fun CursosScreen(
                             Column(
                                 modifier = Modifier.fillMaxWidth().padding(16.dp)
                             ) {
+
                                 Image(
+
                                     painter = rememberAsyncImagePainter(curso.imagenUrl),
                                     contentDescription = curso.nombre,
                                     contentScale = ContentScale.Crop,
