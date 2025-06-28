@@ -15,10 +15,18 @@ sealed class CursoUiState {
 }
 
 class CursoViewModel : ViewModel() {
+
     private val _uiState = MutableStateFlow<CursoUiState>(CursoUiState.Loading)
     val uiState: StateFlow<CursoUiState> = _uiState
+
     private val _cursoDetalle = MutableStateFlow<Curso?>(null)
     val cursoDetalle: StateFlow<Curso?> = _cursoDetalle
+
+    private val _mensajeError = MutableStateFlow<String?>(null)
+    val mensajeError: StateFlow<String?> = _mensajeError
+
+    private val _inscripcionExitosa = MutableStateFlow<Boolean?>(null)
+    val inscripcionExitosa: StateFlow<Boolean?> = _inscripcionExitosa
 
     fun getCursoPorId(id: Long) {
         viewModelScope.launch {
@@ -29,6 +37,29 @@ class CursoViewModel : ViewModel() {
                 _cursoDetalle.value = null
             }
         }
+    }
+
+    fun inscribirse(idCronograma: Long, idAlumno: Long, token: String) {
+        viewModelScope.launch {
+            try {
+                val response = CursoRepository.inscribirseACurso(token, idCronograma, idAlumno)
+                if (response.isSuccessful) {
+                    _inscripcionExitosa.value = true
+                    _mensajeError.value = null
+                } else {
+                    _inscripcionExitosa.value = false
+                    _mensajeError.value = "Error ${response.code()}: ${response.message()}"
+                }
+            } catch (e: Exception) {
+                _inscripcionExitosa.value = false
+                _mensajeError.value = "Error de red: ${e.message}"
+            }
+        }
+    }
+
+    fun limpiarEstadoInscripcion() {
+        _inscripcionExitosa.value = null
+        _mensajeError.value = null
     }
 
     init {
@@ -49,5 +80,11 @@ class CursoViewModel : ViewModel() {
     suspend fun obtenerCursoPorId(id: Long): Curso {
         return CursoRepository.getCursoPorId(id)
     }
+    fun cargarCurso(curso: Curso) {
+        _cursoDetalle.value = curso
+    }
 
 }
+
+
+

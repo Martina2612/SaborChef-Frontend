@@ -4,6 +4,9 @@ import com.example.saborchef.model.Curso
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface CursoApi {
     @GET("api/cursos")
@@ -11,6 +14,16 @@ interface CursoApi {
 
     @GET("api/cursos/{id}")
     suspend fun getCursoById(@retrofit2.http.Path("id") id: Long): retrofit2.Response<Curso>
+
+    @POST("api/cursos/{idCronograma}/{idAlumno}/inscripcion")
+    suspend fun inscribirseACurso(
+        @Header("Authorization") token: String,
+        @retrofit2.http.Path("idCronograma") idCronograma: Long,
+        @retrofit2.http.Path("idAlumno") idAlumno: Long
+    ): retrofit2.Response<Void>
+
+
+
 
 }
 
@@ -31,5 +44,11 @@ object CursoRepository {
             throw Exception("Error HTTP ${response.code()}")
         }
     }
+
+    suspend fun inscribirseACurso(token: String, idCronograma: Long, idAlumno: Long): retrofit2.Response<Void> {
+        return api.inscribirseACurso("Bearer $token", idCronograma, idAlumno)
+    }
+
+
 
 }

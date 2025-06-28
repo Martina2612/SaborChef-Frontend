@@ -95,7 +95,7 @@ fun SedesDisponiblesScreen(
                             .background(Color(0xFFFFF4E5))
                             .clickable {
                                 navController.navigate(
-                                    "sucursal_detalle/${cronograma.sede.idSede}"
+                                    "sucursal_detalle/${cronograma.sede.idSede}/${cronograma.idCronograma}"
                                 )
                             }
                             .padding(16.dp)

@@ -16,6 +16,7 @@ data class Curso(
 )
 
 data class Cronograma(
+    val idCronograma:Long,
     val fechaInicio: String,
     val fechaFin: String,
     val vacantesDisponibles: Int,

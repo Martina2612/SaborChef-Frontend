@@ -329,15 +329,23 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(
-                            "sucursal_detalle/{sedeId}",
+                            "sucursal_detalle/{sedeId}/{cronogramaId}",
                             arguments = listOf(
                                 navArgument("sedeId") { type = NavType.LongType },
-
+                                navArgument("cronogramaId") { type = NavType.LongType }
                             )
                         ) { backStackEntry ->
                             val sedeId = backStackEntry.arguments?.getLong("sedeId") ?: 0L
-                            SucursalDetalleScreen(sedeId = sedeId, navController = navController)
+                            val cronogramaId = backStackEntry.arguments?.getLong("cronogramaId") ?: 0L
+                            SucursalDetalleScreen(
+                                sedeId = sedeId,
+                                cronogramaId = cronogramaId,
+                                navController = navController,
+                                rol = Rol.ALUMNO // o el rol dinámico si lo obtenés desde DataStore
+                            )
                         }
+
+
 
 
 
