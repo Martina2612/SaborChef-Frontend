@@ -20,6 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.saborchef.data.DataStoreManager
+import com.example.saborchef.model.Cronograma
 import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.screens.InscripcionExitosaDialog
 import com.example.saborchef.ui.theme.BlueDark
@@ -27,6 +28,7 @@ import com.example.saborchef.ui.theme.Orange
 import com.example.saborchef.viewmodel.CursoViewModel
 import com.example.saborchef.viewmodel.SedeViewModel
 import kotlinx.coroutines.launch
+import androidx.compose.ui.window.Dialog
 
 @Composable
 fun SucursalDetalleScreen(
@@ -46,6 +48,15 @@ fun SucursalDetalleScreen(
 
     var token by remember { mutableStateOf<String?>(null) }
     var alumnoId by remember { mutableStateOf<Long?>(null) }
+    val cronogramaState by cursoViewModel.cronogramaDetalle.collectAsState()
+    val curso = cursoState
+    val cronograma = cronogramaState
+
+
+    LaunchedEffect(cronogramaId) {
+        cursoViewModel.getCronogramaPorId(cronogramaId)
+    }
+
 
     LaunchedEffect(Unit) {
         dataStore.token.collect { newToken ->
@@ -82,26 +93,33 @@ fun SucursalDetalleScreen(
             bottomBar = { /* opcional */ }
         ) { paddingValues ->
 
-            // Diálogo de inscripción exitosa
-            if (inscripcionExitosa == true) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xAA000000)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    cursoState?.let { curso ->
+            if (inscripcionExitosa == true && curso != null && cronograma != null) {
+                Dialog(onDismissRequest = {
+                    cursoViewModel.limpiarEstadoInscripcion()
+                }) {
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        tonalElevation = 8.dp,
+                        color = Color.White,
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                    ) {
                         InscripcionExitosaDialog(
                             onCerrar = {
                                 cursoViewModel.limpiarEstadoInscripcion()
                                 navController.navigate("mis_cursos")
                             },
                             curso = curso,
+                            cronograma = cronograma,
                             sede = sede
                         )
                     }
                 }
             }
+
+
+
 
             Column(
                 modifier = Modifier

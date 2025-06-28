@@ -1,0 +1,22 @@
+package com.example.saborchef.network
+
+import com.example.saborchef.model.Cronograma
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
+object CronogramaRepository {
+    private val api: CronogramaApi = Retrofit.Builder()
+        .baseUrl("http://10.0.2.2:8080/") // localhost para emulador
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(CronogramaApi::class.java)
+
+    suspend fun getCronogramaPorId(id: Long): Cronograma {
+        val response = api.getCronogramaPorId(id)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Cronograma no encontrado")
+        } else {
+            throw Exception("Error HTTP ${response.code()}")
+        }
+    }
+}

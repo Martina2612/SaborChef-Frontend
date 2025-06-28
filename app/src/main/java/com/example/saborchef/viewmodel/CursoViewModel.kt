@@ -2,7 +2,9 @@ package com.example.saborchef.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.saborchef.model.Cronograma
 import com.example.saborchef.model.Curso
+import com.example.saborchef.network.CronogramaRepository
 import com.example.saborchef.network.CursoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +29,8 @@ class CursoViewModel : ViewModel() {
 
     private val _inscripcionExitosa = MutableStateFlow<Boolean?>(null)
     val inscripcionExitosa: StateFlow<Boolean?> = _inscripcionExitosa
+    private val _cronogramaDetalle = MutableStateFlow<Cronograma?>(null)
+    val cronogramaDetalle: StateFlow<Cronograma?> = _cronogramaDetalle
 
     fun getCursoPorId(id: Long) {
         viewModelScope.launch {
@@ -82,6 +86,17 @@ class CursoViewModel : ViewModel() {
     }
     fun cargarCurso(curso: Curso) {
         _cursoDetalle.value = curso
+    }
+
+    fun getCronogramaPorId(id: Long) {
+        viewModelScope.launch {
+            try {
+                val cronograma = CronogramaRepository.getCronogramaPorId(id)
+                _cronogramaDetalle.value = cronograma
+            } catch (e: Exception) {
+                _cronogramaDetalle.value = null
+            }
+        }
     }
 
 }
