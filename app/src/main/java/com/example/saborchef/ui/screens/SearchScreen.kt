@@ -127,7 +127,8 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
                 query = query,
                 onQueryChange = { viewModel.onQueryChange(it) },
                 onSearch = { viewModel.searchByName() },
-                onFilterClick = { navController.navigate("filter") }
+                onFilterClick = { navController.navigate("filter") },
+                placeholderText = "Busca tus recetas favoritas aqui"
             )
 
             Spacer(modifier = Modifier.height(8.dp))

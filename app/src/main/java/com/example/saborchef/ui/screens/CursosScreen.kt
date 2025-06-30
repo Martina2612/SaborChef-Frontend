@@ -68,7 +68,8 @@ fun CursosScreen(
                     query = searchQuery,
                     onQueryChange = { searchQuery = it },
                     onSearch = {},
-                    onFilterClick = {}
+                    onFilterClick = {},
+                    placeholderText = "Busca un curso aquí"
                 )
             }
         },
@@ -102,53 +103,86 @@ fun CursosScreen(
                     items(state.cursos) { curso ->
                         Card(
                             shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(180.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth().padding(16.dp)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp)
                             ) {
-
                                 Image(
-
                                     painter = rememberAsyncImagePainter(curso.imagenUrl),
                                     contentDescription = curso.nombre,
                                     contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxWidth().height(120.dp).clip(RoundedCornerShape(12.dp))
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .clip(RoundedCornerShape(12.dp))
                                 )
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Text(text = curso.nombre, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = BlueDark)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(text = "Chef ${curso.chef}", fontSize = 16.sp, color = Color.Gray)
-                                Text(text = nivelToText(curso.nivel), fontSize = 16.sp, color = Color.Gray)
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Button(
-                                        onClick = {},
-                                        colors = ButtonDefaults.buttonColors(containerColor = OrangeDark),
-                                        shape = RoundedCornerShape(8.dp),
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text(text = curso.modalidad, color = Color.White, fontWeight = FontWeight.Medium)
-                                    }
-                                    TextButton(
-                                        onClick = {
-                                            navController.navigate("curso_detalle/${curso.idCurso}")
-                                        },
-                                        modifier = Modifier.weight(1f)
-                                    ) {
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .weight(1f),
+                                    verticalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column {
                                         Text(
-                                            text = "Ver",
-                                            color = OrangeDark,
-                                            fontWeight = FontWeight.Medium
+                                            text = curso.nombre,
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = BlueDark
+                                        )
+                                        Text(
+                                            text = "Chef ${curso.chef}",
+                                            fontSize = 16.sp,
+                                            color = Color.Gray
+                                        )
+                                        Text(
+                                            text = nivelToText(curso.nivel),
+                                            fontSize = 16.sp,
+                                            color = Color.Gray
                                         )
                                     }
-
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Button(
+                                            onClick = {},
+                                            colors = ButtonDefaults.buttonColors(containerColor = OrangeDark),
+                                            shape = RoundedCornerShape(8.dp),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = curso.modalidad,
+                                                color = Color.White,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 14.sp
+                                            )
+                                        }
+                                        TextButton(
+                                            onClick = {
+                                                navController.navigate("curso_detalle/${curso.idCurso}")
+                                            }
+                                        ) {
+                                            Text(
+                                                text = "Ver",
+                                                color = OrangeDark,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 16.sp
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
+
                 }
             }
         }

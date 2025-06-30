@@ -32,14 +32,15 @@ fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,          // <-- agregamos este parámetro
-    onFilterClick: () -> Unit
+    onFilterClick: () -> Unit,
+    placeholderText: String
 ) {
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
         placeholder = {
             androidx.compose.material.Text(
-                "Busca una receta aquí",
+                placeholderText,
                 fontFamily = Poppins
             )
         },
