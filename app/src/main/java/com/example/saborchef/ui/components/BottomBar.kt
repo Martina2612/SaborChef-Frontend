@@ -29,14 +29,21 @@ sealed class TabItem(
     val matcher: (String?) -> Boolean
 ) {
     object Home : TabItem("home", Icons.Default.Home, { it == "home" })
+
     object Videos : TabItem("cursos", Icons.Default.OndemandVideo, {
-        it == "cursos" || it?.startsWith("curso_detalle") == true
+        it == "cursos" ||
+                it?.startsWith("curso_detalle") == true ||
+                it == "sedes_disponibles" ||
+                it?.startsWith("sucursal_detalle") == true
     })
+
     object Bookmarks : TabItem("favs", Icons.Default.BookmarkBorder, { it == "favs" })
+
     object Search : TabItem("search", Icons.Default.Search, {
         it == "search" || it == "filter"
     })
 }
+
 
 // 2) Lista dinámica según rol
 fun tabsForRole(role: Rol): List<TabItem> =

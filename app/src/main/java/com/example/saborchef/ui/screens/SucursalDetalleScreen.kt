@@ -29,6 +29,7 @@ import com.example.saborchef.viewmodel.CursoViewModel
 import com.example.saborchef.viewmodel.SedeViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.ui.window.Dialog
+import com.example.saborchef.ui.components.BottomBar
 
 @Composable
 fun SucursalDetalleScreen(
@@ -42,57 +43,57 @@ fun SucursalDetalleScreen(
     val sedeState by sedeViewModel.sede.collectAsState()
     val cursoState by cursoViewModel.cursoDetalle.collectAsState()
     val inscripcionExitosa by cursoViewModel.inscripcionExitosa.collectAsState()
-
     val context = LocalContext.current
     val dataStore = remember { DataStoreManager(context) }
-
     var token by remember { mutableStateOf<String?>(null) }
     var alumnoId by remember { mutableStateOf<Long?>(null) }
     val cronogramaState by cursoViewModel.cronogramaDetalle.collectAsState()
     val curso = cursoState
     val cronograma = cronogramaState
 
-
     LaunchedEffect(cronogramaId) {
         cursoViewModel.getCronogramaPorId(cronogramaId)
     }
-
-
     LaunchedEffect(Unit) {
-        dataStore.token.collect { newToken ->
-            if (!newToken.isNullOrBlank()) {
-                token = newToken
-            }
-        }
+        dataStore.token.collect { if (!it.isNullOrBlank()) token = it }
     }
     LaunchedEffect(Unit) {
-        dataStore.userId.collect { id ->
-            if (id != null) {
-                alumnoId = id
-            }
-        }
+        dataStore.userId.collect { if (it != null) alumnoId = it }
     }
-
-
-
-
-
-    // Obtener curso por cronogramaId
     LaunchedEffect(cronogramaId) {
         val curso = cursoViewModel.obtenerCursoPorId(cronogramaId)
         cursoViewModel.cargarCurso(curso)
     }
-
-    // Obtener sede
     LaunchedEffect(sedeId) {
         sedeViewModel.obtenerSedePorId(sedeId)
     }
 
     sedeState?.let { sede ->
         Scaffold(
-            bottomBar = { /* opcional */ }
-        ) { paddingValues ->
+            bottomBar = {
+                BottomBar(navController = navController, role = rol)
+            },
+            topBar = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 32.dp)
+                        .background(Orange)
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Sucursal ${sede.nombreSede}",
+                        fontSize = 20.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
 
+
+
+        ) { paddingValues ->
             if (inscripcionExitosa == true && curso != null && cronograma != null) {
                 Dialog(onDismissRequest = {
                     cursoViewModel.limpiarEstadoInscripcion()
@@ -118,62 +119,65 @@ fun SucursalDetalleScreen(
                 }
             }
 
-
-
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(16.dp)
             ) {
-                Text(
-                    text = "Sucursal ${sede.nombreSede}",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Orange,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
+                // Imagen
                 Image(
                     painter = rememberAsyncImagePainter(sede.imagenUrl),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .height(260.dp)
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                Text("📍 Dirección: ${sede.direccionSede}", color = BlueDark)
-                Text("📞 Teléfono: ${sede.telefonoSede}", color = BlueDark)
-                Text("📧 Email: ${sede.mailSede}", color = BlueDark)
-                Text("📱 WhatsApp: ${sede.whatsapp}", color = BlueDark)
+                // Card de datos
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFDDDDDD)) // Gris más oscuro
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(20.dp)
+                    ) {
+                        Text("📍 Dirección: ${sede.direccionSede}", color = BlueDark)
+                        Spacer(Modifier.height(8.dp))
+                        Text("📞 Teléfono: ${sede.telefonoSede}", color = BlueDark)
+                        Spacer(Modifier.height(8.dp))
+                        Text("📧 Email: ${sede.mailSede}", color = BlueDark)
+                        Spacer(Modifier.height(8.dp))
+                        Text("📱 WhatsApp: ${sede.whatsapp}", color = BlueDark)
+                    }
+                }
+
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // Botones
                 Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
                 ) {
                     Button(
                         onClick = { navController.popBackStack() },
+                        modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
                     ) {
-                        Text("Volver")
+                        Text("Volver", color = Color.White)
                     }
-
 
                     Button(
                         onClick = {
-                            println("Intentando inscribir con:")
-                            println("Token: $token")
-                            println("Alumno ID: $alumnoId")
-                            println("Cronograma ID: $cronogramaId")
-
-
                             if (rol == Rol.ALUMNO && alumnoId != null && token != null) {
                                 cursoViewModel.inscribirse(
                                     idCronograma = cronogramaId,
@@ -182,11 +186,14 @@ fun SucursalDetalleScreen(
                                 )
                             }
                         },
+                        modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = Orange)
                     ) {
                         Text("Confirmar", color = Color.White)
                     }
                 }
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     } ?: run {
@@ -195,5 +202,6 @@ fun SucursalDetalleScreen(
         }
     }
 }
+
 
 
