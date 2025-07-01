@@ -35,7 +35,9 @@ sealed class TabItem(
                 it == "mis_cursos" ||
                 it?.startsWith("curso_detalle") == true ||
                 it == "sedes_disponibles" ||
-                it?.startsWith("sucursal_detalle") == true
+                it?.startsWith("sucursal_detalle") == true||
+                it?.startsWith("mis_cursos_detalle") == true
+
     })
 
 

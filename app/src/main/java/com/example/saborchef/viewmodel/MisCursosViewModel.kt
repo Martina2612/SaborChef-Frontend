@@ -38,4 +38,22 @@ class MisCursosViewModel(context: Context) : ViewModel() {
         }
     }
 
+    fun getCursosInscriptos() {
+        viewModelScope.launch {
+            _loading.value = true
+            val id = dataStore.userId.first()
+            if (id != null) {
+                try {
+                    val cursosInscripto = CronogramaRepository.getCursosInscripto(id)
+                    _cursos.value = cursosInscripto
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    _loading.value = false
+                }
+            }
+        }
+    }
+
+
 }

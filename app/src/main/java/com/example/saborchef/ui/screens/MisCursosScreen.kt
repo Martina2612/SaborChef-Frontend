@@ -40,6 +40,10 @@ fun MisCursosScreen(navController: NavController) {
             return MisCursosViewModel(context) as T
         }
     })
+    LaunchedEffect(Unit) {
+        viewModel.getCursosInscriptos()
+    }
+
 
     val cursos by viewModel.cursos.collectAsState()
     val isLoading by viewModel.loading.collectAsState()

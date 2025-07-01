@@ -9,6 +9,9 @@ import com.example.saborchef.network.CursoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.State
+
 
 sealed class CursoUiState {
     object Loading : CursoUiState()
@@ -31,6 +34,8 @@ class CursoViewModel : ViewModel() {
     val inscripcionExitosa: StateFlow<Boolean?> = _inscripcionExitosa
     private val _cronogramaDetalle = MutableStateFlow<Cronograma?>(null)
     val cronogramaDetalle: StateFlow<Cronograma?> = _cronogramaDetalle
+    private val _bajaExitosa = mutableStateOf<Boolean?>(null)
+    val bajaExitosa: State<Boolean?> = _bajaExitosa
 
     fun getCursoPorId(id: Long) {
         viewModelScope.launch {
@@ -97,6 +102,21 @@ class CursoViewModel : ViewModel() {
                 _cronogramaDetalle.value = null
             }
         }
+    }
+
+    fun darseDeBaja(idCronograma: Long, idAlumno: Long, token: String) {
+        viewModelScope.launch {
+            try {
+                val response = CursoRepository.darseDeBaja(token, idCronograma, idAlumno)
+                _bajaExitosa.value = response.isSuccessful
+            } catch (e: Exception) {
+                _bajaExitosa.value = false
+            }
+        }
+    }
+
+    fun limpiarEstadoBaja() {
+        _bajaExitosa.value = null
     }
 
 }

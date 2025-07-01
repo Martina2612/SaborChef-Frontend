@@ -1,8 +1,7 @@
 package com.example.saborchef.ui.screens
 
 import com.example.saborchef.ui.components.DetallesTabContent
-
-
+import com.example.saborchef.ui.components.BottomBar
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,20 +20,38 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import androidx.navigation.NavController
 import com.example.saborchef.model.CursoInscripto
+import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.theme.Orange
 
 @Composable
 fun MisCursosDetalleScreen(curso: CursoInscripto, navController: NavController) {
     val tabs = listOf("Detalles", "Cronograma", "Asistencia")
-    var selectedTabIndex by remember { mutableIntStateOf(0) } // reemplazo sugerido
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
 
     Scaffold(
-        topBar = {
+        bottomBar = {
+            BottomBar(navController = navController, role = Rol.ALUMNO)
+        }
+    ) { contentPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+        ) {
+            // Espacio blanco arriba (status bar)
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsTopHeight(WindowInsets.statusBars)
+                    .background(Color.White)
+            )
+
+            // Header naranja
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Orange)
-                    .padding(top = 12.dp, bottom = 12.dp),
+                    .padding(vertical = 12.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -56,38 +73,39 @@ fun MisCursosDetalleScreen(curso: CursoInscripto, navController: NavController) 
                     )
                 }
             }
-        }
-    ) { contentPadding -> // ✅ corregido nombre
-        Column(
-            modifier = Modifier
-                .padding(contentPadding)
-                .fillMaxSize()
-        ) {
-            Image(
-                painter = rememberAsyncImagePainter(curso.imagenUrl),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+
+            // Contenido principal
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-            )
+                    .fillMaxSize()
+                    .padding(bottom = contentPadding.calculateBottomPadding())
+            ) {
+                Image(
+                    painter = rememberAsyncImagePainter(curso.imagenUrl),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                )
 
-            TabRow(selectedTabIndex = selectedTabIndex, containerColor = Color.White) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        text = { Text(title) },
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        selectedContentColor = Orange,
-                        unselectedContentColor = Color.Gray
-                    )
+                TabRow(selectedTabIndex = selectedTabIndex, containerColor = Color.White) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            text = { Text(title) },
+                            selected = selectedTabIndex == index,
+                            onClick = { selectedTabIndex = index },
+                            selectedContentColor = Orange,
+                            unselectedContentColor = Color.Gray
+                        )
+                    }
                 }
-            }
 
-            when (selectedTabIndex) {
-                0 -> DetallesTabContent(curso)
-                1 -> { /* Cronograma */ }
-                2 -> { /* Asistencia */ }
+                when (selectedTabIndex) {
+                    0 -> DetallesTabContent(curso,navController)
+                    1 -> { /* Cronograma */ }
+                    2 -> { /* Asistencia */ }
+                }
             }
         }
     }

@@ -332,21 +332,26 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(
-                            "sucursal_detalle/{sedeId}/{cronogramaId}",
+                            "sucursal_detalle/{sedeId}/{cronogramaId}/{mostrarBotonConfirmar}",
                             arguments = listOf(
                                 navArgument("sedeId") { type = NavType.LongType },
-                                navArgument("cronogramaId") { type = NavType.LongType }
+                                navArgument("cronogramaId") { type = NavType.LongType },
+                                navArgument("mostrarBotonConfirmar") { type = NavType.BoolType }
                             )
                         ) { backStackEntry ->
                             val sedeId = backStackEntry.arguments?.getLong("sedeId") ?: 0L
                             val cronogramaId = backStackEntry.arguments?.getLong("cronogramaId") ?: 0L
+                            val mostrarBotonConfirmar = backStackEntry.arguments?.getBoolean("mostrarBotonConfirmar") ?: true
+
                             SucursalDetalleScreen(
                                 sedeId = sedeId,
                                 cronogramaId = cronogramaId,
                                 navController = navController,
-                                rol = Rol.ALUMNO // o el rol dinámico si lo obtenés desde DataStore
+                                rol = Rol.ALUMNO,
+                                mostrarBotonConfirmar = mostrarBotonConfirmar
                             )
                         }
+
 
                         composable("mis_cursos") {
                             MisCursosScreen(navController)

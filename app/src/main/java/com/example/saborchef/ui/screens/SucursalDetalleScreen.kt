@@ -36,7 +36,8 @@ fun SucursalDetalleScreen(
     sedeId: Long,
     cronogramaId: Long,
     navController: NavController,
-    rol: Rol
+    rol: Rol,
+    mostrarBotonConfirmar: Boolean = true
 ) {
     val sedeViewModel: SedeViewModel = viewModel()
     val cursoViewModel: CursoViewModel = viewModel()
@@ -176,22 +177,25 @@ fun SucursalDetalleScreen(
                         Text("Volver", color = Color.White)
                     }
 
-                    Button(
-                        onClick = {
-                            if (rol == Rol.ALUMNO && alumnoId != null && token != null) {
-                                cursoViewModel.inscribirse(
-                                    idCronograma = cronogramaId,
-                                    idAlumno = alumnoId!!,
-                                    token = token!!
-                                )
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Orange)
-                    ) {
-                        Text("Confirmar", color = Color.White)
+                    if (mostrarBotonConfirmar) {
+                        Button(
+                            onClick = {
+                                if (rol == Rol.ALUMNO && alumnoId != null && token != null) {
+                                    cursoViewModel.inscribirse(
+                                        idCronograma = cronogramaId,
+                                        idAlumno = alumnoId!!,
+                                        token = token!!
+                                    )
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Orange)
+                        ) {
+                            Text("Confirmar", color = Color.White)
+                        }
                     }
                 }
+
 
                 Spacer(modifier = Modifier.height(32.dp))
             }

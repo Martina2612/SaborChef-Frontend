@@ -49,6 +49,7 @@ data class CursoInscripto(
     val chef: String,
     val fechaInicio: String,
     val fechaFin: String,
+    val idCronograma: Long,
     val sede: Sede,
     val progreso: Float,
     val finalizado:Boolean

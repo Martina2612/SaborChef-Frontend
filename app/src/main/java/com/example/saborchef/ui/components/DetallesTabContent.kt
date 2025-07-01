@@ -13,14 +13,87 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.saborchef.model.CursoInscripto
 import com.example.saborchef.ui.theme.Orange
-
+import com.example.saborchef.viewmodel.CursoViewModel
+import androidx.compose.runtime.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+import com.example.saborchef.data.DataStoreManager
 
 @Composable
-fun DetallesTabContent(curso: CursoInscripto) {
-    Column(modifier = Modifier.padding(16.dp)) {
+fun DetallesTabContent(
+    curso: CursoInscripto,
+    navController: NavController,
+    viewModel: CursoViewModel = viewModel()
+)
+ {
+    val context = LocalContext.current
+     val dataStore = DataStoreManager(context)
+     val scope = rememberCoroutineScope()
+
+    var token by remember { mutableStateOf<String?>(null) }
+    var userId by remember { mutableStateOf<Long?>(null) }
+
+    val bajaExitosa by viewModel.bajaExitosa
+
+     var mostrarDialogo by remember { mutableStateOf(false) }
+
+     // Leer token y userId desde DataStore
+     LaunchedEffect(Unit) {
+         launch {
+             dataStore.token.collect { t -> if (!t.isNullOrBlank()) token = t }
+         }
+         launch {
+             dataStore.userId.collect { id -> if (id != null) userId = id }
+         }
+     }
+
+
+     if (mostrarDialogo) {
+         AlertDialog(
+             onDismissRequest = { mostrarDialogo = false },
+             confirmButton = {
+                 Button(
+                     onClick = {
+                         mostrarDialogo = false
+                         if (token != null && userId != null) {
+                             scope.launch {
+                                 viewModel.darseDeBaja(curso.idCronograma, userId!!, token!!)
+                                 navController.navigate("mis_cursos") {
+                                     popUpTo("mis_cursos") { inclusive = true }
+                                 }
+                             }
+                         }
+                     },
+                     colors = ButtonDefaults.buttonColors(containerColor = Orange)
+                 ) {
+                     Text("Sí, confirmar", color = Color.White)
+                 }
+             },
+             dismissButton = {
+                 OutlinedButton(onClick = { mostrarDialogo = false }) {
+                     Text("No, regresar")
+                 }
+             },
+             title = {
+                 Text("¿Está seguro que desea darse de baja del curso?", fontWeight = FontWeight.Bold)
+             },
+             text = {
+                 Text("Si ya pagaste, el reintegro será procesado automáticamente.", fontSize = 14.sp)
+             },
+             shape = RoundedCornerShape(20.dp),
+             containerColor = Color.White
+         )
+     }
+
+
+
+
+     Column(modifier = Modifier.padding(16.dp)) {
         // Progreso
         LinearProgressIndicator(
             progress = curso.progreso / 100f,
@@ -71,7 +144,7 @@ fun DetallesTabContent(curso: CursoInscripto) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Button(
-                onClick = { /* Navegar */ },
+                onClick = { navController.navigate("sucursal_detalle/${curso.sede.idSede}/${curso.idCronograma}/false") },
                 shape = RoundedCornerShape(6.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Orange),
                 modifier = Modifier.height(40.dp)
@@ -101,12 +174,13 @@ fun DetallesTabContent(curso: CursoInscripto) {
 
 
         Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { /* darte de baja */ },
-            colors = ButtonDefaults.buttonColors(containerColor = Orange),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Quiero darme de baja", color = Color.White)
-        }
-    }
+         Button(
+             onClick = { mostrarDialogo = true },
+             colors = ButtonDefaults.buttonColors(containerColor = Orange),
+             modifier = Modifier.fillMaxWidth()
+         ) {
+             Text("Quiero darme de baja", color = Color.White)
+         }
+
+     }
 }
