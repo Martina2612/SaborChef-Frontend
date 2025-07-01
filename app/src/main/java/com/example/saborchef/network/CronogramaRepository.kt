@@ -1,6 +1,7 @@
 package com.example.saborchef.network
 
 import com.example.saborchef.model.Cronograma
+import com.example.saborchef.model.CursoInscripto
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -19,4 +20,9 @@ object CronogramaRepository {
             throw Exception("Error HTTP ${response.code()}")
         }
     }
+
+    suspend fun getCursosInscripto(idAlumno: Long): List<CursoInscripto> {
+        return api.getCursosInscripto(idAlumno)
+    }
+
 }

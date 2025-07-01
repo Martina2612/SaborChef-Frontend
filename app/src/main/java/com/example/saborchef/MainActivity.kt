@@ -28,9 +28,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.saborchef.model.CursoInscripto
 import com.example.saborchef.ui.theme.OrangeDark
 import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.theme.Orange
+import com.google.gson.Gson
+
 
 
 class MainActivity : ComponentActivity() {
@@ -344,6 +347,19 @@ class MainActivity : ComponentActivity() {
                                 rol = Rol.ALUMNO // o el rol dinámico si lo obtenés desde DataStore
                             )
                         }
+
+                        composable("mis_cursos") {
+                            MisCursosScreen(navController)
+                        }
+
+                        composable("mis_cursos_detalle/{cursoJson}") { backStackEntry ->
+                            val json = backStackEntry.arguments?.getString("cursoJson") ?: ""
+                            val curso = Gson().fromJson(json, CursoInscripto::class.java)
+                            MisCursosDetalleScreen(curso, navController)
+                        }
+
+
+
 
 
 

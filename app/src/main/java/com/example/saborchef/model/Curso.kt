@@ -37,4 +37,21 @@ data class Sede(
     val imagenUrl: String
 )
 
+data class CursoInscripto(
+    val idCurso: Long,
+    val nombreCurso: String,
+    val descripcion: String,
+    val modalidad: String,
+    val imagenUrl: String,
+    val nivel: String,
+    val precio: Double,
+    val duracion: String,
+    val chef: String,
+    val fechaInicio: String,
+    val fechaFin: String,
+    val sede: Sede,
+    val progreso: Float,
+    val finalizado:Boolean
+)
+
 

@@ -32,10 +32,12 @@ sealed class TabItem(
 
     object Videos : TabItem("cursos", Icons.Default.OndemandVideo, {
         it == "cursos" ||
+                it == "mis_cursos" ||
                 it?.startsWith("curso_detalle") == true ||
                 it == "sedes_disponibles" ||
                 it?.startsWith("sucursal_detalle") == true
     })
+
 
     object Bookmarks : TabItem("favs", Icons.Default.BookmarkBorder, { it == "favs" })
 
