@@ -1,5 +1,6 @@
 package com.example.saborchef.ui.screens
 
+import android.util.Log
 import com.example.saborchef.ui.components.DetallesTabContent
 import com.example.saborchef.ui.components.BottomBar
 
@@ -14,19 +15,39 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import androidx.navigation.NavController
 import com.example.saborchef.model.CursoInscripto
 import com.example.saborchef.model.Rol
+import com.example.saborchef.ui.components.AsistenciaTabContent
+import com.example.saborchef.ui.components.CronogramaTabContent
 import com.example.saborchef.ui.theme.Orange
+import com.example.saborchef.viewmodel.ClasesViewModel
+import com.example.saborchef.viewmodel.CursoViewModel
 
 @Composable
 fun MisCursosDetalleScreen(curso: CursoInscripto, navController: NavController) {
     val tabs = listOf("Detalles", "Cronograma", "Asistencia")
     var selectedTabIndex by remember { mutableIntStateOf(0) }
+    val viewModel: CursoViewModel = viewModel()
+    val cursoCompleto by viewModel.cursoDetalle.collectAsState()
+    val context = LocalContext.current
+    val clasesViewModel: ClasesViewModel = viewModel()
+    val clases by clasesViewModel.clases.collectAsState()
+
+
+
+    LaunchedEffect(Unit) {
+        Log.d("DEBUG", "ID CRONOGRAMA: ${curso.idCronograma}")
+        viewModel.getCursoPorId(curso.idCurso)
+        clasesViewModel.cargarClasesPorCronograma(context,curso.idCronograma)
+    }
+
 
     Scaffold(
         bottomBar = {
@@ -103,8 +124,15 @@ fun MisCursosDetalleScreen(curso: CursoInscripto, navController: NavController) 
 
                 when (selectedTabIndex) {
                     0 -> DetallesTabContent(curso,navController)
-                    1 -> { /* Cronograma */ }
-                    2 -> { /* Asistencia */ }
+                    1 -> {
+                        cursoCompleto?.let {
+                            CronogramaTabContent(clases = clases)
+                        } ?: Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = Orange)
+                        }
+                    }
+                    2 -> AsistenciaTabContent(clases = clases, viewModel = clasesViewModel, context = context)
+
                 }
             }
         }
