@@ -1,6 +1,7 @@
 package com.example.saborchef.ui.components
 
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -36,11 +37,6 @@ fun AsistenciaTabContent(
         clases.sortedBy { it.numeroClase }.forEach { clase ->
             val fecha = LocalDate.parse(clase.fechaClase)
             val asistio = asistencias[clase.idClase]
-            val color = when {
-                fecha.isAfter(hoy) -> Color.Gray
-                asistio == true -> Color(0xFF4CAF50) // verde
-                else -> Color(0xFFF44336) // rojo
-            }
             val puedeEscanearQR = fecha == hoy && asistio != true
 
             Row(
@@ -52,18 +48,30 @@ fun AsistenciaTabContent(
             ) {
                 Column {
                     Text("Clase ${clase.numeroClase}: ${clase.titulo}", fontWeight = FontWeight.Bold)
-                    Text(clase.fechaClase.toString())
+                    Text(clase.fechaClase)
                 }
 
                 when {
                     fecha.isAfter(hoy) -> Icon(Icons.Default.Lock, contentDescription = "Futura", tint = Color.Gray)
-                    asistio == true -> Text("Asistencia", color = color)
+                    asistio == true -> Box(
+                        modifier = Modifier
+                            .background(color = Color(0xFFC8E6C9), shape = MaterialTheme.shapes.small)
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text("Asistencia", color = Color(0xFF388E3C), fontWeight = FontWeight.SemiBold)
+                    }
                     puedeEscanearQR -> IconButton(onClick = {
                         // Abrir escáner QR acá
                     }) {
                         Icon(Icons.Default.QrCodeScanner, contentDescription = "Escanear QR", tint = Color.Black)
                     }
-                    else -> Text("Asistencia", color = color)
+                    else -> Box(
+                        modifier = Modifier
+                            .background(color = Color(0xFFFFCDD2), shape = MaterialTheme.shapes.small)
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text("Asistencia", color = Color(0xFFD32F2F), fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
 
@@ -71,3 +79,4 @@ fun AsistenciaTabContent(
         }
     }
 }
+

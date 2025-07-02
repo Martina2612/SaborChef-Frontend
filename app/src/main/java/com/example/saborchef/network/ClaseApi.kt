@@ -15,14 +15,14 @@ interface ClaseApi {
         @Path("idCronograma") idCronograma: Long
     ): List<Clase>
 
-    @GET("clases/{claseId}/asistencia")
+    @GET("api/clases/{claseId}/asistencia")
     suspend fun verificarAsistencia(
         @Header("Authorization") token: String,
         @Path("claseId") claseId: Long,
         @Query("alumnoId") alumnoId: Long
     ): Boolean
 
-    @POST("clases/{claseId}/asistencia")
+    @POST("api/clases/{claseId}/asistencia")
     suspend fun registrarAsistencia(
         @Header("Authorization") token: String,
         @Path("claseId") claseId: Long,

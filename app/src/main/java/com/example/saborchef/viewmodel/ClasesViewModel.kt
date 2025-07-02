@@ -1,6 +1,7 @@
 package com.example.saborchef.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,8 @@ import com.example.saborchef.network.ClaseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import com.example.saborchef.data.DataStoreManager
+import kotlinx.coroutines.flow.first
 
 class ClasesViewModel : ViewModel() {
     private val _clases = MutableStateFlow<List<Clase>>(emptyList())
@@ -17,7 +20,8 @@ class ClasesViewModel : ViewModel() {
     private val _loading = MutableStateFlow(true)
     val loading: StateFlow<Boolean> = _loading
     private val _asistencias = mutableStateMapOf<Long, Boolean>()
-    val asistencias: Map<Long, Boolean> get() = _asistencias
+    val asistencias: Map<Long, Boolean> = _asistencias
+
 
     fun cargarClasesPorCronograma(context: Context, idCronograma: Long) {
         viewModelScope.launch {
@@ -36,13 +40,18 @@ class ClasesViewModel : ViewModel() {
     fun verificarAsistenciaParaClase(context: Context, claseId: Long) {
         viewModelScope.launch {
             try {
+                val token = DataStoreManager(context).token.first() ?: return@launch
                 val asistio = ClaseRepository.verificarAsistencia(context, claseId)
+                Log.d("AsistenciaDebug", "Clase $claseId: asistio = $asistio")
                 _asistencias[claseId] = asistio
             } catch (e: Exception) {
-                _asistencias[claseId] = false // si hay error, asumimos que no asistió
+                e.printStackTrace()
+                _asistencias[claseId] = false
             }
         }
     }
+
+
 }
 
 

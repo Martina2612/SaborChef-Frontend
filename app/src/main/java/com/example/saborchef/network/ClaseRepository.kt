@@ -1,6 +1,7 @@
 package com.example.saborchef.network
 
 import android.content.Context
+import android.util.Log
 import com.example.saborchef.data.DataStoreManager
 import com.example.saborchef.model.Clase
 import retrofit2.Retrofit
@@ -23,9 +24,11 @@ object ClaseRepository {
 
     private suspend fun getToken(context: Context): String {
         val dataStore = DataStoreManager(context)
-        return dataStore.token.first() ?: throw Exception("Token no encontrado")
-
+        val rawToken = dataStore.token.first() ?: throw Exception("Token no encontrado")
+        Log.d("TokenDebug", "Token recuperado: $rawToken")
+        return rawToken
     }
+
 
     private suspend fun getAlumnoId(context: Context): Long {
         val dataStore = DataStoreManager(context)
@@ -37,13 +40,27 @@ object ClaseRepository {
     suspend fun verificarAsistencia(context: Context, claseId: Long): Boolean {
         val token = getToken(context)
         val alumnoId = getAlumnoId(context)
-        return api.verificarAsistencia(token, claseId, alumnoId)
+        Log.d("AsistenciaDebug", "Llamando asistencia con claseId=$claseId, alumnoId=$alumnoId")
+
+        return try {
+            val result = api.verificarAsistencia("Bearer $token", claseId, alumnoId)
+            Log.d("AsistenciaDebug", "Resultado asistencia: $result")
+            result
+        } catch (e: retrofit2.HttpException) {
+            Log.e("AsistenciaDebug", "Error HTTP ${e.code()} - ${e.message()}")
+            false
+        } catch (e: Exception) {
+            Log.e("AsistenciaDebug", "Error general: ${e.message}")
+            false
+        }
     }
+
 
     suspend fun registrarAsistencia(context: Context, claseId: Long) {
         val token = getToken(context)
         val alumnoId = getAlumnoId(context)
         api.registrarAsistencia(token, claseId, alumnoId)
+
     }
 }
 
