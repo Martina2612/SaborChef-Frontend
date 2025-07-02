@@ -13,7 +13,8 @@ import retrofit2.http.Query
 
 interface CursoApi {
     @GET("api/cursos")
-    suspend fun getCursos(): List<Curso>
+    suspend fun getCursos(@Query("idUsuario") idUsuario: Long): List<Curso>
+
 
     @GET("api/cursos/{id}")
     suspend fun getCursoById(@retrofit2.http.Path("id") id: Long): retrofit2.Response<Curso>
@@ -44,7 +45,10 @@ object CursoRepository {
         .build()
         .create(CursoApi::class.java)
 
-    suspend fun getAllCursos(): List<Curso> = api.getCursos()
+    suspend fun getAllCursos(idUsuario: Long): List<Curso> {
+        return api.getCursos(idUsuario)
+    }
+
 
     suspend fun getCursoPorId(id: Long): Curso {
         val response = api.getCursoById(id)

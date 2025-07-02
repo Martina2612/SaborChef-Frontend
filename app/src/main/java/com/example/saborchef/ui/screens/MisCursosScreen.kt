@@ -26,9 +26,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.background
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.example.saborchef.R
 import com.example.saborchef.ui.components.CursoCard
+import com.example.saborchef.ui.components.TopBarConLogo
 import com.example.saborchef.viewmodel.MisCursosViewModel
 import com.google.gson.Gson
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +48,6 @@ fun MisCursosScreen(navController: NavController) {
         viewModel.getCursosInscriptos()
     }
 
-
     val cursos by viewModel.cursos.collectAsState()
     val isLoading by viewModel.loading.collectAsState()
 
@@ -56,12 +59,71 @@ fun MisCursosScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(top = 0.dp)
 
     ) { padding ->
         if (isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = Orange)
+            }
+        } else if (cursosCompletos.isEmpty() && cursosEnProgreso.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+            ) {
+                // Header naranja
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp)
+                        .background(Orange)
+                ) {
+                    // Logo centrado (ya incluye el texto SaborChef)
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_topbar),
+                        contentDescription = "SaborChef Logo",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .align(Alignment.Center)
+                    )
+                }
+
+                // Contenido centrado
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 32.dp)
+                        .padding(bottom = 100.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    // Mensaje de texto
+                    Text(
+                        text = "Ups! Aún no te has inscrito a ningún curso.",
+                        color = Color(0xFF9E9E9E),
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // Botón redondeado
+                    Button(
+                        onClick = { navController.navigate("cursos") },
+                        colors = ButtonDefaults.buttonColors(containerColor = Orange),
+                        shape = RoundedCornerShape(25.dp),
+                        modifier = Modifier
+                            .height(50.dp)
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Text(
+                            text = "Descubre más cursos aquí!",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
             }
         } else {
             LazyColumn(
@@ -69,6 +131,7 @@ fun MisCursosScreen(navController: NavController) {
                     .padding(padding)
                     .fillMaxSize()
             ) {
+
                 item {
                     Box(
                         modifier = Modifier
@@ -84,7 +147,6 @@ fun MisCursosScreen(navController: NavController) {
                             color = Color.White
                         )
                     }
-
                 }
 
                 if (cursosCompletos.isNotEmpty()) {
@@ -120,7 +182,6 @@ fun MisCursosScreen(navController: NavController) {
                             navController.navigate("mis_cursos_detalle/$cursoJson")
                         })
                     }
-
                 }
 
                 item {

@@ -3,6 +3,7 @@ package com.example.saborchef.ui.screens
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -46,10 +47,16 @@ fun CursosScreen(
 
     // Recupera el rol guardado
     LaunchedEffect(Unit) {
+        dataStoreManager.userId.collectLatest { id ->
+            if (id != null) {
+                viewModel.fetchCursos(id)
+            }
+        }
         dataStoreManager.role.collectLatest {
             actualRol = it?.let { valor -> Rol.valueOf(valor) }
         }
     }
+
 
     // Mostrar pantalla especial si el usuario es USUARIO
 
@@ -58,6 +65,20 @@ fun CursosScreen(
 
     Scaffold(
         topBar = {
+            var expanded by remember { mutableStateOf(false) }
+
+            // Filtrar nombres de cursos que coincidan con el texto escrito
+            val suggestions = when (val state = uiState) {
+                is CursoUiState.Success -> {
+                    state.cursos
+                        .map { it.nombre }
+                        .filter { it.contains(searchQuery, ignoreCase = true) }
+                        .distinct()
+                        .take(5)
+                }
+                else -> emptyList()
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -66,11 +87,40 @@ fun CursosScreen(
             ) {
                 SearchBar(
                     query = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    onSearch = {},
+                    onQueryChange = {
+                        searchQuery = it
+                        expanded = it.isNotBlank()
+                    },
+                    onSearch = {
+                        expanded = false
+                    },
                     onFilterClick = {},
                     placeholderText = "Busca un curso aquí"
                 )
+
+                if (expanded && suggestions.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFF3F3F3))
+                            .padding(top = 4.dp)
+                    ) {
+                        suggestions.forEach { suggestion ->
+                            Text(
+                                text = suggestion,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                                    .clickable {
+                                        searchQuery = suggestion
+                                        expanded = false
+                                    },
+                                color = Color.DarkGray
+                            )
+                        }
+                    }
+                }
+
             }
         },
         bottomBar = {
@@ -100,8 +150,8 @@ fun CursosScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(state.cursos) { curso ->
-                        Card(
+                    items(state.cursos.filter { it.nombre.contains(searchQuery, ignoreCase = true) }) { curso ->
+                    Card(
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier
                                 .fillMaxWidth()

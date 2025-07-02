@@ -71,20 +71,19 @@ class CursoViewModel : ViewModel() {
         _mensajeError.value = null
     }
 
-    init {
-        fetchCursos()
-    }
 
-    private fun fetchCursos() {
+
+    fun fetchCursos(idUsuario: Long) {
         viewModelScope.launch {
             try {
-                val cursos = CursoRepository.getAllCursos()
+                val cursos = CursoRepository.getAllCursos(idUsuario)
                 _uiState.value = CursoUiState.Success(cursos)
             } catch (e: Exception) {
                 _uiState.value = CursoUiState.Error("Error al obtener cursos: ${e.message}")
             }
         }
     }
+
 
     suspend fun obtenerCursoPorId(id: Long): Curso {
         return CursoRepository.getCursoPorId(id)
