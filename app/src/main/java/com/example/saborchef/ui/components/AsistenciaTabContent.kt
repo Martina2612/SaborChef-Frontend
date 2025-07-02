@@ -1,6 +1,7 @@
 package com.example.saborchef.ui.components
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -16,16 +17,40 @@ import com.example.saborchef.model.Clase
 import com.example.saborchef.viewmodel.ClasesViewModel
 import java.time.LocalDate
 import androidx.compose.ui.Alignment
+import com.example.saborchef.ui.screens.QrScannerScreen
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.compose.ui.platform.LocalContext
+
 
 
 @Composable
 fun AsistenciaTabContent(
     clases: List<Clase>,
     viewModel: ClasesViewModel,
-    context: Context
+    context: Context,
+    mostrarScanner: MutableState<Boolean>
 ) {
     val asistencias = viewModel.asistencias
     val hoy = LocalDate.now()
+    val contextLocal = LocalContext.current
+    val tienePermisoCamara = remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                contextLocal,
+                android.Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val solicitarPermisoCamara = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        tienePermisoCamara.value = granted
+    }
+
 
     LaunchedEffect(clases) {
         clases.forEach { clase ->
@@ -61,10 +86,16 @@ fun AsistenciaTabContent(
                         Text("Asistencia", color = Color(0xFF388E3C), fontWeight = FontWeight.SemiBold)
                     }
                     puedeEscanearQR -> IconButton(onClick = {
-                        // Abrir escáner QR acá
+                        if (tienePermisoCamara.value) {
+                            mostrarScanner.value = true
+                        } else {
+                            solicitarPermisoCamara.launch(android.Manifest.permission.CAMERA)
+                        }
                     }) {
                         Icon(Icons.Default.QrCodeScanner, contentDescription = "Escanear QR", tint = Color.Black)
                     }
+
+
                     else -> Box(
                         modifier = Modifier
                             .background(color = Color(0xFFFFCDD2), shape = MaterialTheme.shapes.small)
@@ -77,6 +108,17 @@ fun AsistenciaTabContent(
 
             Divider()
         }
+    }
+
+    if (mostrarScanner.value) {
+        QrScannerScreen(
+            onCodeScanned = { qrCode ->
+                mostrarScanner.value = false
+                Log.d("QR_RESULTADO", "Código escaneado: $qrCode")
+                // Podés procesar el código, enviar asistencia, etc.
+            },
+            onClose = { mostrarScanner.value = false }
+        )
     }
 }
 

@@ -39,6 +39,7 @@ fun MisCursosDetalleScreen(curso: CursoInscripto, navController: NavController) 
     val context = LocalContext.current
     val clasesViewModel: ClasesViewModel = viewModel()
     val clases by clasesViewModel.clases.collectAsState()
+    val mostrarScanner = remember { mutableStateOf(false) }
 
 
 
@@ -131,7 +132,13 @@ fun MisCursosDetalleScreen(curso: CursoInscripto, navController: NavController) 
                             CircularProgressIndicator(color = Orange)
                         }
                     }
-                    2 -> AsistenciaTabContent(clases = clases, viewModel = clasesViewModel, context = context)
+                    2 -> AsistenciaTabContent(
+                        clases = clases,
+                        viewModel = clasesViewModel,
+                        context = context,
+                        mostrarScanner = mostrarScanner
+                    )
+
 
                 }
             }
