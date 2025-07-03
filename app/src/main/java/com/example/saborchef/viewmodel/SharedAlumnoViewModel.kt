@@ -83,19 +83,20 @@ class SharedAlumnoViewModel : ViewModel() {
     // Conversión final a DTO
     fun toRegisterRequest(context: Context): RegisterRequest {
         return RegisterRequest(
-            nombre = nombre,
-            apellido = apellido,
+            // Solo enviar nombre y apellido si no están vacíos
+            nombre = if (nombre.isNotBlank()) nombre else null,
+            apellido = if (apellido.isNotBlank()) apellido else null,
             alias = alias,
             email = email,
             password = password,
             role = rol,
-            numeroTarjeta = cardNumber,
-            tipoTarjeta = tipoTarjeta,
-            vencimiento = expiryDate,
-            codigoSeguridad = securityCode,
+            numeroTarjeta = cardNumber.ifBlank { null },
+            tipoTarjeta = tipoTarjeta.ifBlank { null },
+            vencimiento = expiryDate.ifBlank { null },
+            codigoSeguridad = securityCode.ifBlank { null },
             dniFrente = uriToBase64(context, frontUri),
             dniDorso = uriToBase64(context, backUri),
-            numeroTramite = tramite
+            numeroTramite = tramite.ifBlank { null }
         )
     }
 }

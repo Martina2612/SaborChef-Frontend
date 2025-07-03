@@ -48,8 +48,7 @@ fun RegisterScreen(
     val emailState by viewModel.emailState.collectAsState()
 
     var userType by remember { mutableStateOf(Rol.USUARIO) }
-    var nombre by remember { mutableStateOf("") }
-    var apellido by remember { mutableStateOf("") }
+    // Eliminamos las variables nombre y apellido
     var alias by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -121,63 +120,7 @@ fun RegisterScreen(
             }
             Spacer(Modifier.height(16.dp))
 
-            OutlinedTextField(
-                value = nombre,
-                onValueChange = { nombre = it },
-                label = {
-                    Text(
-                        "Nombre",
-                        fontFamily = Poppins,
-                        fontSize = 14.sp,
-                        color = BlueDark
-                    )
-                },
-                singleLine = true,
-                leadingIcon = {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = BlueDark)
-                },
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = TextFieldDefaults.textFieldColors(
-                    textColor = Color.Black,
-                    focusedIndicatorColor = BlueDark,
-                    unfocusedIndicatorColor = Color.LightGray,
-                    cursorColor = BlueDark,
-                    backgroundColor = Color.Transparent
-                )
-            )
-            Spacer(Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = apellido,
-                onValueChange = { apellido = it },
-                label = {
-                    Text(
-                        "Apellido",
-                        fontFamily = Poppins,
-                        fontSize = 14.sp,
-                        color = BlueDark
-                    )
-                },
-                singleLine = true,
-                leadingIcon = {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = BlueDark)
-                },
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = TextFieldDefaults.textFieldColors(
-                    textColor = Color.Black,
-                    focusedIndicatorColor = BlueDark,
-                    unfocusedIndicatorColor = Color.LightGray,
-                    cursorColor = BlueDark,
-                    backgroundColor = Color.Transparent
-                )
-            )
-            Spacer(Modifier.height(12.dp))
+            // ELIMINAMOS los campos de nombre y apellido
 
             OutlinedTextField(
                 value = alias,
@@ -384,9 +327,10 @@ fun RegisterScreen(
                             passwordError = "Email inválido o no verificado"
                         }
                         else -> {
+                            // Pasamos strings vacíos para nombre y apellido
                             sharedAlumnoViewModel.setUserInfo(
-                                nombre.trim(),
-                                apellido.trim(),
+                                "", // nombre vacío
+                                "", // apellido vacío
                                 alias.trim(),
                                 email.trim(),
                                 password,
@@ -394,7 +338,7 @@ fun RegisterScreen(
                             )
 
                             if (userType == Rol.ALUMNO) {
-                                navController.navigate("upload_dni")
+                                navController.navigate("add_payment")
                             } else {
                                 viewModel.register(context, sharedAlumnoViewModel)
                             }

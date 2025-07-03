@@ -1,8 +1,8 @@
 package com.example.saborchef.model
 
 data class RegisterRequest(
-    val nombre: String,
-    val apellido: String,
+    val nombre: String? = null, // Ahora es opcional
+    val apellido: String? = null, // Ahora es opcional
     val alias: String,
     val email: String,
     val password: String,
@@ -15,4 +15,3 @@ data class RegisterRequest(
     val vencimiento: String? = null,
     val tipoTarjeta: String? = null
 )
-

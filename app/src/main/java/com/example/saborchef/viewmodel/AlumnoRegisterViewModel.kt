@@ -73,19 +73,20 @@ class AlumnoRegisterViewModel : ViewModel() {
 
         val datos = formData.value
         val request = RegisterRequest(
-            nombre = datos.nombre,
-            apellido = datos.apellido,
+            // Solo enviar nombre y apellido si no están vacíos
+            nombre = if (datos.nombre.isNotBlank()) datos.nombre else null,
+            apellido = if (datos.apellido.isNotBlank()) datos.apellido else null,
             alias = datos.alias,
             email = datos.email,
             password = datos.password,
             role = Rol.ALUMNO,
-            dniFrente = datos.dniFrenteBase64,
-            dniDorso = datos.dniDorsoBase64,
-            numeroTramite = datos.numeroTramite,
-            numeroTarjeta = datos.numeroTarjeta,
-            tipoTarjeta = datos.tipoTarjeta,
-            vencimiento = datos.vencimiento,
-            codigoSeguridad = datos.codigoSeguridad
+            dniFrente = datos.dniFrenteBase64.ifBlank { null },
+            dniDorso = datos.dniDorsoBase64.ifBlank { null },
+            numeroTramite = datos.numeroTramite.ifBlank { null },
+            numeroTarjeta = datos.numeroTarjeta.ifBlank { null },
+            tipoTarjeta = datos.tipoTarjeta.ifBlank { null },
+            vencimiento = datos.vencimiento.ifBlank { null },
+            codigoSeguridad = datos.codigoSeguridad.ifBlank { null }
         )
 
         viewModelScope.launch {
@@ -98,4 +99,3 @@ class AlumnoRegisterViewModel : ViewModel() {
         }
     }
 }
-

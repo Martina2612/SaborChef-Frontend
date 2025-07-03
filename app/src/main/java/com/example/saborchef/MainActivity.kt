@@ -121,9 +121,14 @@ class MainActivity : ComponentActivity() {
                             DniUploadScreen(
                                 onBack = { navController.popBackStack() },
                                 onFinish = { frontUri: Uri?, backUri: Uri?, tramite: String ->
-                                    sharedAlumnoViewModel.setDniInfo(frontUri, backUri, tramite)
-                                    navController.navigate("add_payment")
-                                }
+                                    // Los datos del DNI ya se guardaron en el ViewModel dentro de DniUploadScreen
+                                    // Ahora navegamos a la verificación del email
+                                    navController.navigate("verify_registration/${sharedAlumnoViewModel.email}") {
+                                        popUpTo("register") { inclusive = true }
+                                    }
+                                },
+                                sharedAlumnoViewModel = sharedAlumnoViewModel,
+                                registerViewModel = registerViewModel
                             )
                         }
                         composable("add_payment") {

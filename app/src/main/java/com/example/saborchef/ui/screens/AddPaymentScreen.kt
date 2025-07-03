@@ -53,18 +53,6 @@ fun AddPaymentScreen(
 
     var formError by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(uiState) {
-        when (uiState) {
-            is RegisterUiState.Success -> {
-                navController.navigate("verify_registration/${(uiState as RegisterUiState.Success).auth.email}")
-            }
-            is RegisterUiState.Error -> {
-                formError = (uiState as RegisterUiState.Error).message
-            }
-            else -> {}
-        }
-    }
-
     Column(
         Modifier
             .fillMaxSize()
@@ -211,20 +199,24 @@ fun AddPaymentScreen(
                 }
                 if (!valid) return@Button
 
-                // Lógica original
+                // Solo guardar datos de pago y navegar a DNI
                 sharedAlumnoViewModel.setCardInfo(cardNum, code, expiry, tipoTarjeta)
+
+                // Verificar que sea alumno
                 if (sharedAlumnoViewModel.rol != Rol.ALUMNO) {
                     formError = "Solo los alumnos deben registrar tarjeta"
                     return@Button
                 }
-                viewModel.register(context, sharedAlumnoViewModel)
+
+                // Navegar a upload_dni
+                navController.navigate("upload_dni")
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            enabled = uiState !is RegisterUiState.Loading
+            enabled = true
         ) {
-            Text("Confirmar", fontFamily = Poppins)
+            Text("Siguiente", fontFamily = Poppins)
         }
 
         formError?.let {
@@ -233,6 +225,3 @@ fun AddPaymentScreen(
         }
     }
 }
-
-
-

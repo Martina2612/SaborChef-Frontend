@@ -34,11 +34,15 @@ import com.example.saborchef.ui.components.FileSlot
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.OrangeDark
 import com.example.saborchef.ui.theme.Poppins
+import com.example.saborchef.viewmodel.SharedAlumnoViewModel
+import com.example.saborchef.viewmodel.RegisterViewModel
 
 @Composable
 fun DniUploadScreen(
     onBack: () -> Unit,
-    onFinish: (frontUri: Uri, backUri: Uri, tramite: String) -> Unit
+    onFinish: (frontUri: Uri, backUri: Uri, tramite: String) -> Unit,
+    sharedAlumnoViewModel: SharedAlumnoViewModel,
+    registerViewModel: RegisterViewModel
 ) {
     val context = LocalContext.current
 
@@ -194,7 +198,13 @@ fun DniUploadScreen(
                             tramiteError = "El número debe tener 11 dígitos"
                         }
                         else -> {
-                            // Ambos URIs no null y trámite OK
+                            // Guardar los datos del DNI en el ViewModel
+                            sharedAlumnoViewModel.setDniInfo(frontUri, backUri, tramite)
+
+                            // Aquí es donde ahora se hace el registro final
+                            registerViewModel.register(context, sharedAlumnoViewModel)
+
+                            // Llamar a onFinish para la navegación
                             onFinish(frontUri!!, backUri!!, tramite)
                         }
                     }
@@ -208,8 +218,6 @@ fun DniUploadScreen(
     }
 }
 
-
-
 // Utilidad para convertir imagen Uri a base64
 fun uriToBase64(context: Context, uri: Uri): String? {
     return try {
@@ -221,5 +229,3 @@ fun uriToBase64(context: Context, uri: Uri): String? {
         null
     }
 }
-
-
