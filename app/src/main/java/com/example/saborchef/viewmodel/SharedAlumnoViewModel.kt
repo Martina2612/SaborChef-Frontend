@@ -9,10 +9,6 @@ import android.util.Base64
 
 class SharedAlumnoViewModel : ViewModel() {
     // Datos del usuario
-    var nombre: String = ""
-        private set
-    var apellido: String = ""
-        private set
     var alias: String = ""
         private set
     var email: String = ""
@@ -20,6 +16,12 @@ class SharedAlumnoViewModel : ViewModel() {
     var password: String = ""
         private set
     var rol: Rol = Rol.VISITANTE
+        private set
+
+    // Datos personales (opcional)
+    var nombre: String = ""
+        private set
+    var apellido: String = ""
         private set
 
     // Datos de DNI
@@ -41,9 +43,7 @@ class SharedAlumnoViewModel : ViewModel() {
         private set
 
     // --- SETTERS ---
-    fun setUserInfo(nombre: String, apellido: String, alias: String, email: String, password: String, rol: Rol) {
-        this.nombre = nombre
-        this.apellido = apellido
+    fun setUserInfo(alias: String, email: String, password: String, rol: Rol) {
         this.alias = alias
         this.email = email
         this.password = password
@@ -52,6 +52,11 @@ class SharedAlumnoViewModel : ViewModel() {
 
     fun setEmail(email: String) {
         this.email = email
+    }
+
+    fun setPersonalInfo(nombre: String, apellido: String) {
+        this.nombre = nombre
+        this.apellido = apellido
     }
 
     fun setDniInfo(front: Uri?, back: Uri?, tramite: String) {

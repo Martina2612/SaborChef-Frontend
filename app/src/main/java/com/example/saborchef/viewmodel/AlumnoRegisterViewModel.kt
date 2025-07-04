@@ -73,7 +73,7 @@ class AlumnoRegisterViewModel : ViewModel() {
 
         val datos = formData.value
         val request = RegisterRequest(
-            // Solo enviar nombre y apellido si no están vacíos
+            // Solo enviar nombre y apellido si no están vacíos (mantiene flexibilidad)
             nombre = if (datos.nombre.isNotBlank()) datos.nombre else null,
             apellido = if (datos.apellido.isNotBlank()) datos.apellido else null,
             alias = datos.alias,

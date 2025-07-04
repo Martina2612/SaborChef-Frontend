@@ -99,6 +99,7 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.7.5")
 
+
     // ML Kit para escaneo de código de barras
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
 
@@ -106,6 +107,10 @@ dependencies {
     implementation("androidx.camera:camera-camera2:1.3.0")
     implementation("androidx.camera:camera-lifecycle:1.3.0")
     implementation("androidx.camera:camera-view:1.3.0")
+
+
+    //HILT VIEW MODEL
+    implementation ("androidx.hilt:hilt-navigation-compose:1.0.0")
 
 
 

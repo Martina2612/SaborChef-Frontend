@@ -3,8 +3,8 @@ package com.example.saborchef.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -13,7 +13,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,7 +29,6 @@ import com.example.saborchef.models.TopRecetaResponse
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.BlueLight
 
-
 @Composable
 fun <T> RecipeCarouselSection(
     title: String,
@@ -41,8 +40,8 @@ fun <T> RecipeCarouselSection(
             text = title,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
-            color=BlueDark,
-            modifier = Modifier.padding(start = 16.dp,top=15.dp, bottom = 8.dp)
+            color = BlueDark,
+            modifier = Modifier.padding(start = 8.dp, top = 16.dp, bottom = 8.dp, end=8.dp)
         )
 
         if (items.isEmpty()) {
@@ -54,25 +53,26 @@ fun <T> RecipeCarouselSection(
             return
         }
 
-        val itemsPerPage = 2
+        val itemsPerPage = 3
         val pageCount = (items.size + itemsPerPage - 1) / itemsPerPage
         val pagerState = rememberPagerState(pageCount = { pageCount })
 
+        Spacer(Modifier.height(20.dp))
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(180.dp)
         ) { page ->
             val startIndex = page * itemsPerPage
-            val endIndex = minOf(startIndex + itemsPerPage, items.size)
+            val endIndex = (startIndex + itemsPerPage).coerceAtMost(items.size)
             val pageItems = items.subList(startIndex, endIndex)
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 pageItems.forEach { item ->
                     // Extraemos datos
@@ -83,22 +83,22 @@ fun <T> RecipeCarouselSection(
                         else                     -> 0L
                     }
                     val img = when (item) {
-                        is TopRecetaResponse     -> item.fotoPrincipal ?: ""
-                        is RecetaResumenResponse -> item.fotoPrincipal ?: ""
-                        is RecetaDetalleResponse -> item.fotoPrincipal ?: ""
+                        is TopRecetaResponse     -> item.fotoPrincipal.orEmpty()
+                        is RecetaResumenResponse -> item.fotoPrincipal.orEmpty()
+                        is RecetaDetalleResponse -> item.fotoPrincipal.orEmpty()
                         else                     -> ""
                     }
                     val nombre = when (item) {
-                        is TopRecetaResponse     -> item.nombreReceta ?: ""
-                        is RecetaResumenResponse -> item.nombre ?: ""
-                        is RecetaDetalleResponse -> item.nombre ?: ""
+                        is TopRecetaResponse     -> item.nombreReceta.orEmpty()
+                        is RecetaResumenResponse -> item.nombre.orEmpty()
+                        is RecetaDetalleResponse -> item.nombre.orEmpty()
                         else                     -> ""
                     }
                     val usuario = when (item) {
-
-                        is RecetaResumenResponse -> item.nombreUsuario ?: ""
-                        is RecetaDetalleResponse -> item.nombreUsuario ?: ""
-                        else                     -> ""
+                        is TopRecetaResponse -> ""  // no mostramos usuario en Top
+                        is RecetaResumenResponse -> item.nombreUsuario.orEmpty()
+                        is RecetaDetalleResponse -> item.nombreUsuario.orEmpty()
+                        else -> ""
                     }
 
                     RecipeCarouselCard(
@@ -116,23 +116,21 @@ fun <T> RecipeCarouselSection(
             }
         }
 
-        // Indicadores como circulitos
+        Spacer(Modifier.height(15.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(24.dp)
-                .padding(top = 12.dp),
+                .padding(vertical = 4.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            repeat(pageCount) { idx2 ->
-                val dotColor = if (idx2 == pagerState.currentPage) BlueDark else Color.LightGray
-
+            repeat(pageCount) { idx ->
+                val color = if (idx == pagerState.currentPage) BlueDark else Color.LightGray.copy(alpha = 0.5f)
                 Box(
                     modifier = Modifier
-                        .size(10.dp)
+                        .size(if (idx == pagerState.currentPage) 10.dp else 8.dp)
                         .padding(horizontal = 4.dp)
                         .clip(CircleShape)
-                        .background(dotColor)
+                        .background(color)
                 )
             }
         }
@@ -149,38 +147,41 @@ fun RecipeCarouselCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         modifier = modifier
             .fillMaxHeight()
             .clickable { onClick(id) }
     ) {
-        Column {
-            Image(
-                painter = rememberAsyncImagePainter(imageUrl),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,       // recorta si hace falta
-                modifier = Modifier
-                    .fillMaxWidth()                    // ocupa TODO el ancho de la card
-                    .height(140.dp)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+        // 1) Imagen sin padding, ocupa ancho total
+        Base64Image(
+            base64String = imageUrl,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+        )
+
+        // 2) Resto del contenido con pequeño padding interior
+        Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
             Text(
                 text = title,
-                fontSize = 15.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = BlueDark,
-                modifier = Modifier.padding(horizontal = 12.dp)
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = subtitle,
-                fontSize = 10.sp,
-                color = BlueLight,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-            )
+            if (subtitle.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    fontSize = 10.sp,
+                    color = BlueLight,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }

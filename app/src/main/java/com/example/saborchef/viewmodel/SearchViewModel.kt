@@ -7,17 +7,19 @@ import androidx.lifecycle.viewModelScope
 import com.example.saborchef.apis.RecetaControllerApi
 import com.example.saborchef.data.url
 import com.example.saborchef.infrastructure.ApiClient
+import com.example.saborchef.models.RecetaDetalleResponse
 import com.example.saborchef.models.RecetaFiltroRequest
-import com.example.saborchef.models.RecetaResumenResponse
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
 sealed class SearchUiState {
     object Idle : SearchUiState()
     data class Suggest(val suggestions: List<String>) : SearchUiState()
     object NoResults : SearchUiState()
-    data class Results(val recipes: List<RecetaResumenResponse>) : SearchUiState()
+    data class Results(val recipes: List<RecetaDetalleResponse>) : SearchUiState()
     data class Error(val message: String) : SearchUiState()
 }
 
@@ -32,92 +34,79 @@ class SearchViewModel : ViewModel() {
     var sortOption by mutableStateOf("Más nueva a más antigua")
         private set
 
+    var suggestions by mutableStateOf<List<String>>(emptyList())
+        private set
+
     private val api: RecetaControllerApi by lazy {
         ApiClient(baseUrl = url)
             .createService(RecetaControllerApi::class.java)
     }
 
+    private var initialized = false
+
+    fun initIfNeeded() {
+        if (!initialized) {
+            resetSearch()
+            initialized = true
+        }
+    }
+
     fun onQueryChange(new: String) {
-        Log.d("SearchViewModel", "onQueryChange() called with: $new")
         query = new
         if (new.isBlank()) {
-            Log.d("SearchViewModel", "Query está en blanco, cambiando estado a Idle")
+            suggestions = emptyList()
             uiState = SearchUiState.Idle
             return
         }
 
         viewModelScope.launch {
+            delay(300)
+            if (query != new) return@launch
+
             try {
-                val request = RecetaFiltroRequest(
-                    nombre = null,
-                    tipo = null,
-                    ingredientesIncluidos = listOf(new),
-                    ingredientesExcluidos = null,
-                    usuario = null,
-                    orden = sortOption
-                )
-
-                Log.d("SearchViewModel", "Realizando búsqueda de sugerencias con filtro: $request")
-                val response = withContext(Dispatchers.IO) {
-                    api.buscarPorFiltros(request).execute()
+                val resp = withContext(Dispatchers.IO) {
+                    api.sugerirNombres(new).execute()
                 }
-
-                if (response.isSuccessful) {
-                    val suggestions = response.body().orEmpty().mapNotNull { it.nombre }.distinct()
-                    Log.d("SearchViewModel", "Sugerencias encontradas: $suggestions")
-                    uiState = if (suggestions.isEmpty())
-                        SearchUiState.NoResults
-                    else
-                        SearchUiState.Suggest(suggestions)
+                if (resp.isSuccessful) {
+                    val list = resp.body().orEmpty()
+                    suggestions = list.distinct()
+                    uiState = if (list.isEmpty()) SearchUiState.NoResults
+                    else SearchUiState.Suggest(list)
                 } else {
-                    Log.d("SearchViewModel", "Respuesta no exitosa: ${response.code()}")
-                    uiState = SearchUiState.Error("Error del servidor: ${response.code()}")
+                    uiState = SearchUiState.Error("Error servidor: ${resp.code()}")
                 }
-
             } catch (e: Exception) {
-                Log.e("SearchViewModel", "Error en onQueryChange: ${e.message}", e)
-                uiState = SearchUiState.Error("Error de conexión: ${e.message}")
+                uiState = SearchUiState.Error("Error conexión: ${e.message}")
             }
         }
     }
 
     fun searchByName() {
-        Log.d("SearchViewModel", "searchByName() called con query: '$query'")
-        if (query.isBlank()) {
-            Log.d("SearchViewModel", "Query está en blanco, no se busca")
-            return
-        }
+        if (query.isBlank()) return
 
         viewModelScope.launch {
             try {
-                val response = withContext(Dispatchers.IO) {
+                val resp = withContext(Dispatchers.IO) {
                     api.buscarPorNombre(query, sortOption).execute()
                 }
-                Log.d("SearchViewModel", "Response buscarPorNombre: ${response.code()}, body: ${response.body()}")
-
-                handleRecipeResponse(response)
+                handleRecipeResponse(resp)
             } catch (e: Exception) {
-                Log.e("SearchViewModel", "Error en searchByName: ${e.message}", e)
-                uiState = SearchUiState.Error("Error de conexión: ${e.message}")
+                uiState = SearchUiState.Error("Error conexión: ${e.message}")
             }
         }
     }
 
     fun searchByCategory(tipo: String) {
-        Log.d("SearchViewModel", "searchByCategory() llamada con tipo: $tipo")
         query = ""
-
         viewModelScope.launch {
             try {
-                val response = withContext(Dispatchers.IO) {
-                    api.buscarPorTipo(tipo, sortOption).execute()
+                val tipoUpper = tipo.uppercase(Locale.getDefault())
+                val resp = withContext(Dispatchers.IO) {
+                    api.buscarPorTipo(tipoUpper, sortOption).execute()
                 }
-                Log.d("SearchViewModel", "Response buscarPorTipo: ${response.code()}, body: ${response.body()}")
-
-                handleRecipeResponse(response)
+                handleRecipeResponse(resp)
             } catch (e: Exception) {
-                Log.e("SearchViewModel", "Error en searchByCategory: ${e.message}", e)
-                uiState = SearchUiState.Error("Error de conexión: ${e.message}")
+                uiState = SearchUiState.Error("Error conexión: ${e.message}")
             }
         }
     }
@@ -126,77 +115,61 @@ class SearchViewModel : ViewModel() {
         tipos: List<String>? = null,
         incluir: List<String>? = null,
         excluir: List<String>? = null,
-        usuario: String? = null
+        usuarios: List<String>? = null
     ) {
-        Log.d("SearchViewModel", "applyFilters() llamada con: tipos=$tipos, incluir=$incluir, excluir=$excluir, usuario=$usuario")
+        val tiposUpper = tipos?.map { it.uppercase(Locale.getDefault()) }?.takeIf { it.isNotEmpty() }
+        val incluirList = incluir?.map { it.lowercase(Locale.getDefault()) }?.takeIf { it.isNotEmpty() }
+        val excluirList = excluir?.map { it.lowercase(Locale.getDefault()) }?.takeIf { it.isNotEmpty() }
+        val usuariosList = usuarios?.takeIf { it.isNotEmpty() }
+
         val req = RecetaFiltroRequest(
             nombre = null,
-            tipo = tipos,
-            ingredientesIncluidos = incluir,
-            ingredientesExcluidos = excluir,
-            usuario = usuario?.let { listOf(it) },
+            tipo = tiposUpper,
+            ingredientesIncluidos = incluirList,
+            ingredientesExcluidos = excluirList,
+            usuario = usuariosList,
             orden = sortOption
         )
 
         viewModelScope.launch {
             try {
-                val response = withContext(Dispatchers.IO) {
+                val resp = withContext(Dispatchers.IO) {
                     api.buscarPorFiltros(req).execute()
                 }
-                Log.d("SearchViewModel", "Response buscarPorFiltros con filtros aplicados: ${response.code()}, body: ${response.body()}")
-
-                handleRecipeResponse(response)
+                handleRecipeResponse(resp)
             } catch (e: Exception) {
-                Log.e("SearchViewModel", "Error en applyFilters: ${e.message}", e)
-                uiState = SearchUiState.Error("Error de conexión: ${e.message}")
+                uiState = SearchUiState.Error("Error conexión: ${e.message}")
             }
         }
     }
 
     fun onSortSelected(option: String) {
-        Log.d("SearchViewModel", "onSortSelected() llamada con opción: $option")
         sortOption = option
-
         when (val st = uiState) {
             is SearchUiState.Results -> {
-                if (query.isNotBlank()) {
-                    Log.d("SearchViewModel", "onSortSelected: ejecutando searchByName()")
-                    searchByName()
-                } else {
-                    Log.d("SearchViewModel", "onSortSelected: ejecutando searchByCategory() con tipo: ${st.recipes.firstOrNull()?.tipo}")
-                    searchByCategory(st.recipes.firstOrNull()?.tipo ?: "")
-                }
+                if (query.isNotBlank()) searchByName()
+                else searchByCategory(st.recipes.firstOrNull()?.tipo ?: "")
             }
-            is SearchUiState.Suggest -> {
-                Log.d("SearchViewModel", "onSortSelected: ejecutando onQueryChange()")
-                onQueryChange(query)
-            }
-            else -> {
-                Log.d("SearchViewModel", "onSortSelected: no se realiza ninguna acción")
-            }
+            is SearchUiState.Suggest -> onQueryChange(query)
+            else -> {}
         }
     }
 
-    private fun handleRecipeResponse(response: retrofit2.Response<List<RecetaResumenResponse>>) {
-        Log.d("SearchViewModel", "handleRecipeResponse - code: ${response.code()}, body: ${response.body()}")
-        val list = response.body().orEmpty()
-        uiState = if (response.isSuccessful && list.isNotEmpty()) {
-            Log.d("SearchViewModel", "Recetas encontradas: ${list.size}")
-            SearchUiState.Results(list)
-        } else if (response.isSuccessful && list.isEmpty()) {
-            Log.d("SearchViewModel", "Respuesta vacía")
-            SearchUiState.NoResults
+    private fun handleRecipeResponse(response: retrofit2.Response<List<RecetaDetalleResponse>>) {
+        if (response.isSuccessful) {
+            val list = response.body().orEmpty()
+            uiState = when {
+                list.isEmpty() -> SearchUiState.NoResults
+                else           -> SearchUiState.Results(list)
+            }
         } else {
-            Log.e("SearchViewModel", "Error del servidor con código: ${response.code()}")
-            SearchUiState.Error("Error del servidor: ${response.code()}")
+            uiState = SearchUiState.Error("Error servidor: ${response.code()}")
         }
     }
 
-    /** Llamar a esto para limpiar vista cuando entremos de nuevo */
     fun resetSearch() {
         query = ""
+        suggestions = emptyList()
         uiState = SearchUiState.Idle
-
     }
-
 }

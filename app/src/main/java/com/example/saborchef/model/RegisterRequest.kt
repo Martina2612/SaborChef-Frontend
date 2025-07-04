@@ -1,6 +1,7 @@
 package com.example.saborchef.model
 
 data class RegisterRequest(
+
     val nombre: String? = null, // Ahora es opcional
     val apellido: String? = null, // Ahora es opcional
     val alias: String,

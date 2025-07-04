@@ -1,149 +1,184 @@
-package com.example.saborchef.viewmodel
-/*
-import android.content.ContentResolver
+package com.example.saborchef.ui.publish
+
+import android.app.Application
 import android.net.Uri
-import android.webkit.MimeTypeMap
-import androidx.lifecycle.ViewModel
+import android.util.Base64
+import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.text.toUpperCase
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saborchef.apis.RecetaControllerApi
+import com.example.saborchef.data.DataStoreManager
+import com.example.saborchef.data.url
 import com.example.saborchef.infrastructure.ApiClient
 import com.example.saborchef.models.*
-import com.example.saborchef.ui.screens.IngredientItem
-import com.example.saborchef.ui.screens.PublishRecipeData
-import com.example.saborchef.ui.screens.PublishResult
-import com.example.saborchef.ui.screens.StepItem
+import com.example.saborchef.ui.screens.uriToBase64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
 
-sealed class SubmitState {
-    object Idle    : SubmitState()
-    object Loading : SubmitState()
-    object Success : SubmitState()
-    data class Error(val message: String) : SubmitState()
-}
+// StepItem top-level
 
-class PublishRecipeViewModel(
-    private val contentResolver: ContentResolver
-) : ViewModel() {
+data class StepItem(
+    val description: String = "",
+    val media: List<Uri> = emptyList()
+)
 
-    private val _submitState = MutableStateFlow<SubmitState>(SubmitState.Idle)
-    val submitState: StateFlow<SubmitState> = _submitState
-
-    private val _publishResult = MutableStateFlow(PublishResult.NONE)
-    val publishResult: StateFlow<PublishResult> = _publishResult
-
-    private val api: RecetaControllerApi by lazy {
-        ApiClient(baseUrl = BuildConfig.BASE_URL)
+class PublishRecipeViewModel(application: Application) : AndroidViewModel(application) {
+    private val dataStore = DataStoreManager(application)
+    private val api by lazy {
+        ApiClient
+            .createAuthenticatedClient(url)
             .createService(RecetaControllerApi::class.java)
     }
 
-    /**
-     * Lanza todo el flujo de:
-     * 1) Subida de cada foto → URL
-     * 2) Armado de RecetaCrearRequest con fotos, ingredientes y pasos
-     * 3) Invocación a crearReceta()
-     * 4) Emisión de resultado: SUCCESS o DUPLICATE
-     */
-    fun publishRecipe(data: PublishRecipeData) {
+    sealed class PublishUiState {
+        object Idle : PublishUiState()
+        object Loading : PublishUiState()
+        object Success : PublishUiState()
+        object Duplicate : PublishUiState()
+        data class Error(val message: String) : PublishUiState()
+    }
+
+    private val _uiState = MutableStateFlow<PublishUiState>(PublishUiState.Idle)
+    val uiState: StateFlow<PublishUiState>
+        get() = _uiState
+
+    var steps = mutableStateListOf(StepItem())
+
+    private var lastRequest: RecetaCrearRequest? = null
+    private var lastExistingRecipeId: Long? = null
+
+    private fun uriToBase64(uri: Uri?): String? {
+        return try {
+            uri?.let {
+                val inputStream = getApplication<Application>().contentResolver.openInputStream(it)
+                val bytes = inputStream?.readBytes()
+                inputStream?.close()
+                bytes?.let { b -> Base64.encodeToString(b, Base64.NO_WRAP) }
+            }
+        } catch (e: Exception) {
+            Log.e("PublishVM", "Error converting URI to Base64", e)
+            null
+        }
+    }
+
+    fun updateStepDescription(index: Int, text: String) {
+        steps[index] = steps[index].copy(description = text)
+    }
+
+    fun updateStepMedia(index: Int, uris: List<Uri>) {
+        steps[index] = steps[index].copy(media = uris)
+    }
+
+    fun submitRecipe(
+        photos: List<Uri>,
+        nombre: String,
+        descripcion: String,
+        duracion: Int,
+        porciones: Int,
+        tipo: String,
+        ingredientes: List<IngredienteCantidad>
+    ) {
         viewModelScope.launch {
-            _submitState.value = SubmitState.Loading
-            _publishResult.value = PublishResult.NONE
-
+            val userId = dataStore.userId.firstOrNull() ?: 0L
+            _uiState.value = PublishUiState.Loading
             try {
-                // 1) sube todas las fotos y recoge sus URLs
-                val photoUrls = data.photos.map { uri ->
-                    uploadAndGetUrl(uri)
+                val fotoPrincipal = photos.firstOrNull()?.let { uriToBase64(it) }
+                val fotosDto = photos.mapNotNull { uri ->
+                    uriToBase64(uri)?.let { FotoCrear(urlFoto = it, descripcion = null) }
                 }
-
-                // 2) mapea ingredientes
-                val ingredientesBody = data.ingredients.map { ing ->
-                    IngredienteCantidad(
-                        nombreIngrediente = ing.name,
-                        cantidad          = ing.quantity.toDoubleOrNull() ?: 0.0,
-                        unidad            = ing.unit,
-                        observaciones     = null
-                    )
-                }
-
-                // 3) mapea pasos (sin media aún, puedes extender si quieres contenidos multimedia)
-                val pasosBody = data.steps.mapIndexed { idx, step ->
-                    PasoCrear(
-                        nroPaso    = idx + 1,
-                        texto      = step.description,
-                        contenidos = emptyList()
-                    )
-                }
-
-                // 4) construye request
-                val request = RecetaCrearRequest(
-                    idUsuario         = 1L,  // -> reemplaza por tu user id real
-                    nombreReceta      = data.name,
-                    descripcionReceta = data.description,
-                    fotoPrincipal     = photoUrls.firstOrNull(),
-                    duracion          = data.duration,
-                    porciones         = data.servings,
-                    tipo              = null,  // -> tu campo de tipo si existe
-                    ingredientes      = ingredientesBody,
-                    pasos             = pasosBody,
-                    fotos             = photoUrls.map { url ->
-                        FotoCrear(
-                            urlFoto     = url,
-                            descripcion = "Foto receta"
-                        )
+                val pasosDto = steps.mapIndexed { idx, step ->
+                    val contenidos = step.media.mapNotNull { uri ->
+                        uriToBase64(uri)?.let { base64 ->
+                            val extension = uri.lastPathSegment?.substringAfterLast('.') ?: ""
+                            MultimediaCrear(
+                                tipoContenido = if (uri.toString().endsWith(".mp4")) "video" else "image",
+                                extension = extension,
+                                urlContenido = base64
+                            )
+                        }
                     }
-                )
+                    PasoCrear(nroPaso = idx + 1, texto = step.description, contenidos = contenidos)
+                }
 
-                // 5) llamada a crearReceta
-                val resp = withContext(Dispatchers.IO) {
+                val request = RecetaCrearRequest(
+                    idUsuario = userId,
+                    nombreReceta = nombre,
+                    descripcionReceta = descripcion,
+                    fotoPrincipal = fotoPrincipal,
+                    duracion = duracion,
+                    porciones = porciones,
+                    tipo = tipo.toUpperCase(),
+                    ingredientes = ingredientes,
+                    pasos = pasosDto,
+                    fotos = fotosDto
+                )
+                lastRequest = request
+
+                val response = withContext(Dispatchers.IO) {
                     api.crearReceta(request).execute()
                 }
-                if (resp.isSuccessful) {
-                    _submitState.value = SubmitState.Success
-                    _publishResult.value = PublishResult.SUCCESS
-                } else if (resp.code() == 409) {
-                    // suponiendo que un 409 indica duplicado
-                    _submitState.value = SubmitState.Idle
-                    _publishResult.value = PublishResult.DUPLICATE
-                } else {
-                    val err = resp.errorBody()?.string() ?: "Código ${resp.code()}"
-                    _submitState.value = SubmitState.Error("Servidor: $err")
+                when {
+                    response.isSuccessful -> {
+                        _uiState.value = PublishUiState.Success
+                    }
+                    response.code() == 409 || response.code() == 403 -> {
+                        lastExistingRecipeId = response.headers()["X-Existing-Recipe-Id"]?.toLongOrNull()
+                        Log.d("PublishVM", "Duplicate! existingId = $lastExistingRecipeId")
+                        _uiState.value = PublishUiState.Duplicate
+                    }
+                    else -> {
+                        _uiState.value = PublishUiState.Error("Error ${response.code()}")
+                    }
                 }
-
             } catch (e: Exception) {
-                _submitState.value = SubmitState.Error("Error: ${e.localizedMessage}")
+                Log.e("PublishVM", "Error publishing", e)
+                _uiState.value = PublishUiState.Error(e.localizedMessage ?: "Unexpected error")
             }
         }
     }
 
     /**
-     * Sube un archivo y devuelve su URL
+     * Llamado cuando el usuario confirma reemplazo en el diálogo
      */
-    private suspend fun uploadAndGetUrl(uri: Uri): String = withContext(Dispatchers.IO) {
-        val mimeType = contentResolver.getType(uri) ?: "application/octet-stream"
-        val stream   = contentResolver.openInputStream(uri)!!
-        val bytes    = stream.readBytes().also { stream.close() }
-
-        val reqBody = RequestBody.create(mimeType.toMediaTypeOrNull(), bytes)
-        val extension = MimeTypeMap.getSingleton()
-            .getExtensionFromMimeType(mimeType)
-            ?: uri.lastPathSegment?.substringAfterLast('.', "") ?: "bin"
-
-        val part = MultipartBody.Part.createFormData(
-            name     = "file",
-            filename = "upload_${System.currentTimeMillis()}.$extension",
-            body     = reqBody
-        )
-        val uploadResp = api.uploadFile(part).execute()
-        if (!uploadResp.isSuccessful) {
-            throw RuntimeException("Upload fallo: ${uploadResp.code()}")
+    fun confirmReplace() {
+        val req = lastRequest
+        val recetaId = lastExistingRecipeId
+        if (req == null || recetaId == null) {
+            Log.e("PublishVM", "confirmReplace fue llamado con req=$req, recetaId=$recetaId")
+            return
         }
-        uploadResp.body()!!.url
+
+        viewModelScope.launch {
+            _uiState.value = PublishUiState.Loading
+            try {
+                Log.d("PublishVM", "Calling PUT api/recetas/$recetaId …")
+                // Llamada a actualizar receta
+                val response = withContext(Dispatchers.IO) {
+                    api.actualizar(recetaId, req).execute()
+                }
+                Log.d("PublishVM", "update response code=${response.code()}, body=${response.errorBody()?.string()}")
+                _uiState.value = if (response.isSuccessful) {
+                    PublishUiState.Success
+                } else {
+                    PublishUiState.Error("Error al reemplazar: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("PublishVM", "Error replacing recipe", e)
+                _uiState.value = PublishUiState.Error(e.localizedMessage ?: "Error inesperado")
+            }
+        }
     }
+
+
+    fun resetState() {
+        _uiState.value = PublishUiState.Idle
+    }
+
+
 }
-*/

@@ -28,11 +28,17 @@ import com.google.gson.annotations.SerializedName
 
 data class ComentarioResponse (
 
+    @SerializedName("idComentario")
+    val idComentario: kotlin.Long? = null,
+
     @SerializedName("nombreUsuario")
     val nombreUsuario: kotlin.String? = null,
 
     @SerializedName("texto")
-    val texto: kotlin.String? = null
+    val texto: kotlin.String? = null,
+
+    @SerializedName("fechaCreacion")
+    val fechaCreacion: kotlin.String? = null
 
 ) {
 

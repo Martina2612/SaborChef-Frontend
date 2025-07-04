@@ -108,5 +108,12 @@ class ApiClient(
         val defaultBasePath: String by lazy {
             System.getProperties().getProperty(baseUrlKey, "http://localhost:8080")
         }
+
+        fun createAuthenticatedClient(baseUrl: String): ApiClient {
+                return ApiClient(baseUrl)
+                    .addAuthorization("bearerAuth", AuthInterceptor())
+            }
+
+
     }
 }

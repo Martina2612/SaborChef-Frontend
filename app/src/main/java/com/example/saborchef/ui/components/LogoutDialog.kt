@@ -29,14 +29,13 @@ fun CustomLogoutDialog(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0x66000000)) // Fondo semitransparente
-            .clickable(onClick = onDismiss), // Toca afuera para cerrar
+            .background(Color.Black.copy(alpha = 0.4f)) // Fondo translúcido
+            .clickable(onClick = onDismiss),
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
-                .width(380.dp) // Más ancho
-                .heightIn(min = 180.dp) // Más bajo
+                .width(320.dp)
                 .background(Color.White, RoundedCornerShape(20.dp))
                 .padding(24.dp)
         ) {
@@ -62,7 +61,7 @@ fun CustomLogoutDialog(
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
                 ) {
                     Button(
                         onClick = onConfirm,
@@ -70,29 +69,29 @@ fun CustomLogoutDialog(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
+                            .height(44.dp)
                     ) {
                         Text(
                             text = "Sí, cerrar",
                             fontFamily = Poppins,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp,
+                            fontSize = 12.sp,
                             color = Color.White
                         )
                     }
                     OutlinedButton(
                         onClick = onCancel,
-                        border = BorderStroke(1.dp, Color(0xFF3E5481)),
+                        border = BorderStroke(1.dp, TextPrimary),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
+                            .height(44.dp)
                     ) {
                         Text(
                             text = "No, cancelar",
                             fontFamily = Poppins,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp,
+                            fontSize = 12.sp,
                             color = TextPrimary
                         )
                     }
@@ -101,6 +100,7 @@ fun CustomLogoutDialog(
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

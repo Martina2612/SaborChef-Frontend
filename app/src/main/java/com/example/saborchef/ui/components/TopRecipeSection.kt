@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,55 +52,61 @@ fun TopCarouselSection(
 
         val pagerState = rememberPagerState(pageCount = { items.size })
         val scope = rememberCoroutineScope()
-
+        Spacer(Modifier.height(20.dp))
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp),
-            contentPadding = PaddingValues(horizontal = 32.dp),
-            pageSpacing = 16.dp
+                .height(220.dp),
+            contentPadding = PaddingValues(horizontal = 48.dp),
+            pageSpacing = 12.dp
         ) { page ->
             val receta = items[page]
             val imageUrl = receta.fotoPrincipal ?: ""
             val nombre = receta.nombreReceta ?: ""
             val id = receta.idReceta ?: 0L
 
+            val isCurrent = page == pagerState.currentPage
+            val scale = if (isCurrent) 1.1f else 0.9f // efecto agrandado
+
             Box(
                 modifier = Modifier
-                    .width(260.dp)
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    }
+                    .width(300.dp)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(15.dp))
                     .clickable { onClick(id) }
             ) {
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = nombre,
+                Base64Image(
+                    base64String = imageUrl,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(15.dp))
                 )
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(56.dp)
                         .align(Alignment.BottomStart)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color(0xAA000000)),
-                                startY = 0f,
-                                endY = 300f
-                            )
-                        )
-                        .padding(12.dp)
+                        .background(Color.Black.copy(alpha = 0.6f)) // Línea oscura semi-transparente
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = nombre,
                         color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2
                     )
                 }
             }
         }
     }
 }
+
+

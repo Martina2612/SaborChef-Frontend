@@ -31,13 +31,8 @@
             </intent-filter>
         </activity>
 
-        <!-- ✅ AuthTestActivity sigue disponible, pero ya no inicia la app -->
-        <activity
-            android:name=".ui.AuthTestActivity"
-            android:exported="true"
-            android:label="Auth Test"
-            android:theme="@style/Theme.SaborChef" />
-
     </application>
+
+    <uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>

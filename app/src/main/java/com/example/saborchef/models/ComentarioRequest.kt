@@ -31,8 +31,8 @@ data class ComentarioRequest (
     @SerializedName("idReceta")
     val idReceta: kotlin.Long? = null,
 
-    @SerializedName("comentario")
-    val comentario: kotlin.String? = null
+    @SerializedName("texto")
+    val texto: kotlin.String? = null
 
 ) {
 

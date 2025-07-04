@@ -14,8 +14,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.example.saborchef.network.LoginRequest
 
-
-
 data class User(val id: Long, val email: String, val name: String? = null)
 data class ExistsResponse(val exists: Boolean)
 data class PasswordResetRequest(val email: String)
@@ -24,6 +22,14 @@ data class NewPasswordRequest(val email: String, val nuevaPassword: String)
 
 data class PasswordResetResponse(val message: String, val success: Boolean)
 data class VerifyCodeResponse(val success: Boolean, val message: String)
+
+// Clase para compatibilidad con ambas ramas
+data class AuthenticationResponse(
+    val access_token: String,
+    val role: String,
+    val userId: Long,
+    val email: String
+)
 
 object AuthRepository {
 
@@ -38,6 +44,7 @@ object AuthRepository {
             .build()
             .create(AuthApiService::class.java)
     }
+
     suspend fun isAliasAvailable(alias: String): Boolean {
         val resp = api.aliasExists(alias)
         // available == !exists
@@ -78,13 +85,16 @@ object AuthRepository {
         }
     }
 
-    suspend fun login(alias: String, password: String): Result<AuthResponse> {
+    /**
+     * Método de login principal que devuelve AuthenticationResponse
+     * Compatible con ambas ramas
+     */
+    suspend fun login(alias: String, password: String): Result<AuthenticationResponse> {
         return try {
             val response = api.login(LoginRequest(alias, password))
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.access_token.isNotEmpty())
-                {
+                if (body != null && body.access_token.isNotEmpty()) {
                     Result.success(body)
                 } else {
                     Result.failure(Exception("El body viene nulo o el access_token está vacío"))
@@ -98,6 +108,33 @@ object AuthRepository {
         }
     }
 
+    /**
+     * Método de login alternativo que devuelve AuthResponse
+     * Para compatibilidad con código que espera AuthResponse
+     */
+    suspend fun loginAuthResponse(alias: String, password: String): Result<AuthResponse> {
+        return try {
+            val authResult = login(alias, password)
+            authResult.fold(
+                onSuccess = { authResponse ->
+                    // Convertir AuthenticationResponse a AuthResponse
+                    val convertedResponse = AuthResponse(
+                        access_token = authResponse.access_token,
+                        role = authResponse.role,
+                        userId = authResponse.userId,
+                        email = authResponse.email
+                    )
+                    Result.success(convertedResponse)
+                },
+                onFailure = { exception ->
+                    Result.failure(exception)
+                }
+            )
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Error en loginAuthResponse", e)
+            Result.failure(e)
+        }
+    }
 
     suspend fun sendPasswordResetEmailRaw(request: PasswordResetRequest): Response<PasswordResetResponse> {
         return api.sendPasswordResetEmail(request)
@@ -143,7 +180,4 @@ object AuthRepository {
             )
         }
     }
-
-
-
 }

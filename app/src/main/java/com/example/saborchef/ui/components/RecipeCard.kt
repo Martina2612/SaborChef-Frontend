@@ -22,10 +22,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.saborchef.R
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.Orange
@@ -35,7 +33,7 @@ import com.example.saborchef.ui.theme.Poppins
 fun RecipeCard(
     id: String,
     title: String,
-    imageUrl: Uri,
+    imageUrl: Uri?,
     duration: String,
     portions: Int,
     rating: Int,
@@ -70,9 +68,8 @@ fun RecipeCard(
                         )
                 )
             } else {
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = title,
+                Base64Image(
+                    base64String = imageUrl.toString(),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxHeight()
@@ -175,6 +172,7 @@ fun RecipeCard(
     }
 }
 
+/*
 @Preview(showBackground = true)
 @Composable
 fun PreviewRecipeCard() {
@@ -188,4 +186,4 @@ fun PreviewRecipeCard() {
         user = "usuario2612",
         onClick = {}
     )
-}
+}*/

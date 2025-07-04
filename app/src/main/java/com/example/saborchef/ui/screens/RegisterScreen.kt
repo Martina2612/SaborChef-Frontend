@@ -39,16 +39,15 @@ import com.example.saborchef.viewmodel.*
 @Composable
 fun RegisterScreen(
     navController: NavController,
-    sharedAlumnoViewModel: SharedAlumnoViewModel,
-    onRegisterSuccess: (email: String) -> Unit
+    sharedAlumnoViewModel: SharedAlumnoViewModel
 ) {
     val viewModel: RegisterViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     val aliasState by viewModel.aliasState.collectAsState()
     val emailState by viewModel.emailState.collectAsState()
+    val context = LocalContext.current
 
     var userType by remember { mutableStateOf(Rol.USUARIO) }
-    // Eliminamos las variables nombre y apellido
     var alias by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -59,7 +58,6 @@ fun RegisterScreen(
 
     var aliasChecked by remember { mutableStateOf("") }
     var emailChecked by remember { mutableStateOf("") }
-    val context = LocalContext.current
 
     LaunchedEffect(alias) {
         if (alias != aliasChecked) {
@@ -79,10 +77,16 @@ fun RegisterScreen(
         when (val state = uiState) {
             is RegisterUiState.Success -> {
                 val resultEmail = state.auth.email ?: ""
-                if (state.auth.role.name == "ALUMNO"){
+                val role = state.auth.role // "USUARIO" o "ALUMNO"
+
+                // Navegación diferencial según el rol
+                if (state.auth.role.name == "ALUMNO") {
                     navController.navigate("upload_dni")
                 } else {
-                    onRegisterSuccess(resultEmail)
+                    // Para usuarios regulares, navegamos a verificación
+                    navController.navigate("verify_registration/$resultEmail/$role") {
+                        popUpTo("register") { inclusive = true }
+                    }
                 }
             }
             is RegisterUiState.Error -> {
@@ -119,8 +123,6 @@ fun RegisterScreen(
                 userType = Rol.valueOf(it.uppercase())
             }
             Spacer(Modifier.height(16.dp))
-
-            // ELIMINAMOS los campos de nombre y apellido
 
             OutlinedTextField(
                 value = alias,
@@ -327,16 +329,15 @@ fun RegisterScreen(
                             passwordError = "Email inválido o no verificado"
                         }
                         else -> {
-                            // Pasamos strings vacíos para nombre y apellido
+                            // Configuramos la info del usuario (sin nombre y apellido)
                             sharedAlumnoViewModel.setUserInfo(
-                                "", // nombre vacío
-                                "", // apellido vacío
                                 alias.trim(),
                                 email.trim(),
                                 password,
                                 userType
                             )
 
+                            // Navegación diferencial según el tipo de usuario
                             if (userType == Rol.ALUMNO) {
                                 navController.navigate("add_payment")
                             } else {

@@ -28,7 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class AuthTestActivity : ComponentActivity() {
+/*class AuthTestActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -247,3 +247,4 @@ class AuthTestActivity : ComponentActivity() {
         }
     }
 }
+*/

@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.saborchef.ui.components.CurvedHeader
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.OrangeDark
@@ -37,6 +38,7 @@ import com.example.saborchef.ui.theme.SaborChefTheme
 
 @Composable
 fun TermsConditionsScreen(
+    navController: NavController,
     onBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -145,14 +147,3 @@ fun ScrollBar(
 }
 
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
-@Composable
-fun TermsConditionsScreenPreview() {
-    SaborChefTheme {
-        Surface {
-            TermsConditionsScreen(
-                onBack = { /* Volver */ }
-            )
-        }
-    }
-}

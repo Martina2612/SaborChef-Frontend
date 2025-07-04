@@ -46,9 +46,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.ui.res.painterResource
 import com.example.saborchef.R
+import androidx.navigation.NavController
 
 @Composable
 fun ContactUsScreen(
+    navController : NavController,
     onBack: () -> Unit
 ) {
 
@@ -132,14 +134,3 @@ fun RectangleItem(
 
 
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
-@Composable
-fun ContactUsScreenPreview() {
-    SaborChefTheme {
-        Surface {
-            ContactUsScreen(
-                onBack = { /* Volver */ }
-            )
-        }
-    }
-}

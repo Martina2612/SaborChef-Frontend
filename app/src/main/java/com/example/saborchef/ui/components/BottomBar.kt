@@ -22,7 +22,7 @@ import com.example.saborchef.model.Rol
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 
-// 1) Modelo de Tab con matcher dinámico
+// 1) Modelo de Tab con matcher dinámico para mejor detección de rutas activas
 sealed class TabItem(
     val route: String,
     val icon: ImageVector,
@@ -35,11 +35,9 @@ sealed class TabItem(
                 it == "mis_cursos" ||
                 it?.startsWith("curso_detalle") == true ||
                 it == "sedes_disponibles" ||
-                it?.startsWith("sucursal_detalle") == true||
+                it?.startsWith("sucursal_detalle") == true ||
                 it?.startsWith("mis_cursos_detalle") == true
-
     })
-
 
     object Bookmarks : TabItem("favs", Icons.Default.BookmarkBorder, { it == "favs" })
 
@@ -47,7 +45,6 @@ sealed class TabItem(
         it == "search" || it == "filter"
     })
 }
-
 
 // 2) Lista dinámica según rol
 fun tabsForRole(role: Rol): List<TabItem> =
@@ -92,6 +89,7 @@ fun BottomBar(navController: NavController, role: Rol) {
                 onClick = {
                     if (!selected) {
                         navController.navigate(tab.route) {
+                            // Limpia el stack hasta el destino inicial, manteniendo el estado
                             popUpTo(navController.graph.startDestinationId) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
