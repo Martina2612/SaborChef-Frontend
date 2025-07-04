@@ -32,7 +32,7 @@ object AuthRepository {
         val client = OkHttpClient.Builder().addInterceptor(logging).build()
 
         Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/api/")
+            .baseUrl("https://saborchef-backend-production.up.railway.app/api/")
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()

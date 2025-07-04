@@ -40,7 +40,7 @@ interface CursoApi {
 
 object CursoRepository {
     private val api: CursoApi = Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:8080/") // ← localhost para emulador Android
+        .baseUrl("https://saborchef-backend-production.up.railway.app/") // ← localhost para emulador Android
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(CursoApi::class.java)

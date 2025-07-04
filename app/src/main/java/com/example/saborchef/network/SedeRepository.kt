@@ -15,7 +15,7 @@ interface SedeApi{
 }
 class SedeRepository {
     private val api: SedeApi = Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:8080/") // ← localhost para emulador Android
+        .baseUrl("https://saborchef-backend-production.up.railway.app/") // ← localhost para emulador Android
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(SedeApi::class.java)

@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.first
 
 object ClaseRepository {
     private val api: ClaseApi = Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:8080/")
+        .baseUrl("https://saborchef-backend-production.up.railway.app/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(ClaseApi::class.java)

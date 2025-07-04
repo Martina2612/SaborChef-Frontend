@@ -20,7 +20,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Usar la misma URL en ambos lugares
-        buildConfigField("String","BASE_URL","\"http://10.0.2.2:8080/\"")
+        buildConfigField("String","BASE_URL","\"https://saborchef-backend-production.up.railway.app/\"")
     }
 
     buildTypes {

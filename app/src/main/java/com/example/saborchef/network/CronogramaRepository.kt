@@ -7,7 +7,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object CronogramaRepository {
     private val api: CronogramaApi = Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:8080/") // localhost para emulador
+        .baseUrl("https://saborchef-backend-production.up.railway.app/") // localhost para emulador
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(CronogramaApi::class.java)
