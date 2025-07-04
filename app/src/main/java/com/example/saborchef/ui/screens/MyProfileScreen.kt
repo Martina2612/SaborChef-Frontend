@@ -46,8 +46,10 @@ import coil.compose.AsyncImage
 import com.example.saborchef.data.DataStoreManager
 import com.example.saborchef.ui.theme.BlueLight
 import kotlinx.coroutines.launch
+import com.example.saborchef.model.Rol // Importar el enum principal
 
-enum class UserRole { ALUMNO, USUARIO }
+// ELIMINAR: enum class UserRole { ALUMNO, USUARIO }
+// Ahora usamos directamente el enum Rol
 
 data class ProfileOption(
     val icon: ImageVector,
@@ -59,7 +61,7 @@ data class ProfileOption(
 fun ProfileScreen(
     userName: String,
     photoUri: Uri?,
-    role: UserRole,
+    role: Rol, // Cambiar UserRole por Rol
     onBack: () -> Unit,
     onEditPhoto: () -> Unit,
     onOptionClick: (label: String) -> Unit,
@@ -143,12 +145,12 @@ fun ProfileScreen(
                     .offset(y = (-150).dp)
             )
 
-            // 4) Opciones (igual que antes, con ImageVector)
+            // 4) Opciones (cambiar UserRole.ALUMNO por Rol.ALUMNO)
             val opciones = remember(role) {
                 mutableListOf<ProfileOption>().apply {
                     add(ProfileOption(Icons.Default.Person,      "Mis datos")              { onOptionClick("Mis datos") })
                     add(ProfileOption(Icons.Default.Book, "Mis recetas")           { onOptionClick("Mis recetas") })
-                    if (role == UserRole.ALUMNO) {
+                    if (role == Rol.ALUMNO) { // Cambiar aquí
                         add(ProfileOption(Icons.Default.OndemandVideo,    "Mis cursos")             { onOptionClick("Mis cursos") })
                         add(ProfileOption(Icons.Default.Payment, "Medio de pago")         { onOptionClick("Medios de pago") })
                     }
@@ -193,8 +195,8 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 5) Botón “¡Hazte alumno!” solo para USUARIO
-            if (role == UserRole.USUARIO) {
+            // 5) Botón "¡Hazte alumno!" solo para USUARIO (cambiar UserRole.USUARIO por Rol.USUARIO)
+            if (role == Rol.USUARIO) { // Cambiar aquí
                 AppButton(
                     text = "¡Hazte alumno!",
                     onClick = onBecomeStudent,

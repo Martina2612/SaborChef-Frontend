@@ -45,17 +45,18 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 AuthRepository.login(alias, password)
                     .onSuccess { authResponse ->
                         // Guarda la sesión completa en DataStore
+                        // CORRECCIÓN: Usar los nombres correctos de las propiedades
                         dataStoreManager.saveUserData(
-                            token = authResponse.accessToken.toString(),
-                            role = authResponse.role.toString(),
-                            userId = authResponse.userId,
-                            email = authResponse.email.toString()
+                            token = authResponse.access_token, // No .toString(), ya es String
+                            role = authResponse.role.name, // .name para convertir Rol enum a String
+                            userId = authResponse.user_id, // user_id, no userId
+                            email = authResponse.email // No .toString(), ya es String
                         )
 
                         // Actualiza el SessionManager con el token
-                        SessionManager.token = authResponse.accessToken
+                        SessionManager.token = authResponse.access_token
 
-                        _loginState.value = LoginState.Success(authResponse.accessToken.toString())
+                        _loginState.value = LoginState.Success(authResponse.access_token)
                     }
                     .onFailure { e ->
                         Log.e("LoginViewModel", "Login fallido", e)

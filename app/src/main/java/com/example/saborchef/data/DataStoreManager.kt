@@ -16,46 +16,46 @@ class DataStoreManager(private val context: Context) {
         val USER_ID_KEY = longPreferencesKey("user_id")
     }
 
+    // Flows para leer datos
+    val token: Flow<String?> = context.dataStore.data.map { it[TOKEN_KEY] }
+    val role: Flow<String?> = context.dataStore.data.map { it[ROLE_KEY] }
+    val email: Flow<String?> = context.dataStore.data.map { it[EMAIL_KEY] }
+    val userId: Flow<Long?> = context.dataStore.data.map { it[USER_ID_KEY] }
 
+    // Guardar datos de login
     suspend fun saveLoginData(token: String, role: String, email: String, userId: Long) {
         context.dataStore.edit { prefs ->
             prefs[TOKEN_KEY] = token
             prefs[ROLE_KEY] = role
             prefs[EMAIL_KEY] = email
             prefs[USER_ID_KEY] = userId
-
-    // Flows para leer datos
-    val token: Flow<String?>    = context.dataStore.data.map { it[TOKEN_KEY] }
-    val role: Flow<String?>     = context.dataStore.data.map { it[ROLE_KEY] }
-    val userId: Flow<Long?>     = context.dataStore.data.map { it[USER_ID_KEY] }
-    val email: Flow<String?>    = context.dataStore.data.map { it[EMAIL_KEY] }
-
-    // Guardar sesión completa
-    suspend fun saveUserData(token: String, role: String, userId: Long?, email: String) {
-        context.dataStore.edit {
-            it[TOKEN_KEY]   = token
-            it[ROLE_KEY]    = role
-            it[USER_ID_KEY] = userId as Long
-            it[EMAIL_KEY]   = email
-
         }
     }
 
-
-    val token: Flow<String?> = context.dataStore.data.map { it[TOKEN_KEY] }
-    val role: Flow<String?> = context.dataStore.data.map { it[ROLE_KEY] }
-    val email: Flow<String?> = context.dataStore.data.map { it[EMAIL_KEY] }
-    val userId: Flow<Long?> = context.dataStore.data.map { it[USER_ID_KEY] }
-
-    suspend fun clearUserData() {
-        context.dataStore.edit { it.clear() }
-        SessionManager.token = null
+    // Guardar sesión completa
+    suspend fun saveUserData(token: String, role: String, userId: Long?, email: String) {
+        context.dataStore.edit { prefs ->
+            prefs[TOKEN_KEY] = token
+            prefs[ROLE_KEY] = role
+            userId?.let { prefs[USER_ID_KEY] = it }
+            prefs[EMAIL_KEY] = email
+        }
     }
 
+    // Guardar solo el rol
     suspend fun saveRole(role: String) {
-        context.dataStore.edit {
-            it[ROLE_KEY] = role
-        }}
+        context.dataStore.edit { prefs ->
+            prefs[ROLE_KEY] = role
+        }
+    }
 
+    // Limpiar todos los datos
+    suspend fun clearUserData() {
+        context.dataStore.edit { prefs ->
+            prefs.clear()
+        }
+        // Si tienes SessionManager, descomenta la siguiente línea
+        // SessionManager.token = null
+    }
 }
 

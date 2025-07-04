@@ -8,6 +8,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import com.example.saborchef.data.SessionManager
+
 
 import androidx.compose.ui.platform.LocalContext
 
@@ -43,7 +45,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.saborchef.model.CursoInscripto
 import com.example.saborchef.ui.theme.OrangeDark
-import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.theme.Orange
 import com.google.gson.Gson
 
@@ -59,12 +60,12 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     val searchViewModel: SearchViewModel = viewModel()
 
-                    // LoginViewModel con factory combinado - mantiene ambas opciones
+                    // LoginViewModel con factory corregido - solo Application
                     val loginViewModel: LoginViewModel = viewModel(
                         factory = object : ViewModelProvider.Factory {
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                                 @Suppress("UNCHECKED_CAST")
-                                return LoginViewModel(application, dataStoreManager) as T
+                                return LoginViewModel(application) as T
                             }
                         }
                     )
@@ -86,14 +87,14 @@ class MainActivity : ComponentActivity() {
 
                     val dataStore = remember { DataStoreManager(this@MainActivity) }
                     LaunchedEffect(Unit) {
-                        val stored = dataStore.role.firstOrNull()
-                        if (stored.isNullOrBlank()) {
+                        val storedRole = dataStore.role.firstOrNull()
+                        if (storedRole.isNullOrBlank()) {
                             dataStore.saveRole(Rol.VISITANTE.name)
                         }
                     }
                     val roleString by dataStore.role.collectAsState(initial = "")
-                    val role = remember(roleString) {
-                        runCatching { Rol.valueOf(roleString.toString()) }.getOrElse { Rol.VISITANTE }
+                    val userRole = remember(roleString) {
+                        runCatching { Rol.valueOf(roleString ?: Rol.VISITANTE.name) }.getOrElse { Rol.VISITANTE }
                     }
 
                     NavHost(navController = navController, startDestination = "splash") {
@@ -127,7 +128,17 @@ class MainActivity : ComponentActivity() {
                         composable("login") {
                             var aliasLocal by remember { mutableStateOf("") }
                             var passwordLocal by remember { mutableStateOf("") }
-                            val loginViewModel: LoginViewModel = viewModel()
+
+                            // CORRECCIÓN: Usar el factory con application para AndroidViewModel
+                            val loginViewModel: LoginViewModel = viewModel(
+                                factory = object : ViewModelProvider.Factory {
+                                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                        @Suppress("UNCHECKED_CAST")
+                                        return LoginViewModel(application) as T
+                                    }
+                                }
+                            )
+
                             LoginScreen(
                                 aliasValue = aliasLocal,
                                 passwordValue = passwordLocal,
@@ -161,7 +172,7 @@ class MainActivity : ComponentActivity() {
                                     sharedAlumnoViewModel.setDniInfo(frontUri, backUri, tramite)
 
                                     // Navegamos a verificación del email después de subir DNI
-                                    navController.navigate("verify_registration/${sharedAlumnoViewModel.email}/${sharedAlumnoViewModel.role}") {
+                                    navController.navigate("verify_registration/${sharedAlumnoViewModel.email}/${sharedAlumnoViewModel.rol}") {
                                         popUpTo("register") { inclusive = true }
                                     }
                                 },
@@ -184,13 +195,13 @@ class MainActivity : ComponentActivity() {
                             )
                         ) { backStack ->
                             val email = backStack.arguments!!.getString("email")!!
-                            val role  = backStack.arguments!!.getString("role")!!
+                            val roleParam  = backStack.arguments!!.getString("role")!!
 
                             VerificationCodeScreen(
                                 email = email,
                                 onBack = { navController.popBackStack() },
                                 onNext = {
-                                    if (role == "ALUMNO") {
+                                    if (roleParam == "ALUMNO") {
                                         // tras validar ALUMNO → pago → luego DNI…
                                         navController.navigate("add_payment")
                                     } else {
@@ -256,18 +267,18 @@ class MainActivity : ComponentActivity() {
                         composable("verify_recovery/{email}",
                             arguments = listOf(navArgument("email") { type = NavType.StringType })
                         ) { backStackEntry ->
-                            val email = backStackEntry.arguments?.getString("email") ?: ""
+                            val emailParam = backStackEntry.arguments?.getString("email") ?: ""
                             VerificationCodeScreen(
-                                email = email,
+                                email = emailParam,
                                 onBack = { navController.popBackStack() },
                                 onNext = {
-                                    navController.navigate("password_new/$email")
+                                    navController.navigate("password_new/$emailParam")
                                 },
                                 onResendCode = {
                                     resetTimerTrigger++
                                     scope.launch(Dispatchers.IO) {
                                         AuthRepository.sendPasswordResetEmailRaw(
-                                            PasswordResetRequest(email)
+                                            PasswordResetRequest(emailParam)
                                         )
                                     }
                                 },
@@ -278,7 +289,7 @@ class MainActivity : ComponentActivity() {
                             "password_new/{email}",
                             arguments = listOf(navArgument("email") { type = NavType.StringType })
                         ) { backStackEntry ->
-                            val email = backStackEntry.arguments?.getString("email") ?: ""
+                            val emailParam = backStackEntry.arguments?.getString("email") ?: ""
                             PasswordNewScreen(
                                 password = recoveryPassword,
                                 onPasswordChange = { recoveryPassword = it },
@@ -293,7 +304,7 @@ class MainActivity : ComponentActivity() {
                                     scope.launch(Dispatchers.IO) {
                                         try {
                                             val resp = AuthRepository.resetPassword(
-                                                NewPasswordRequest(email, recoveryPassword)
+                                                NewPasswordRequest(emailParam, recoveryPassword)
                                             )
                                             withContext(Dispatchers.Main) {
                                                 isLoading = false
@@ -331,7 +342,7 @@ class MainActivity : ComponentActivity() {
                             SimpleHomeScreen(
                                 nombre = alias.ifBlank { null },
                                 navController = navController,
-                                role = role,
+                                role = userRole,
                                 dataStoreManager = dataStore
                             )
                         }
@@ -342,7 +353,7 @@ class MainActivity : ComponentActivity() {
                             }
                             // Aquí obtienes el VM y lo asocias a ese owner
                             val vm: SearchViewModel = viewModel(parentEntry)
-                            SearchScreen(navController, vm, role = role)
+                            SearchScreen(navController, vm, role = userRole)
                         }
                         composable("filter") { backStackEntry ->
                             // Reusa el mismo owner "search"
@@ -363,42 +374,46 @@ class MainActivity : ComponentActivity() {
                         composable("favs") {
                             FavoriteRecipesScreen(
                                 navController = navController,
-                                role = role
+                                role = userRole
                             )
                         }
                         composable("profile") {
                             val dataStore = remember { DataStoreManager(this@MainActivity) }
-                            val nav = navController
 
-                            // 2) Lee desde tu DataStore el nombre de usuario (o alias, o email)
+                            // Lee los datos del usuario desde DataStore
                             val userName by dataStore.email.collectAsState(initial = "")
-                            // 3) Si no guardas la URI en DataStore, pásala como nula o desde donde la tengas
+                            val storedRole by dataStore.role.collectAsState(initial = Rol.VISITANTE.name)
+
+                            // Convierte el string a enum Rol
+                            val currentUserRole = try {
+                                Rol.valueOf(storedRole ?: Rol.VISITANTE.name)
+                            } catch (e: IllegalArgumentException) {
+                                Rol.VISITANTE
+                            }
+
+                            // URI de foto (por ahora null)
                             val photoUri: Uri? = null
 
-                            // 4) Convierte tu Rol (string) a UserRole
-                            val storedRole by dataStore.role.collectAsState(initial = Rol.VISITANTE.name)
-                            val roleEnum = if (storedRole == Rol.ALUMNO.name) UserRole.ALUMNO else UserRole.USUARIO
-
                             ProfileScreen(
-                                userName =alias,
-                                photoUri  =photoUri,
-                                role      = roleEnum,
-                                onBack    = { navController.popBackStack() },
-                                onEditPhoto    = { /*…*/ },
-                                onOptionClick     = { label ->
+                                userName = alias.ifBlank { userName ?: "" },
+                                photoUri = photoUri,
+                                role = currentUserRole, // Ahora es de tipo Rol y funciona correctamente
+                                onBack = { navController.popBackStack() },
+                                onEditPhoto = { /* Implementar después */ },
+                                onOptionClick = { label ->
                                     when(label) {
-                                        "Mis datos"            -> nav.navigate("my_data")
-                                        "Mis recetas"          -> nav.navigate("my_recipes")
-                                        "Mis cursos"           -> nav.navigate("my_courses")
-                                        "Medios de pago"       -> nav.navigate("payment_methods")
-                                        "Términos y condiciones" -> nav.navigate("terms")
-                                        "Contáctanos"          -> nav.navigate("contact")
+                                        "Mis datos" -> navController.navigate("my_data")
+                                        "Mis recetas" -> navController.navigate("my_recipes")
+                                        "Mis cursos" -> navController.navigate("my_courses")
+                                        "Medios de pago" -> navController.navigate("payment_methods")
+                                        "Términos y condiciones" -> navController.navigate("terms")
+                                        "Contáctanos" -> navController.navigate("contact")
                                     }
                                 },
-                                onBecomeStudent   = { nav.navigate("course_enroll") },
-                                onLogout  = { /* ya no hace falta: se maneja dentro */ },
+                                onBecomeStudent = { navController.navigate("course_enroll") },
+                                onLogout = { /* Se maneja dentro del ProfileScreen */ },
                                 dataStoreManager = dataStore,
-                                navController    = navController
+                                navController = navController
                             )
                         }
                         composable("publishRecipe") {
@@ -435,27 +450,28 @@ class MainActivity : ComponentActivity() {
                             val cursoId = backStackEntry.arguments?.getLong("id") ?: 0
                             val cursoViewModel: CursoViewModel = viewModel()
 
-                            var rol by remember { mutableStateOf<Rol?>(null) }
+                            var userRole by remember { mutableStateOf<Rol?>(null) }
 
                             LaunchedEffect(Unit) {
-                                dataStoreManager.role.collect {
-                                    rol = it?.let { valor -> Rol.valueOf(valor) }
+                                dataStoreManager.role.collect { roleValue ->
+                                    userRole = roleValue?.let { Rol.valueOf(it) }
                                 }
                             }
 
-                            val curso by cursoViewModel.cursoDetalle.collectAsState()
-
-                            if (rol != null) {
+                            if (userRole != null) {
                                 CursoDetalleScreen(
                                     cursoId = cursoId,
                                     navController = navController,
                                     cursoViewModel = cursoViewModel,
-                                    userRole = rol!!,
+                                    userRole = userRole!!,
                                     sharedCursoViewModel = sharedCursoViewModel
                                 )
                             } else {
-                                // Mostrar loading mientras carga el rol
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                // Loading mientras carga el rol
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     CircularProgressIndicator(color = OrangeDark)
                                 }
                             }
