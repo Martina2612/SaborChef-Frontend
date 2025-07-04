@@ -6,7 +6,7 @@ import com.example.saborchef.apis.TipoRecetaControllerApi
 
 object ServiceLocator {
     private val apiClient by lazy {
-        ApiClient(baseUrl = "http://192.168.1.37:8080/")
+        ApiClient(baseUrl = "https://saborchef-backend-production.up.railway.app/")
         // El interceptor ya inyecta el token de SessionManager
     }
 

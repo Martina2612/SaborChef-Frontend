@@ -1,8 +1,8 @@
-// File: app/src/main/java/com/example/saborchef/ui/screens/SearchScreen.kt
 package com.example.saborchef.ui.screens
 
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items as listItems
@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.saborchef.R
+import com.example.saborchef.model.Rol
+import com.example.saborchef.ui.components.BottomBar
 import com.example.saborchef.ui.components.CategoryCard
 import com.example.saborchef.ui.components.NoResultsView
 import com.example.saborchef.ui.components.RecipeCard
@@ -30,9 +33,9 @@ import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.Poppins
 import com.example.saborchef.viewmodel.SearchUiState
 import com.example.saborchef.viewmodel.SearchViewModel
-import com.example.saborchef.ui.components.SuggestList
 
-data class Recipe(
+// Modelo local para UI
+private data class RecipeItem(
     val id: String,
     val title: String,
     val imageUrl: Uri,
@@ -44,44 +47,25 @@ data class Recipe(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
-    // Cada vez que esta pantalla aparece, reseteamos la búsqueda
-    LaunchedEffect(Unit) {
-        viewModel.resetSearch()
-    }
+fun SearchScreen(
+    navController: NavController,
+    viewModel: SearchViewModel = viewModel(),
+    role: Rol
+) {
+    LaunchedEffect(Unit) { viewModel.initIfNeeded() }
 
-    // Estado local de la opción seleccionada en SortDropdown
-    var sortOption by remember { mutableStateOf("") }
+    var sortOption by remember { mutableStateOf("Más nueva a más antigua") }
     val sortOptions = listOf("Más nueva a más antigua", "Nombre de usuario")
-
-    // Leer uiState y query desde el ViewModel
     val uiState by remember { derivedStateOf { viewModel.uiState } }
     val query = viewModel.query
-
-    // Mapeo a UI Recipe
-    val recipesUi: List<Recipe> = when (uiState) {
-        is SearchUiState.Results -> (uiState as SearchUiState.Results).recipes.map {
-            Recipe(
-                id = it.idReceta?.toString() ?: "0",
-                title = it.nombre.orEmpty(),
-                imageUrl = Uri.parse(it.fotoPrincipal.orEmpty()),
-                duration = it.duracion?.toString().orEmpty(),
-                portions = it.porciones ?: 0,
-                rating = (it.promedioCalificacion ?: 0.0).toInt(),
-                user = it.nombreUsuario.orEmpty()
-            )
-        }
-        else -> emptyList()
-    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                backgroundColor = Color.White,
-                elevation = 4.dp,
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
@@ -90,16 +74,13 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
                             color = BlueDark,
                             fontSize = 20.sp
                         )
-                        Spacer(modifier = Modifier.weight(1f))
-                        // Aquí insertamos el SortDropdown a la derecha del título
-                        SortDropdown(
-                            options = sortOptions,
-                            selected = sortOption,
-                            onSelected = { newOption ->
-                                sortOption = newOption
-                                viewModel.onSortSelected(newOption)
-                            }
-                        )
+                        if (uiState is SearchUiState.Results) {
+                            SortDropdown(
+                                options = sortOptions,
+                                selected = sortOption,
+                                onSelected = { sortOption = it }
+                            )
+                        }
                     }
                 },
                 navigationIcon = {
@@ -111,44 +92,39 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
                         )
                     }
                 },
-
+                backgroundColor = Color.White,
+                elevation = 4.dp
             )
-        }
+
+        },
+        bottomBar = { BottomBar(navController, role) }
     ) { paddingValues ->
         Column(
-            modifier = Modifier
+            Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // ----------------------------------------------------------------
-            // 1) En lugar del RecipeFilterSortBarView, usamos tu nuevo SearchBar:
-            // ----------------------------------------------------------------
+            Spacer(Modifier.height(12.dp))
             SearchBar(
                 query = query,
                 onQueryChange = { viewModel.onQueryChange(it) },
                 onSearch = { viewModel.searchByName() },
                 onFilterClick = { navController.navigate("filter") }
             )
+            Spacer(Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // ----------------------------------------------------------------
-            // 2) Mostramos el contenido según el estado (Idle, Suggest, Results, etc.)
-            // ----------------------------------------------------------------
             when (uiState) {
                 SearchUiState.Idle -> {
-                    // Mostrar categorías
                     val categories = listOf(
-                        "Desayuno" to com.example.saborchef.R.drawable.img_desayuno,
-                        "Almuerzo" to com.example.saborchef.R.drawable.img_almuerzo,
-                        "Pastas" to com.example.saborchef.R.drawable.img_pastas,
-                        "Cena" to com.example.saborchef.R.drawable.img_cena,
-                        "Postres" to com.example.saborchef.R.drawable.img_cheesecake,
-                        "Snacks" to com.example.saborchef.R.drawable.img_snacks,
-                        "Vegetariano" to com.example.saborchef.R.drawable.img_vegetariano,
-                        "Vegano" to com.example.saborchef.R.drawable.img_vegano
+                        "Desayuno" to R.drawable.img_desayuno,
+                        "Almuerzo" to R.drawable.img_almuerzo,
+                        "Pastas" to R.drawable.img_pastas,
+                        "Cena" to R.drawable.img_cena,
+                        "Postres" to R.drawable.img_cheesecake,
+                        "Snacks" to R.drawable.img_snacks,
+                        "Vegetariano" to R.drawable.img_vegetariano,
+                        "Vegano" to R.drawable.img_vegano
                     )
-
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
                         modifier = Modifier
@@ -161,32 +137,44 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
                             CategoryCard(
                                 label = label,
                                 imagePainter = painterResource(drawableRes),
-                                modifier = Modifier
-                                    .width(80.dp)   // Ajusta el ancho que prefieras
-                                    .height(100.dp), // Ajusta el alto que prefieras
+                                modifier = Modifier.size(80.dp, 100.dp),
                                 onClick = { viewModel.searchByCategory(label) }
                             )
                         }
                     }
                 }
+
                 is SearchUiState.Suggest -> {
+                    val suggestions = (uiState as SearchUiState.Suggest).suggestions
                     LazyColumn(
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listItems((uiState as SearchUiState.Suggest).suggestions) { suggestion ->
-                            SuggestList(listOf(suggestion)) {
-                                viewModel.onQueryChange(it)
-                                viewModel.searchByName()
-                            }
+                        listItems(suggestions) { suggestion ->
+                            Text(
+                                text = suggestion,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                                    .clickable {
+                                        viewModel.onQueryChange(suggestion)
+                                        viewModel.searchByName()
+                                    },
+                                fontFamily = Poppins,
+                                fontSize = 16.sp,
+                                color = BlueDark
+                            )
+                            Divider()
                         }
+
                     }
                 }
+
                 SearchUiState.NoResults -> {
                     Box(
-                        modifier = Modifier
+                        Modifier
                             .weight(1f)
                             .fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -194,7 +182,25 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
                         NoResultsView()
                     }
                 }
+
                 is SearchUiState.Results -> {
+                    val original = (uiState as SearchUiState.Results).recipes.map {
+                        RecipeItem(
+                            id = it.idReceta.toString(),
+                            title = it.nombre.orEmpty(),
+                            imageUrl = Uri.parse(it.fotoPrincipal.orEmpty()),
+                            duration = it.duracion.toString() +"min",
+                            portions = it.porciones ?: 0,
+                            rating = (it.promedioCalificacion ?: 0.0).toInt(),
+                            user = it.nombreUsuario.orEmpty()
+                        )
+                    }
+                    val sorted = remember(original, sortOption) {
+                        when (sortOption) {
+                            "Nombre de usuario" -> original.sortedBy { it.user }
+                            else -> original.sortedByDescending { it.id.toLongOrNull() ?: 0L }
+                        }
+                    }
                     LazyColumn(
                         modifier = Modifier
                             .weight(1f)
@@ -202,7 +208,7 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
                             .padding(horizontal = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        listItems(recipesUi) { r ->
+                        listItems(sorted) { r ->
                             RecipeCard(
                                 id = r.id,
                                 title = r.title,
@@ -217,15 +223,16 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel) {
                         }
                     }
                 }
+
                 is SearchUiState.Error -> {
                     Box(
-                        modifier = Modifier
+                        Modifier
                             .weight(1f)
                             .fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Ocurrió un error al cargar los datos",
+                            "Ocurrió un error al cargar los datos",
                             color = Color.Red,
                             fontFamily = Poppins
                         )

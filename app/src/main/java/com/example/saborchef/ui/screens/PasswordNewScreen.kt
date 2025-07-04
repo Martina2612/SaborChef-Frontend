@@ -1,11 +1,8 @@
 package com.example.saborchef.ui.screens
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -18,30 +15,27 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.saborchef.ui.components.AppButton
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.Orange
 import com.example.saborchef.ui.theme.Poppins
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.ui.tooling.preview.Preview
-
 
 @Composable
 fun PasswordNewScreen(
     password: String,
     onPasswordChange: (String) -> Unit,
+    confirmPassword: String,
+    onConfirmPasswordChange: (String) -> Unit,
     isLoading: Boolean,
     errorMessage: String?,
     onSubmit: () -> Unit,
@@ -49,10 +43,16 @@ fun PasswordNewScreen(
 ) {
     val context = LocalContext.current
     var passwordVisible by remember { mutableStateOf(false) }
+    var confirmVisible by remember { mutableStateOf(false) }
 
     // Validaciones en tiempo real
-    val lengthValid = password.length >= 6
+    val lengthValid = password.length >= 8
     val numberValid = password.any { it.isDigit() }
+    val passwordsMatch = password == confirmPassword
+
+    // Mensaje de error para confirmación
+    val confirmError = if (confirmPassword.isNotEmpty() && !passwordsMatch)
+        "Las contraseñas no coinciden" else null
 
     Box(
         Modifier
@@ -75,7 +75,6 @@ fun PasswordNewScreen(
                     tint = BlueDark
                 )
             }
-
         }
 
         Column(
@@ -105,16 +104,10 @@ fun PasswordNewScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = onPasswordChange,
-                label = {
-                    Text("Contraseña nueva", fontFamily = Poppins, fontSize = 14.sp, color = BlueDark)
-                },
-                leadingIcon = {
-                    Icon(Icons.Default.Lock, contentDescription = null, tint = BlueDark)
-                },
+                label = { Text("Contraseña nueva", fontFamily = Poppins, fontSize = 14.sp) },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = BlueDark) },
                 trailingIcon = {
-                    IconButton(
-                        onClick = { passwordVisible = !passwordVisible }
-                    ) {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = null,
@@ -129,60 +122,10 @@ fun PasswordNewScreen(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    // Textos
-                    focusedTextColor       = Color.Black,
-                    unfocusedTextColor     = Color.Black,
-                    disabledTextColor      = Color.Gray,
-                    errorTextColor         = Color.Red,
-                    // Fondo de la caja
-                    focusedContainerColor   = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor  = Color.Transparent,
-                    errorContainerColor     = Color.Transparent,
-                    // Cursor
-                    cursorColor            = Orange,
-                    errorCursorColor       = Color.Red,
-                    // Bordes
-                    focusedBorderColor     = if (errorMessage != null) Color.Red else Orange,
-                    unfocusedBorderColor   = if (errorMessage != null) Color.Red else Color.LightGray,
-                    disabledBorderColor    = Color.LightGray,
-                    errorBorderColor       = Color.Red,
-                    // Iconos
-                    focusedLeadingIconColor    = BlueDark,
-                    unfocusedLeadingIconColor  = BlueDark,
-                    errorLeadingIconColor      = Color.Red,
-                    focusedTrailingIconColor   = BlueDark,
-                    unfocusedTrailingIconColor = BlueDark,
-                    errorTrailingIconColor     = Color.Red,
-                    // Label
-                    focusedLabelColor      = BlueDark,
-                    unfocusedLabelColor    = BlueDark.copy(alpha = 0.5f),
-                    errorLabelColor        = Color.Red,
-                    // Placeholder
-                    focusedPlaceholderColor   = BlueDark.copy(alpha = 0.5f),
-                    unfocusedPlaceholderColor = BlueDark.copy(alpha = 0.5f),
-                    errorPlaceholderColor     = Color.Red
+                    .height(56.dp)
             )
-            )
-
-            // Mensaje de error si lo hay
-            errorMessage?.let {
-                Text(
-                    text = it,
-                    color = Color.Red,
-                    fontFamily = Poppins,
-                    fontSize = 12.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, top = 4.dp)
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            // Lista de requisitos
+            // Requisitos
+            Spacer(Modifier.height(16.dp))
             Column(Modifier.fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -217,6 +160,44 @@ fun PasswordNewScreen(
                 }
             }
 
+            Spacer(Modifier.height(24.dp))
+
+            // Confirmar contraseña
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = onConfirmPasswordChange,
+                label = { Text("Repetir contraseña", fontFamily = Poppins, fontSize = 14.sp) },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = BlueDark) },
+                trailingIcon = {
+                    IconButton(onClick = { confirmVisible = !confirmVisible }) {
+                        Icon(
+                            imageVector = if (confirmVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = null,
+                            tint = BlueDark
+                        )
+                    }
+                },
+                visualTransformation = if (confirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                singleLine = true,
+                isError = confirmError != null,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            )
+            confirmError?.let {
+                Text(
+                    text = it,
+                    color = Color.Red,
+                    fontFamily = Poppins,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 4.dp)
+                )
+            }
+
             Spacer(Modifier.height(32.dp))
 
             // Botón “Listo!”
@@ -224,16 +205,15 @@ fun PasswordNewScreen(
                 text = if (isLoading) "Guardando..." else "Listo!",
                 onClick = {
                     if (!isLoading) {
-                        if (lengthValid && numberValid) {
+                        if (lengthValid && numberValid && passwordsMatch) {
                             onSubmit()
                         } else {
-                            Toast
-                                .makeText(context, "Cumplí todos los requisitos", Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(context, "Cumplí todos los requisitos", Toast.LENGTH_SHORT).show()
                         }
                     }
                 },
                 primary = true,
+                enabled = lengthValid && numberValid && passwordsMatch,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
@@ -242,40 +222,15 @@ fun PasswordNewScreen(
     }
 }
 
-
-@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Preview(showBackground = true)
 @Composable
-fun PasswordNewScreenPreview_Success() {
+fun PasswordNewScreenPreview() {
     PasswordNewScreen(
-        password = "MiNuevaClave123",
+        password = "",
         onPasswordChange = {},
+        confirmPassword = "",
+        onConfirmPasswordChange = {},
         isLoading = false,
-        errorMessage = null,
-        onSubmit = {},
-        onBack = {}
-    )
-}
-
-@Preview(showBackground = true, widthDp = 360, heightDp = 640)
-@Composable
-fun PasswordNewScreenPreview_Error() {
-    PasswordNewScreen(
-        password = "123",
-        onPasswordChange = {},
-        isLoading = false,
-        errorMessage = "La contraseña debe tener al menos 8 caracteres",
-        onSubmit = {},
-        onBack = {}
-    )
-}
-
-@Preview(showBackground = true, widthDp = 360, heightDp = 640)
-@Composable
-fun PasswordNewScreenPreview_Loading() {
-    PasswordNewScreen(
-        password = "MiNuevaClave123",
-        onPasswordChange = {},
-        isLoading = true,
         errorMessage = null,
         onSubmit = {},
         onBack = {}

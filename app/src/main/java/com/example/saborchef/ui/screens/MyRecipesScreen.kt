@@ -2,60 +2,69 @@ package com.example.saborchef.ui.screens
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.saborchef.R
-import com.example.saborchef.ui.components.CurvedHeader
-import com.example.saborchef.ui.components.AppButton
+import com.example.saborchef.data.DataStoreManager
+import com.example.saborchef.data.url
+import com.example.saborchef.models.RecetaDetalleResponse
 import com.example.saborchef.ui.theme.BlueDark
-import com.example.saborchef.ui.theme.Orange
 import com.example.saborchef.ui.theme.OrangeDark
-import com.example.saborchef.ui.theme.Poppins
+import com.example.saborchef.viewmodel.MyRecipesUiState
+import com.example.saborchef.viewmodel.MyRecipesViewModel
+import com.example.saborchef.viewmodel.MyRecipesViewModelFactory
+import com.example.saborchef.apis.RecetaControllerApi
+import com.example.saborchef.infrastructure.ApiClient
+import com.example.saborchef.ui.components.CurvedHeader
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.example.saborchef.ui.components.RecipeCard
+import com.example.saborchef.ui.theme.Poppins
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MyRecipesScreen(
     navController: NavController,
-    recipesInitial: List<RecipeData> = sampleRecipes()
+    onBack: () -> Unit = {}
 ) {
-    var recipes by remember { mutableStateOf(recipesInitial) }
+    val context = LocalContext.current
+
+    val viewModel: MyRecipesViewModel = viewModel(
+        factory = MyRecipesViewModelFactory(
+            dataStore = DataStoreManager(context)
+        )
+    )
+    val uiState by viewModel.uiState.collectAsState()
+
     var showConfirm by remember { mutableStateOf(false) }
     var showDeleted by remember { mutableStateOf(false) }
-    var toDelete by remember { mutableStateOf<RecipeData?>(null) }
+    var toDelete by remember { mutableStateOf<RecetaDetalleResponse?>(null) }
     val sheetState = rememberModalBottomSheetState(
-        initialValue = ModalBottomSheetValue.Hidden,
-        skipHalfExpanded = true
+        initialValue = ModalBottomSheetValue.Hidden, skipHalfExpanded = true
     )
     val scope = rememberCoroutineScope()
-
     LaunchedEffect(showConfirm) {
         if (showConfirm) sheetState.show() else sheetState.hide()
     }
@@ -67,115 +76,145 @@ fun MyRecipesScreen(
                 icon = Icons.Default.Book,
                 headerColor = OrangeDark,
                 circleColor = Color.White,
-                onBack = { navController.popBackStack() }
+                onBack = onBack
             )
-        },
+        }
+        ,
         floatingActionButton = {
-            AppButton(
-                text = "Añadir receta",
-                onClick = { /* Navegar a creación */ },
-                primary = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .padding(horizontal = 16.dp)
-            )
-        },
-        floatingActionButtonPosition = FabPosition.Center
-    ) { paddingValues ->
-        ModalBottomSheetLayout(
-            sheetState = sheetState,
-            sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            sheetContent = {
-                Column(
-                    Modifier
+            if (!showConfirm && !showDeleted) {
+                Button(
+                    onClick = { navController.navigate("publish") },
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .height(50.dp)
+                        .padding(horizontal = 16.dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = OrangeDark),
+                    shape = RoundedCornerShape(50)
                 ) {
-                    Text(
-                        "¿Está seguro que desea eliminar esta receta?",
-                        fontFamily = Poppins,
-                        fontWeight = FontWeight.Bold,
-                        color = BlueDark
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Button(
-                        onClick = {
-                            recipes = recipes.filterNot { it.id == toDelete?.id }
-                            showConfirm = false
-                            showDeleted = true
-                            scope.launch {
-                                delay(2000)
-                                showDeleted = false
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(backgroundColor = OrangeDark),
-                        shape = RoundedCornerShape(50)
-                    ) {
-                        Text("Sí, eliminar", color = Color.White, fontFamily = Poppins)
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedButton(
-                        onClick = { showConfirm = false },
-                        shape = RoundedCornerShape(50)
-                    ) {
-                        Text("No, cancelar", fontFamily = Poppins)
-                    }
+                    Text("Añadir receta", color = MaterialTheme.colors.onPrimary, fontFamily=Poppins)
                 }
             }
-        ) {
-            Box(Modifier.fillMaxSize()) {
-                LazyColumn(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(recipes, key = { it.id }) { recipe ->
-                        RecipeCardRow(
-                            recipe = recipe,
-                            onDelete = {
-                                toDelete = recipe
-                                showConfirm = true
-                            },
-                            onEdit = {
-                                /* navegar a edición */
-                            }
-                        )
-                    }
+        },
+        floatingActionButtonPosition = FabPosition.Center
+    ) {
+        when (uiState) {
+            MyRecipesUiState.Loading -> {
+                Box(Modifier.fillMaxSize(), Alignment.Center) {
+                    CircularProgressIndicator(color=OrangeDark)
                 }
-                AnimatedVisibility(
-                    visible = showDeleted,
-                    modifier = Modifier.fillMaxSize()
+            }
+            is MyRecipesUiState.Error -> {
+                val msg = (uiState as MyRecipesUiState.Error).message
+                Box(Modifier.fillMaxSize(), Alignment.Center) {
+                    Text("Error: $msg", color = MaterialTheme.colors.error)
+                }
+            }
+            is MyRecipesUiState.Success -> {
+                val recipes = (uiState as MyRecipesUiState.Success).recipes
+                Log.d("MyRecipesScreen", "Recetas cargadas: ${'$'}{recipes.size}")
+                ModalBottomSheetLayout(
+                    sheetState = sheetState,
+                    sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+                    sheetContent = {
+                        Column(
+                            Modifier.fillMaxWidth().padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "¿Está seguro que desea eliminar esta receta?",
+                                style = MaterialTheme.typography.h6,
+                                color = BlueDark,
+                                fontFamily = Poppins
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Row {
+                                Button(
+                                    onClick = {
+                                        toDelete?.let { viewModel.deleteRecipe(it.idReceta ?: 0) }
+                                        showConfirm = false
+                                        showDeleted = true
+                                        scope.launch {
+                                            delay(1500)
+                                            showDeleted = false
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(backgroundColor = OrangeDark),
+                                    shape = RoundedCornerShape(50)
+                                ) {
+                                    Text("Sí, eliminar", color = MaterialTheme.colors.onPrimary)
+                                }
+                                Spacer(Modifier.width(8.dp))
+                                OutlinedButton(onClick = { showConfirm = false }, shape = RoundedCornerShape(50)) {
+                                    Text("No, cancelar")
+                                }
+                            }
+                        }
+                    }
                 ) {
-                    Box(
+                    LazyColumn(
                         Modifier
                             .fillMaxSize()
-                            .background(Color(0x88000000)),
-                        contentAlignment = Alignment.Center
+                            .padding(horizontal = 16.dp, vertical = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Card(
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = 8.dp
+                        items(recipes, key = { it.idReceta.toString() }) { r ->
+                            val base64 = r.fotoPrincipal
+                            Log.d("MyRecipesScreen", "Receta ID=${r.idReceta} nombre=${r.nombre} base64-valido=${!base64.isNullOrEmpty()} length=${base64?.length ?: 0}")
+                            Box(Modifier.fillMaxWidth()
+                                .height(120.dp)) {
+                                // Tu RecipeCard consume Base64
+                                RecipeCard(
+                                    id = r.idReceta.toString(),
+                                    title = r.nombre.toString(),
+                                    imageUrl = Uri.parse(r.fotoPrincipal ?: ""),
+                                    duration = "${r.duracion} min",
+                                    portions = r.porciones ?: 0,
+                                    rating = r.promedioCalificacion?.toInt() ?: 0,
+                                    user = r.nombreUsuario ?: "",
+                                    onClick = { navController.navigate("recipe/${r.idReceta}")}
+                                )
+                                Row(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(8.dp)
+                                ) {
+                                    IconButton(
+                                        onClick = { navController.navigate("editRecipe/${r.idReceta}") }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Editar",
+                                            tint = BlueDark
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    IconButton(
+                                        onClick = { toDelete = r; showConfirm = true }
+                                    ) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = OrangeDark)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    AnimatedVisibility(visible = showDeleted) {
+                        Box(
+                            Modifier.fillMaxSize().background(Color(0x88000000)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(24.dp)
-                            ) {
-                                Image(
-                                    painter = painterResource(R.drawable.chef_popup),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(120.dp)
-                                )
-                                Spacer(Modifier.height(16.dp))
-                                Text(
-                                    "Receta eliminada!",
-                                    fontFamily = Poppins,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp,
-                                    color = BlueDark
-                                )
+                            Card(shape = RoundedCornerShape(16.dp), elevation = 8.dp) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(24.dp)
+                                ) {
+                                    Image(
+                                        painter = painterResource(R.drawable.chef_popup),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(120.dp)
+                                    )
+                                    Spacer(Modifier.height(16.dp))
+                                    Text("Receta eliminada!", style = MaterialTheme.typography.h6, color = BlueDark)
+                                }
                             }
                         }
                     }
@@ -185,104 +224,3 @@ fun MyRecipesScreen(
     }
 }
 
-@Composable
-private fun RecipeCardRow(
-    recipe: RecipeData,
-    onDelete: () -> Unit,
-    onEdit: () -> Unit
-) {
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(100.dp)
-            .shadow(2.dp, RoundedCornerShape(12.dp))
-            .background(Color.White, RoundedCornerShape(12.dp))
-    ) {
-        Row(Modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(recipe.imageRes),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .width(100.dp)
-                    .clip(RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
-            )
-            Spacer(Modifier.width(12.dp))
-            Column(
-                Modifier
-                    .weight(1f)
-                    .padding(vertical = 8.dp)
-            ) {
-                Text(
-                    text = recipe.title,
-                    fontFamily = Poppins,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = BlueDark
-                )
-                Spacer(Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    repeat(5) { idx ->
-                        if (idx < recipe.rating)
-                            Icon(Icons.Filled.Star, contentDescription = null, tint = OrangeDark, modifier = Modifier.size(16.dp))
-                        else
-                            Icon(Icons.Outlined.StarBorder, contentDescription = null, tint = OrangeDark, modifier = Modifier.size(16.dp))
-                    }
-                }
-                Spacer(Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.AccessTime, contentDescription = null, tint = BlueDark, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("${recipe.duration} min", fontFamily = Poppins, fontSize = 12.sp, color = BlueDark)
-                    Spacer(Modifier.width(16.dp))
-                    Icon(Icons.Filled.Person, contentDescription = null, tint = BlueDark, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("${recipe.portions} porciones", fontFamily = Poppins, fontSize = 12.sp, color = BlueDark)
-                }
-            }
-            Column(
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(8.dp)
-            ) {
-                IconButton(onClick = onEdit) {
-                    Icon(Icons.Filled.Edit, contentDescription = "Editar", tint = BlueDark)
-                }
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        Icons.Filled.Delete,
-                        contentDescription = "Eliminar receta",
-                        tint = Orange
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MyRecipesPreview() {
-    // NavController no es necesario para preview, pasamos un stub
-    MyRecipesScreen(navController = rememberNavController())
-}
-
-data class RecipeData(
-    val id: Int,
-    val title: String,
-    val imageRes: Int,
-    val rating: Int,
-    val duration: Int,
-    val portions: Int
-)
-
-private fun sampleRecipes() = listOf(
-    RecipeData(1, "Budín de limón y amapolas", R.drawable.img_pastas, 4, 70, 8),
-    RecipeData(2, "Tarta de atún", R.drawable.img_snacks, 3, 50, 10),
-    RecipeData(3, "Alfajores de chocolate", R.drawable.img_cheesecake, 5, 40, 12)
-)

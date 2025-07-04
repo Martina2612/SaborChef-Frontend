@@ -72,8 +72,6 @@ class AlumnoRegisterViewModel : ViewModel() {
 
         val datos = formData.value
         val request = RegisterRequest(
-            nombre = datos.nombre,
-            apellido = datos.apellido,
             alias = datos.alias,
             email = datos.email,
             password = datos.password,

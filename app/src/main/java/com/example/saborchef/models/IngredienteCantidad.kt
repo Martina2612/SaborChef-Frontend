@@ -31,16 +31,16 @@ import com.google.gson.annotations.SerializedName
 data class IngredienteCantidad (
 
     @SerializedName("nombreIngrediente")
-    val nombreIngrediente: kotlin.String? = null,
+    val nombreIngrediente: String? = null,
 
     @SerializedName("cantidad")
-    val cantidad: kotlin.Double? = null,
+    val cantidad: Float = 0f,
 
     @SerializedName("unidad")
-    val unidad: kotlin.String? = null,
+    val unidad: String? = "unid.",
 
     @SerializedName("observaciones")
-    val observaciones: kotlin.String? = null
+    val observaciones: String? = null
 
 ) {
 

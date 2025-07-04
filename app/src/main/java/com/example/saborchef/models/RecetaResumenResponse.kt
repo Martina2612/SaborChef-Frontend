@@ -45,7 +45,7 @@ data class RecetaResumenResponse (
     val fotoPrincipal: kotlin.String? = null,
 
     @SerializedName("porciones")
-    val porciones: kotlin.Int? = null,
+    val cantidadPersonas: kotlin.Int? = null,
 
     @SerializedName("promedioCalificacion")
     val promedioCalificacion: kotlin.Double? = null,

@@ -82,4 +82,7 @@ interface CalificacionControllerApi {
     @GET("api/calificaciones/top")
     fun obtenerTopRecetas(@Query("cantidad") cantidad: kotlin.Int? = 12): Call<kotlin.collections.List<TopRecetaResponse>>
 
+    @GET("api/calificaciones/{idReceta}/mi-calificacion")
+    fun obtenerMiCalificacion(@Path("idReceta") idReceta: Long): Call<Int>
+
 }

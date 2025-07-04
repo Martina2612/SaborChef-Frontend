@@ -8,8 +8,10 @@ import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.OrangeDark
 import com.example.saborchef.ui.theme.Poppins
 
@@ -25,7 +27,7 @@ fun NoResultsView() {
         Icon(
             imageVector = Icons.Default.SearchOff,
             contentDescription = null,
-            tint = OrangeDark,
+            tint = BlueDark,
             modifier = Modifier.size(64.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -33,7 +35,14 @@ fun NoResultsView() {
             text = "No se encontraron resultados.",
             fontFamily = Poppins,
             fontSize = 16.sp,
-            color = OrangeDark
+            color = BlueDark
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(
+            text = "Intenta otra palabra o borra los filtros de busqueda",
+            fontFamily = Poppins,
+            fontSize = 10.sp,
+            color = Color.Gray
         )
     }
 }

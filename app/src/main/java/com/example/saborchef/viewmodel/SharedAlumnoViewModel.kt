@@ -9,10 +9,6 @@ import android.util.Base64
 
 class SharedAlumnoViewModel : ViewModel() {
     // Datos del usuario
-    var nombre: String = ""
-        private set
-    var apellido: String = ""
-        private set
     var alias: String = ""
         private set
     var email: String = ""
@@ -41,9 +37,7 @@ class SharedAlumnoViewModel : ViewModel() {
         private set
 
     // --- SETTERS ---
-    fun setUserInfo(nombre: String, apellido: String, alias: String, email: String, password: String, rol: Rol) {
-        this.nombre = nombre
-        this.apellido = apellido
+    fun setUserInfo(alias: String, email: String, password: String, rol: Rol) {
         this.alias = alias
         this.email = email
         this.password = password
@@ -83,8 +77,6 @@ class SharedAlumnoViewModel : ViewModel() {
     // Conversión final a DTO
     fun toRegisterRequest(context: Context): RegisterRequest {
         return RegisterRequest(
-            nombre = nombre,
-            apellido = apellido,
             alias = alias,
             email = email,
             password = password,

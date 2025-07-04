@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.BlueLight
 import com.example.saborchef.ui.theme.OrangeDark
@@ -31,7 +32,7 @@ import com.example.saborchef.ui.theme.Poppins
 fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,          // <-- agregamos este parámetro
+    onSearch: () -> Unit,
     onFilterClick: () -> Unit
 ) {
     OutlinedTextField(
@@ -40,7 +41,8 @@ fun SearchBar(
         placeholder = {
             androidx.compose.material.Text(
                 "Busca una receta aquí",
-                fontFamily = Poppins
+                fontFamily = Poppins,
+                fontSize = 14.sp
             )
         },
         singleLine = true,
@@ -66,7 +68,7 @@ fun SearchBar(
             .fillMaxWidth()
             .height(60.dp)
             .background(color = Color.White, shape = RoundedCornerShape(20.dp))
-            .padding(start = 8.dp, end = 8.dp, top = 10.dp),
+            .padding(start = 8.dp, end = 8.dp),
         shape = RoundedCornerShape(20.dp),
         colors = TextFieldDefaults.outlinedTextFieldColors(
             focusedBorderColor = BlueDark,

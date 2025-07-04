@@ -1,4 +1,3 @@
-// File: app/src/main/java/com/example/saborchef/ui/components/SortDropdown.kt
 package com.example.saborchef.ui.components
 
 import androidx.compose.foundation.border
@@ -24,42 +23,38 @@ import com.example.saborchef.ui.theme.Poppins
 
 @Composable
 fun SortDropdown(
+    modifier: Modifier = Modifier,
     options: List<String>,
     selected: String,
     onSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-
-    // Si selected está vacío, mostramos el placeholder "Ordenar por"
     val displayText = if (selected.isBlank()) "Ordenar por" else selected
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .height(36.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .border(1.dp, BlueDark, RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .border(1.dp, BlueDark, RoundedCornerShape(16.dp))
             .clickable { expanded = true }
             .padding(horizontal = 12.dp),
         contentAlignment = Alignment.CenterStart
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = displayText,
                 fontFamily = Poppins,
-                fontSize = 14.sp,
+                fontSize = 10.sp,
                 fontWeight = if (selected.isBlank()) FontWeight.Normal else FontWeight.Medium,
                 color = if (selected.isBlank()) Color.Gray else BlueDark
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(Modifier.width(4.dp))
             Icon(
                 imageVector = Icons.Default.ArrowDropDown,
                 contentDescription = "Abrir menú",
                 tint = BlueDark
             )
         }
-
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
@@ -70,12 +65,7 @@ fun SortDropdown(
                     expanded = false
                     onSelected(option)
                 }) {
-                    Text(
-                        text = option,
-                        fontFamily = Poppins,
-                        fontSize = 14.sp,
-                        color = Color.Black
-                    )
+                    Text(text = option, fontFamily = Poppins, fontSize = 10.sp, color = Color.Black)
                 }
             }
         }

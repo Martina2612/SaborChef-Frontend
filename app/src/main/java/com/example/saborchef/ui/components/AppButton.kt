@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun AppButton(
     text: String,
-    onClick: () -> Unit,
+    onClick: () -> Unit,        // Cambiado a lambda normal
     primary: Boolean = true,
     enabled: Boolean = true,
     modifier: Modifier = Modifier
@@ -26,7 +26,7 @@ fun AppButton(
     val content   = if (primary) Color.White else BlueDark
 
     ElevatedButton(
-        onClick = onClick,
+        onClick = onClick,       // Ahora acepta la lambda directamente
         enabled = enabled,
         modifier = modifier
             .height(48.dp)
@@ -47,4 +47,5 @@ fun AppButton(
         )
     }
 }
+
 

@@ -2,6 +2,7 @@ package com.example.saborchef.ui.screens
 
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.OndemandVideo
 import androidx.compose.material.icons.filled.OutlinedFlag
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.saborchef.ui.components.CurvedHeader
 import com.example.saborchef.ui.components.AppButton
 import com.example.saborchef.ui.theme.BlueDark
@@ -40,7 +43,9 @@ import com.example.saborchef.ui.theme.OrangeDark
 import com.example.saborchef.ui.theme.SaborChefTheme
 import com.example.saborchef.ui.theme.Poppins
 import coil.compose.AsyncImage
+import com.example.saborchef.data.DataStoreManager
 import com.example.saborchef.ui.theme.BlueLight
+import kotlinx.coroutines.launch
 
 enum class UserRole { ALUMNO, USUARIO }
 
@@ -59,8 +64,12 @@ fun ProfileScreen(
     onEditPhoto: () -> Unit,
     onOptionClick: (label: String) -> Unit,
     onBecomeStudent: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    dataStoreManager: DataStoreManager,
+    navController: NavController
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column {
             // 1) Header curvo; ocultamos su círculo interno
@@ -141,7 +150,7 @@ fun ProfileScreen(
                     add(ProfileOption(Icons.Default.Book, "Mis recetas")           { onOptionClick("Mis recetas") })
                     if (role == UserRole.ALUMNO) {
                         add(ProfileOption(Icons.Default.OndemandVideo,    "Mis cursos")             { onOptionClick("Mis cursos") })
-                        add(ProfileOption(Icons.Default.Payment, "Medios de pago")         { onOptionClick("Medios de pago") })
+                        add(ProfileOption(Icons.Default.Payment, "Medio de pago")         { onOptionClick("Medios de pago") })
                     }
                     add(ProfileOption(Icons.Default.OutlinedFlag, "Términos y condiciones") { onOptionClick("Términos y condiciones") })
                     add(ProfileOption(Icons.Default.Phone,       "Contáctanos")            { onOptionClick("Contáctanos") })
@@ -160,8 +169,13 @@ fun ProfileScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.LightGray,
+                                shape = RoundedCornerShape(8.dp)
+                            )
                             .background(color = Color.White, shape = RoundedCornerShape(8.dp))
-                            .shadow(elevation = 1.dp,shape = RoundedCornerShape(8.dp))
+                            .shadow(elevation = 1.dp, shape = RoundedCornerShape(8.dp))
                             .clickable { opt.onClick() }
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -193,61 +207,6 @@ fun ProfileScreen(
             }
         }
 
-        // 6) Cerrar sesión fijo abajo
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .clickable { onLogout() }
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Logout,
-                contentDescription = "Cerrar sesión",
-                tint = BlueDark
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Cerrar sesión",
-                fontFamily = Poppins,
-                color = BlueDark
-            )
-        }
     }
 }
 
-
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
-@Composable
-fun PreviewProfileAlumno() {
-    SaborChefTheme {
-        ProfileScreen(
-            userName = "Tiziano Cristiani",
-            photoUri = null, // o Uri.parse("...")
-            role = UserRole.ALUMNO,
-            onBack = {},
-            onEditPhoto = { /* lanza galería/cámara */ },
-            onOptionClick = {},
-            onBecomeStudent = {},
-            onLogout = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
-@Composable
-fun PreviewProfileUsuario() {
-    SaborChefTheme {
-        ProfileScreen(
-            userName = "Tiziano Cristiani",
-            photoUri = Uri.parse("https://cdn0.bioenciclopedia.com/es/posts/0/2/0/zorro_20_orig.jpg"),
-            role = UserRole.USUARIO,
-            onBack = {},
-            onEditPhoto = { /* lanza galería/cámara */ },
-            onOptionClick = {},
-            onBecomeStudent = { /* lleva a inscripción */ },
-            onLogout = {}
-        )
-    }
-}

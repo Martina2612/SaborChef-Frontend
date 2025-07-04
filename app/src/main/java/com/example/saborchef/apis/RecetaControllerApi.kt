@@ -39,7 +39,7 @@ interface RecetaControllerApi {
      * @return [Call]<[kotlin.collections.List<RecetaResumenResponse>]>
      */
     @POST("api/recetas/buscar")
-    fun buscarPorFiltros(@Body recetaFiltroRequest: RecetaFiltroRequest): Call<kotlin.collections.List<RecetaResumenResponse>>
+    fun buscarPorFiltros(@Body recetaFiltroRequest: RecetaFiltroRequest): Call<kotlin.collections.List<RecetaDetalleResponse>>
 
     /**
      * GET api/recetas/ingrediente
@@ -54,7 +54,7 @@ interface RecetaControllerApi {
      * @return [Call]<[kotlin.collections.List<RecetaResumenResponse>]>
      */
     @GET("api/recetas/ingrediente")
-    fun buscarPorIngrediente(@Query("nombreIngrediente") nombreIngrediente: kotlin.String, @Query("orden") orden: kotlin.String? = null): Call<kotlin.collections.List<RecetaResumenResponse>>
+    fun buscarPorIngrediente(@Query("nombreIngrediente") nombreIngrediente: kotlin.String, @Query("orden") orden: kotlin.String? = null): Call<kotlin.collections.List<RecetaDetalleResponse>>
 
     /**
      * GET api/recetas/search
@@ -69,7 +69,7 @@ interface RecetaControllerApi {
      * @return [Call]<[kotlin.collections.List<RecetaResumenResponse>]>
      */
     @GET("api/recetas/search")
-    fun buscarPorNombre(@Query("nombre") nombre: kotlin.String, @Query("orden") orden: kotlin.String? = null): Call<kotlin.collections.List<RecetaResumenResponse>>
+    fun buscarPorNombre(@Query("nombre") nombre: kotlin.String, @Query("orden") orden: kotlin.String? = null): Call<kotlin.collections.List<RecetaDetalleResponse>>
 
     /**
      * GET api/recetas/tipo/{tipo}
@@ -84,7 +84,7 @@ interface RecetaControllerApi {
      * @return [Call]<[kotlin.collections.List<RecetaResumenResponse>]>
      */
     @GET("api/recetas/tipo/{tipo}")
-    fun buscarPorTipo(@Path("tipo") tipo: kotlin.String, @Query("orden") orden: kotlin.String? = null): Call<kotlin.collections.List<RecetaResumenResponse>>
+    fun buscarPorTipo(@Path("tipo") tipo: kotlin.String, @Query("orden") orden: kotlin.String? = null): Call<kotlin.collections.List<RecetaDetalleResponse>>
 
     /**
      * GET api/recetas/buscar/usuario
@@ -99,7 +99,7 @@ interface RecetaControllerApi {
      * @return [Call]<[kotlin.collections.List<RecetaResumenResponse>]>
      */
     @GET("api/recetas/buscar/usuario")
-    fun buscarPorUsuario(@Query("nombre") nombre: kotlin.String, @Query("orden") orden: kotlin.String? = null): Call<kotlin.collections.List<RecetaResumenResponse>>
+    fun buscarPorUsuario(@Query("nombre") nombre: kotlin.String, @Query("orden") orden: kotlin.String? = null): Call<kotlin.collections.List<RecetaDetalleResponse>>
 
     /**
      * GET api/recetas/sin-ingrediente
@@ -114,7 +114,7 @@ interface RecetaControllerApi {
      * @return [Call]<[kotlin.collections.List<RecetaResumenResponse>]>
      */
     @GET("api/recetas/sin-ingrediente")
-    fun buscarSinIngrediente(@Query("nombreIngrediente") nombreIngrediente: kotlin.String, @Query("orden") orden: kotlin.String? = null): Call<kotlin.collections.List<RecetaResumenResponse>>
+    fun buscarSinIngrediente(@Query("nombreIngrediente") nombreIngrediente: kotlin.String, @Query("orden") orden: kotlin.String? = null): Call<kotlin.collections.List<RecetaDetalleResponse>>
 
     /**
      * POST api/recetas
@@ -157,6 +157,12 @@ interface RecetaControllerApi {
     @GET("api/recetas/ultimas")
     fun getUltimasRecetas(): Call<kotlin.collections.List<RecetaDetalleResponse>>
 
+    @GET("api/recetas/usuario/{id}")
+    fun buscarPorUsuarioId(
+        @Path("id") usuarioId: Long,
+        @Query("orden") orden: String
+    ): Call<List<RecetaDetalleResponse>>
+
     /**
      * GET api/recetas
      * 
@@ -171,7 +177,7 @@ interface RecetaControllerApi {
      * @return [Call]<[kotlin.collections.List<RecetaResumenResponse>]>
      */
     @GET("api/recetas")
-    fun listarRecetas(@Query("idUsuario") idUsuario: kotlin.Long? = null, @Query("idTipo") idTipo: kotlin.Long? = null, @Query("orden") orden: kotlin.String? = null): Call<kotlin.collections.List<RecetaResumenResponse>>
+    fun listarRecetas(@Query("idUsuario") idUsuario: kotlin.Long? = null, @Query("idTipo") idTipo: kotlin.Long? = null, @Query("orden") orden: kotlin.String? = null): Call<kotlin.collections.List<RecetaDetalleResponse>>
 
     /**
      * GET api/recetas/{id}
@@ -200,4 +206,14 @@ interface RecetaControllerApi {
     @GET("api/recetas/ultimas3")
     fun obtenerUltimas3Recetas(): Call<kotlin.collections.List<RecetaDetalleResponse>>
 
+    /**
+     * GET api/recetas/suggestions?prefix=...
+     *
+     * Devuelve hasta 10 nombres de receta que empiecen con el prefijo,
+     * para autocompletar en la SearchBar.
+     */
+    @GET("api/recetas/suggestions")
+    fun sugerirNombres(
+        @Query("prefix") prefix: String
+    ): Call<List<String>>
 }

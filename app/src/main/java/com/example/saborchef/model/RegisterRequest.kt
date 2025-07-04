@@ -1,8 +1,6 @@
 package com.example.saborchef.model
 
 data class RegisterRequest(
-    val nombre: String,
-    val apellido: String,
     val alias: String,
     val email: String,
     val password: String,

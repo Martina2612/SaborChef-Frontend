@@ -20,7 +20,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Usar la misma URL en ambos lugares
-        buildConfigField("String","BASE_URL","\"http://10.0.2.2:8080/\"")
+        buildConfigField("String","BASE_URL","\"https://saborchef-backend-production.up.railway.app/\"")
     }
 
     buildTypes {
@@ -98,6 +98,9 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     implementation("androidx.navigation:navigation-compose:2.7.5")
+
+    //HILT VIEW MODEL
+    implementation ("androidx.hilt:hilt-navigation-compose:1.0.0")
 
 
     // Testing

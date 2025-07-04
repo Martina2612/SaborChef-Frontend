@@ -23,11 +23,11 @@ class DataStoreManager(private val context: Context) {
     val email: Flow<String?>    = context.dataStore.data.map { it[EMAIL_KEY] }
 
     // Guardar sesión completa
-    suspend fun saveUserData(token: String, role: String, userId: Long, email: String) {
+    suspend fun saveUserData(token: String, role: String, userId: Long?, email: String) {
         context.dataStore.edit {
             it[TOKEN_KEY]   = token
             it[ROLE_KEY]    = role
-            it[USER_ID_KEY] = userId
+            it[USER_ID_KEY] = userId as Long
             it[EMAIL_KEY]   = email
         }
         // También actualizamos el SessionManager en memoria:
@@ -38,4 +38,9 @@ class DataStoreManager(private val context: Context) {
         context.dataStore.edit { it.clear() }
         SessionManager.token = null
     }
+
+    suspend fun saveRole(role: String) {
+        context.dataStore.edit {
+            it[ROLE_KEY] = role
+        }}
 }

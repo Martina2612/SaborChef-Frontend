@@ -99,6 +99,7 @@ fun WelcomeScreen(
                                     textOffsetX = pos.textOffsetX,
                                     textOffsetY = pos.textOffsetY,
                                     startAngle = pos.startAngle,
+                                    isBase64 = true,
                                     onClick = { navController?.navigate("recipe/${recipe.idReceta}") }
                                 )
                                 Spacer(Modifier.height(16.dp))

@@ -28,6 +28,9 @@ import com.google.gson.annotations.SerializedName
 
 data class CalificacionRequest (
 
+    @SerializedName("idUsuario")
+    val idUsuario: kotlin.Long? = null,
+
     @SerializedName("idReceta")
     val idReceta: kotlin.Long? = null,
 

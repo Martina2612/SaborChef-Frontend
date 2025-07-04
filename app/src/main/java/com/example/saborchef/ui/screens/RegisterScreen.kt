@@ -39,17 +39,15 @@ import com.example.saborchef.viewmodel.*
 @Composable
 fun RegisterScreen(
     navController: NavController,
-    sharedAlumnoViewModel: SharedAlumnoViewModel,
-    onRegisterSuccess: (email: String) -> Unit
+    sharedAlumnoViewModel: SharedAlumnoViewModel
 ) {
     val viewModel: RegisterViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     val aliasState by viewModel.aliasState.collectAsState()
     val emailState by viewModel.emailState.collectAsState()
+    val context = LocalContext.current
 
     var userType by remember { mutableStateOf(Rol.USUARIO) }
-    var nombre by remember { mutableStateOf("") }
-    var apellido by remember { mutableStateOf("") }
     var alias by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -60,7 +58,6 @@ fun RegisterScreen(
 
     var aliasChecked by remember { mutableStateOf("") }
     var emailChecked by remember { mutableStateOf("") }
-    val context = LocalContext.current
 
     LaunchedEffect(alias) {
         if (alias != aliasChecked) {
@@ -80,10 +77,10 @@ fun RegisterScreen(
         when (val state = uiState) {
             is RegisterUiState.Success -> {
                 val resultEmail = state.auth.email ?: ""
-                if (state.auth.role == "ALUMNO") {
-                    navController.navigate("upload_dni")
-                } else {
-                    onRegisterSuccess(resultEmail)
+                val role          = state.auth.role     // "USUARIO" o "ALUMNO"
+                // navegamos a la pantalla de verificación, pasando rol
+                navController.navigate("verify_registration/$resultEmail/$role") {
+                    popUpTo("register") { inclusive = true }
                 }
             }
             is RegisterUiState.Error -> {
@@ -120,64 +117,6 @@ fun RegisterScreen(
                 userType = Rol.valueOf(it.uppercase())
             }
             Spacer(Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = nombre,
-                onValueChange = { nombre = it },
-                label = {
-                    Text(
-                        "Nombre",
-                        fontFamily = Poppins,
-                        fontSize = 14.sp,
-                        color = BlueDark
-                    )
-                },
-                singleLine = true,
-                leadingIcon = {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = BlueDark)
-                },
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = TextFieldDefaults.textFieldColors(
-                    textColor = Color.Black,
-                    focusedIndicatorColor = BlueDark,
-                    unfocusedIndicatorColor = Color.LightGray,
-                    cursorColor = BlueDark,
-                    backgroundColor = Color.Transparent
-                )
-            )
-            Spacer(Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = apellido,
-                onValueChange = { apellido = it },
-                label = {
-                    Text(
-                        "Apellido",
-                        fontFamily = Poppins,
-                        fontSize = 14.sp,
-                        color = BlueDark
-                    )
-                },
-                singleLine = true,
-                leadingIcon = {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = BlueDark)
-                },
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = TextFieldDefaults.textFieldColors(
-                    textColor = Color.Black,
-                    focusedIndicatorColor = BlueDark,
-                    unfocusedIndicatorColor = Color.LightGray,
-                    cursorColor = BlueDark,
-                    backgroundColor = Color.Transparent
-                )
-            )
-            Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = alias,
@@ -385,19 +324,13 @@ fun RegisterScreen(
                         }
                         else -> {
                             sharedAlumnoViewModel.setUserInfo(
-                                nombre.trim(),
-                                apellido.trim(),
                                 alias.trim(),
                                 email.trim(),
                                 password,
                                 userType
                             )
 
-                            if (userType == Rol.ALUMNO) {
-                                navController.navigate("upload_dni")
-                            } else {
-                                viewModel.register(context, sharedAlumnoViewModel)
-                            }
+                            viewModel.register(context, sharedAlumnoViewModel)
                         }
                     }
                 },

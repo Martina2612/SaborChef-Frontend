@@ -31,7 +31,7 @@ object AuthRepository {
         val client = OkHttpClient.Builder().addInterceptor(logging).build()
 
         Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/api/")
+            .baseUrl("https://saborchef-backend-production.up.railway.app/api/")
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
@@ -77,18 +77,17 @@ object AuthRepository {
         }
     }
 
-    suspend fun login(alias: String, password: String): Result<String> {
+    /**
+     * Realiza login y devuelve el objeto AuthenticationResponse con token, role, userId y email.
+     */
+    suspend fun login(alias: String, password: String): Result<AuthenticationResponse> {
         return try {
-            val response = api.login(LoginRequest(alias, password))
-            if (response.isSuccessful) {
-                val body = response.body()
-                if (body != null && !body.accessToken.isNullOrEmpty()) {
-                    Result.success(body.accessToken!!)
-                } else {
-                    Result.failure(Exception("El accessToken viene nulo o vacío"))
-                }
+            val resp = api.login(LoginRequest(alias, password))
+            if (resp.isSuccessful) {
+                resp.body()?.let { Result.success(it) }
+                    ?: Result.failure(Exception("Cuerpo de AuthenticationResponse es null"))
             } else {
-                Result.failure(HttpException(response))
+                Result.failure(HttpException(resp))
             }
         } catch (e: Exception) {
             Log.e("AuthRepository", "Error en login", e)

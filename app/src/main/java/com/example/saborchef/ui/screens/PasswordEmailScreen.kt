@@ -24,7 +24,7 @@ fun PasswordEmailScreen(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color.White // 👉 Fondo completamente blanco
+        color = Color.White
     ) {
         Column(
             modifier = Modifier
@@ -33,7 +33,7 @@ fun PasswordEmailScreen(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            // 🔙 Botón Atrás arriba a la izquierda
+            // Botón Atrás arriba a la izquierda
             IconButton(
                 onClick = onBack,
                 modifier = Modifier.padding(top = 16.dp)
