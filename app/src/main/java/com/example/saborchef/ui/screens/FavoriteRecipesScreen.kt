@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.saborchef.R
@@ -54,6 +56,20 @@ fun FavoriteRecipesScreen(
     val favoritesViewModel: FavoritesViewModel = viewModel()
     val favorites by favoritesViewModel.favorites.collectAsState(initial = emptyList())
 
+    DisposableEffect(Unit) {
+        val entry = navController.getBackStackEntry("favs")
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                favoritesViewModel.loadFavorites()
+            }
+        }
+        entry.lifecycle.addObserver(observer)
+
+        onDispose {
+            entry.lifecycle.removeObserver(observer)
+        }
+    }
+
     var showConfirm by remember { mutableStateOf(false) }
     var showDeleted by remember { mutableStateOf(false) }
     var toDelete by remember { mutableStateOf<RecetaDetalleResponse?>(null) }
@@ -72,9 +88,23 @@ fun FavoriteRecipesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Recetas favoritas", color = BlueDark, fontFamily = Poppins, fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "Recetas favoritas",
+                        color = BlueDark,
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        navController.navigate("simple_home") {
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = BlueDark)
                     }
                 },

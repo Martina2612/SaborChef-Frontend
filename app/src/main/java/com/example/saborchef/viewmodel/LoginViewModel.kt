@@ -47,10 +47,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                         // Guarda la sesión completa en DataStore
                         // CORRECCIÓN: Usar los nombres correctos de las propiedades
                         dataStoreManager.saveUserData(
-                            token = authResponse.access_token, // No .toString(), ya es String
+                            token = authResponse.access_token,
                             role = authResponse.role.name, // .name para convertir Rol enum a String
-                            userId = authResponse.user_id, // user_id, no userId
-                            email = authResponse.email // No .toString(), ya es String
+                            userId = authResponse.user_id,
+                            email = authResponse.email ,
+                            alias=authResponse.alias
+
                         )
 
                         // Actualiza el SessionManager con el token

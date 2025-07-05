@@ -109,7 +109,9 @@ class MainActivity : ComponentActivity() {
                             }
                             WelcomeScreen(
                                 navController = navController,
-                                onContinueAsUser = { navController.navigate("auth") },
+                                onContinueAsUser = { navController.navigate("auth") {
+                                    popUpTo("welcome") { inclusive = true }
+                                    launchSingleTop = true} },
                                 onContinueAsGuest = {
                                     scope.launch {
                                         dataStore.saveRole(Rol.VISITANTE.name)
@@ -377,7 +379,7 @@ class MainActivity : ComponentActivity() {
                             val dataStore = remember { DataStoreManager(this@MainActivity) }
 
                             // Lee los datos del usuario desde DataStore
-                            val userName by dataStore.email.collectAsState(initial = "")
+                            val userName by dataStore.alias.collectAsState(initial = "")
                             val storedRole by dataStore.role.collectAsState(initial = Rol.VISITANTE.name)
 
                             // Convierte el string a enum Rol

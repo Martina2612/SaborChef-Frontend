@@ -111,6 +111,10 @@ fun MyRecipesScreen(
             }
             is MyRecipesUiState.Success -> {
                 val recipes = (uiState as MyRecipesUiState.Success).recipes
+                val pageSize = 4
+                var currentPage by remember { mutableStateOf(0) }
+                val totalPages = (recipes.size + pageSize - 1) / pageSize
+                val pagedRecipes = recipes.drop(currentPage * pageSize).take(pageSize)
                 Log.d("MyRecipesScreen", "Recetas cargadas: ${'$'}{recipes.size}")
                 ModalBottomSheetLayout(
                     sheetState = sheetState,
@@ -157,7 +161,7 @@ fun MyRecipesScreen(
                             .padding(horizontal = 16.dp, vertical = 24.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(recipes, key = { it.idReceta.toString() }) { r ->
+                        items(pagedRecipes, key = { it.idReceta.toString() }) { r ->
                             val base64 = r.fotoPrincipal
                             Log.d("MyRecipesScreen", "Receta ID=${r.idReceta} nombre=${r.nombre} base64-valido=${!base64.isNullOrEmpty()} length=${base64?.length ?: 0}")
                             Box(Modifier.fillMaxWidth()
@@ -196,6 +200,31 @@ fun MyRecipesScreen(
                                 }
                             }
                         }
+                        item {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                OutlinedButton(
+                                    onClick = { if (currentPage > 0) currentPage-- },
+                                    enabled = currentPage > 0
+                                ) {
+                                    Text("Anterior")
+                                }
+
+                                Text("Página ${currentPage + 1} de $totalPages")
+
+                                OutlinedButton(
+                                    onClick = { if (currentPage < totalPages - 1) currentPage++ },
+                                    enabled = currentPage < totalPages - 1
+                                ) {
+                                    Text("Siguiente")
+                                }
+                            }
+                        }
+
                     }
                     AnimatedVisibility(visible = showDeleted) {
                         Box(

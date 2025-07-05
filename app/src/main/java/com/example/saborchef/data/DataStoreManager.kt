@@ -14,6 +14,7 @@ class DataStoreManager(private val context: Context) {
         val ROLE_KEY = stringPreferencesKey("role")
         val EMAIL_KEY = stringPreferencesKey("email")
         val USER_ID_KEY = longPreferencesKey("user_id")
+        val ALIAS_KEY = stringPreferencesKey("alias")
     }
 
     // Flows para leer datos
@@ -21,24 +22,27 @@ class DataStoreManager(private val context: Context) {
     val role: Flow<String?> = context.dataStore.data.map { it[ROLE_KEY] }
     val email: Flow<String?> = context.dataStore.data.map { it[EMAIL_KEY] }
     val userId: Flow<Long?> = context.dataStore.data.map { it[USER_ID_KEY] }
+    val alias: Flow<String?> = context.dataStore.data.map { it[ALIAS_KEY] }
 
     // Guardar datos de login
-    suspend fun saveLoginData(token: String, role: String, email: String, userId: Long) {
+    suspend fun saveLoginData(token: String, role: String, email: String, userId: Long, alias: String) {
         context.dataStore.edit { prefs ->
             prefs[TOKEN_KEY] = token
             prefs[ROLE_KEY] = role
             prefs[EMAIL_KEY] = email
             prefs[USER_ID_KEY] = userId
+            prefs[ALIAS_KEY] = alias
         }
     }
 
     // Guardar sesión completa
-    suspend fun saveUserData(token: String, role: String, userId: Long?, email: String) {
+    suspend fun saveUserData(token: String, role: String, userId: Long?, email: String, alias: String?) {
         context.dataStore.edit { prefs ->
             prefs[TOKEN_KEY] = token
             prefs[ROLE_KEY] = role
             userId?.let { prefs[USER_ID_KEY] = it }
             prefs[EMAIL_KEY] = email
+            alias?.let { prefs[ALIAS_KEY] = it }
         }
     }
 

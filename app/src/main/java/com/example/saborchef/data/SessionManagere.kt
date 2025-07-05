@@ -5,11 +5,13 @@ object SessionManager {
     var userId: Long? = null
     var userRole: String? = null
     var userEmail: String? = null
+    var userAlias: String? = null
 
     fun clearSession() {
         token = null
         userId = null
         userRole = null
         userEmail = null
+        userAlias = null
     }
 }

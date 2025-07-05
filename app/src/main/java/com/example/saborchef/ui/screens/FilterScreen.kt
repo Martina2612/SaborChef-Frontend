@@ -50,13 +50,13 @@ enum class Category(val label: String, val icon: ImageVector) {
     Snacks("Snacks", Icons.Filled.Fastfood),
     Postres("Postres", Icons.Filled.BakeryDining),
     Vegano("Vegano", Icons.Filled.Spa),
-    Carnes("Carnes", Icons.Filled.Restaurant),
+    Carnes("Carne", Icons.Filled.Restaurant),
     Bebidas("Bebidas", Icons.Filled.Coffee),
     Pastas("Pastas", Icons.Filled.RamenDining),
     Vegetariano("Vegetariano", Icons.Filled.Grass),
     Tartas("Tartas", Icons.Filled.DinnerDining),
     Ensaladas("Ensalada", Icons.Filled.Grass),
-    Sopa("Sopa", Icons.Filled.SoupKitchen)
+    Sopa("Sopas", Icons.Filled.SoupKitchen)
 }
 
 @OptIn(ExperimentalLayoutApi::class)

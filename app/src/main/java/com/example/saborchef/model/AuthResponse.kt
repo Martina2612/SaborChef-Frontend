@@ -4,5 +4,6 @@ data class AuthResponse(
     val access_token: String,
     val user_id: Long,
     val role: Rol,
-    val email: String
+    val email: String,
+    val alias: String
 )

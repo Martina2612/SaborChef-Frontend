@@ -124,7 +124,7 @@ fun CursosScreen(
             }
         },
         bottomBar = {
-            BottomBar(navController = navController, role = userRole)
+            BottomBar(navController = navController, role = actualRol ?: Rol.VISITANTE)
         }
     ) { paddingValues ->
         when (val state = uiState) {

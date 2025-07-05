@@ -317,14 +317,14 @@ fun PublishRecipeScreen(
                     listOf(
                         "Snacks",
                         "Postres",
-                        "Vegano",
-                        "Carnes",
+                        "Carne",
                         "Bebidas",
                         "Pastas",
-                        "Vegetariano",
                         "Tartas",
-                        "Ensaladas",
-                        "Sopa"
+                        "Ensalada",
+                        "Sopas",
+                        "Vegetariano",
+                        "Vegano"
                     ).forEach { option ->
                         DropdownMenuItem(
                             text = { Text(option, color = BlueDark, fontFamily = Poppins) },

@@ -117,11 +117,11 @@ fun SearchScreen(
             when (uiState) {
                 SearchUiState.Idle -> {
                     val categories = listOf(
-                        "Desayuno" to R.drawable.img_desayuno,
-                        "Almuerzo" to R.drawable.img_almuerzo,
+                        "Tartas" to R.drawable.img_desayuno,
                         "Pastas" to R.drawable.img_pastas,
-                        "Cena" to R.drawable.img_cena,
+                        "Carne" to R.drawable.img_cena,
                         "Postres" to R.drawable.img_cheesecake,
+                        "Bebidas" to R.drawable.img_bebidas,
                         "Snacks" to R.drawable.img_snacks,
                         "Vegetariano" to R.drawable.img_vegetariano,
                         "Vegano" to R.drawable.img_vegano
