@@ -22,31 +22,18 @@ import com.example.saborchef.model.Rol
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 
-// 1) Modelo de Tab con matcher dinámico para mejor detección de rutas activas
+// SIMPLIFICADO: Sin matcher complejo, como en tu otra rama
 sealed class TabItem(
     val route: String,
-    val icon: ImageVector,
-    val matcher: (String?) -> Boolean
+    val icon: ImageVector
 ) {
-    object Home : TabItem("home", Icons.Default.Home, { it == "home" })
-
-    object Videos : TabItem("cursos", Icons.Default.OndemandVideo, {
-        it == "cursos" ||
-                it == "mis_cursos" ||
-                it?.startsWith("curso_detalle") == true ||
-                it == "sedes_disponibles" ||
-                it?.startsWith("sucursal_detalle") == true ||
-                it?.startsWith("mis_cursos_detalle") == true
-    })
-
-    object Bookmarks : TabItem("favs", Icons.Default.BookmarkBorder, { it == "favs" })
-
-    object Search : TabItem("search", Icons.Default.Search, {
-        it == "search" || it == "filter"
-    })
+    object Home : TabItem("simple_home", Icons.Default.Home)
+    object Videos : TabItem("cursos", Icons.Default.OndemandVideo)
+    object Bookmarks : TabItem("favs", Icons.Default.BookmarkBorder)
+    object Search : TabItem("search", Icons.Default.Search)
 }
 
-// 2) Lista dinámica según rol
+// Lista dinámica según rol
 fun tabsForRole(role: Rol): List<TabItem> =
     when (role) {
         Rol.ALUMNO, Rol.USUARIO -> listOf(
@@ -62,7 +49,7 @@ fun tabsForRole(role: Rol): List<TabItem> =
         )
     }
 
-// 3) Composable de la barra
+// Composable de la barra con lógica de rutas relacionadas
 @Composable
 fun BottomBar(navController: NavController, role: Rol) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -76,7 +63,20 @@ fun BottomBar(navController: NavController, role: Rol) {
             .height(56.dp)
     ) {
         tabsForRole(role).forEach { tab ->
-            val selected = tab.matcher(currentRoute)
+            // Lógica mejorada: comparación directa + rutas relacionadas
+            val selected = when (tab.route) {
+                "simple_home" -> currentRoute == "simple_home"
+                "cursos" -> currentRoute == "cursos" ||
+                        currentRoute == "mis_cursos" ||
+                        currentRoute?.startsWith("curso_detalle") == true ||
+                        currentRoute == "sedes_disponibles" ||
+                        currentRoute?.startsWith("sucursal_detalle") == true ||
+                        currentRoute?.startsWith("mis_cursos_detalle") == true
+                "search" -> currentRoute == "search" || currentRoute == "filter"
+                "favs" -> currentRoute == "favs"
+                else -> currentRoute == tab.route
+            }
+
             BottomNavigationItem(
                 icon = {
                     Icon(

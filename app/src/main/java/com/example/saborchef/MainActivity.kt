@@ -191,24 +191,19 @@ class MainActivity : ComponentActivity() {
                             "verify_registration/{email}/{role}",
                             arguments = listOf(
                                 navArgument("email") { type = NavType.StringType },
-                                navArgument("role" ) { type = NavType.StringType }
+                                navArgument("role") { type = NavType.StringType }
                             )
                         ) { backStack ->
                             val email = backStack.arguments!!.getString("email")!!
-                            val roleParam  = backStack.arguments!!.getString("role")!!
+                            val roleParam = backStack.arguments!!.getString("role")!!
 
                             VerificationCodeScreen(
                                 email = email,
                                 onBack = { navController.popBackStack() },
                                 onNext = {
-                                    if (roleParam == "ALUMNO") {
-                                        // tras validar ALUMNO → pago → luego DNI…
-                                        navController.navigate("add_payment")
-                                    } else {
-                                        // tras validar USUARIO → login
-                                        navController.navigate("login") {
-                                            popUpTo("auth") { inclusive = true }
-                                        }
+                                    // CAMBIO: Siempre ir a successful_register cuando se verifica exitosamente
+                                    navController.navigate("successful_register") {
+                                        popUpTo("verify_registration/{email}/{role}") { inclusive = true }
                                     }
                                 },
                                 onResendCode = {
@@ -220,6 +215,7 @@ class MainActivity : ComponentActivity() {
                                 resetTrigger = resetTimerTrigger
                             )
                         }
+
 
                         composable("successful_register") {
                             SuccessfulRegisterScreen(
