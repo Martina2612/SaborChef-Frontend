@@ -514,7 +514,38 @@ class MainActivity : ComponentActivity() {
                             val curso = Gson().fromJson(json, CursoInscripto::class.java)
                             MisCursosDetalleScreen(curso, navController)
                         }
+
+
+
+                        composable("upgrade_to_student") {
+
+                            val dataStore = remember { DataStoreManager(this@MainActivity) }
+                            val currentRole by dataStore.role.collectAsState(initial = "")
+                            val scope = rememberCoroutineScope()
+
+                            MostrarPantallaSerAlumno(
+                                onQuieroSerAlumno = {
+
+                                    if (currentRole == Rol.VISITANTE.name) {
+                                        navController.navigate("auth")
+                                    } else {
+                                        navController.navigate("register")
+
+                                    }
+                                },
+                                onContinuar = {
+
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+
+
+
                     }
+
+
                 }
             }
         }

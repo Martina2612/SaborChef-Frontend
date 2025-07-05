@@ -38,30 +38,45 @@ import kotlinx.coroutines.flow.collectLatest
 fun CursosScreen(
     navController: NavController,
     viewModel: CursoViewModel = viewModel(),
-    userRole: Rol = Rol.ALUMNO
+    userRole: Rol = Rol.VISITANTE // CAMBIO: Default a VISITANTE en lugar de ALUMNO
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val dataStoreManager = remember { DataStoreManager(context) }
     var actualRol by remember { mutableStateOf<Rol?>(null) }
 
-    // Recupera el rol guardado
+    // CAMBIO: Recupera el rol y carga cursos de manera diferente según el rol
     LaunchedEffect(Unit) {
-        dataStoreManager.userId.collectLatest { id ->
-            if (id != null) {
-                viewModel.fetchCursos(id)
+        dataStoreManager.role.collectLatest { roleString ->
+            actualRol = roleString?.let { Rol.valueOf(it) } ?: Rol.VISITANTE
+
+            // Solo cargar cursos si tenemos un rol definido
+            actualRol?.let { rol ->
+                when (rol) {
+                    Rol.VISITANTE -> {
+                        // Para visitantes, usar un ID especial o -1
+                        viewModel.fetchCursos(-1L) // Backend debe manejar este caso
+                    }
+                    Rol.USUARIO, Rol.ALUMNO -> {
+                        // Para usuarios autenticados, usar su userId real
+                        dataStoreManager.userId.collectLatest { id ->
+                            if (id != null) {
+                                viewModel.fetchCursos(id)
+                            }
+                        }
+                    }
+                    else -> {
+                        viewModel.fetchCursos(-1L)
+                    }
+                }
             }
-        }
-        dataStoreManager.role.collectLatest {
-            actualRol = it?.let { valor -> Rol.valueOf(valor) }
         }
     }
 
-
-    // Mostrar pantalla especial si el usuario es USUARIO
-
-
     var searchQuery by remember { mutableStateOf("") }
+
+    // CAMBIO: Usar el rol real en lugar del parámetro hardcodeado
+    val rolParaBottomBar = actualRol ?: userRole
 
     Scaffold(
         topBar = {
@@ -120,11 +135,11 @@ fun CursosScreen(
                         }
                     }
                 }
-
             }
         },
         bottomBar = {
-            BottomBar(navController = navController, role = userRole)
+            // CAMBIO: Usar el rol real del usuario
+            BottomBar(navController = navController, role = rolParaBottomBar)
         }
     ) { paddingValues ->
         when (val state = uiState) {
@@ -141,7 +156,39 @@ fun CursosScreen(
                     Modifier.fillMaxSize().padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(state.message, color = MaterialTheme.colorScheme.error)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Error al cargar cursos",
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = state.message,
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = {
+                                // Intentar recargar
+                                actualRol?.let { rol ->
+                                    when (rol) {
+                                        Rol.VISITANTE -> viewModel.fetchCursos(-1L)
+                                        else -> {
+                                            // Para usuarios autenticados, necesitaríamos el userId
+                                            viewModel.fetchCursos(-1L)
+                                        }
+                                    }
+                                }
+                            }
+                        ) {
+                            Text("Reintentar")
+                        }
+                    }
                 }
             }
             is CursoUiState.Success -> {
@@ -151,7 +198,7 @@ fun CursosScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(state.cursos.filter { it.nombre.contains(searchQuery, ignoreCase = true) }) { curso ->
-                    Card(
+                        Card(
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -217,7 +264,14 @@ fun CursosScreen(
                                         }
                                         TextButton(
                                             onClick = {
-                                                navController.navigate("curso_detalle/${curso.idCurso}")
+                                                // CAMBIO: Solo ALUMNO puede ver detalles, otros ven pantalla para upgrade
+                                                if (rolParaBottomBar == Rol.ALUMNO) {
+                                                    // Solo alumnos pueden ver el detalle completo
+                                                    navController.navigate("curso_detalle/${curso.idCurso}")
+                                                } else {
+                                                    // VISITANTE y USUARIO ven la misma pantalla de upgrade
+                                                    navController.navigate("upgrade_to_student")
+                                                }
                                             }
                                         ) {
                                             Text(
@@ -232,43 +286,8 @@ fun CursosScreen(
                             }
                         }
                     }
-
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun MostrarPantallaSerAlumno(
-    onQuieroSerAlumno: () -> Unit,
-    onContinuar: () -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Ups! Debes ser Alumno para poder inscribirte a un curso.",
-            color = BlueLight,
-            fontSize = 18.sp
-        )
-        Spacer(Modifier.height(24.dp))
-        Button(
-            onClick = onQuieroSerAlumno,
-            colors = ButtonDefaults.buttonColors(containerColor = OrangeDark),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text("Quiero ser Alumno", color = Color.White)
-        }
-        Spacer(Modifier.height(16.dp))
-        OutlinedButton(
-            onClick = onContinuar,
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = OrangeDark)
-        ) {
-            Text("Continuar viendo cursos")
         }
     }
 }
