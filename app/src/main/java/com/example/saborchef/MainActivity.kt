@@ -25,7 +25,7 @@ import com.example.saborchef.data.DataStoreManager
 
 
 import com.example.saborchef.model.Rol
-
+import com.example.saborchef.ui.screens.MisDatosScreen
 import com.example.saborchef.network.AuthRepository
 import com.example.saborchef.network.NewPasswordRequest
 import com.example.saborchef.network.PasswordResetRequest
@@ -414,6 +414,21 @@ class MainActivity : ComponentActivity() {
                                 navController = navController
                             )
                         }
+
+                        // NUEVA RUTA: MIS DATOS
+                        composable("my_data") {
+                            val dataStore = remember { DataStoreManager(this@MainActivity) }
+                            val userId by dataStore.userId.collectAsState(initial = null)
+
+                            // Usar el userId directamente o 1L como fallback
+                            val safeUserId = userId ?: 1L
+
+                            MisDatosScreen(
+                                navController = navController,
+                                userId = safeUserId
+                            )
+                        }
+
                         composable("publishRecipe") {
                             PublishRecipeScreen(
                                 navController = navController
