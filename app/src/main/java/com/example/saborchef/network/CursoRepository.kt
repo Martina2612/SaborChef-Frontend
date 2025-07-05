@@ -1,5 +1,6 @@
 package com.example.saborchef.network
 
+import com.example.saborchef.model.BajaCursoResponse
 import com.example.saborchef.model.Curso
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -31,8 +32,13 @@ interface CursoApi {
         @Path("idCronograma") idCronograma: Long,
         @Path("idAlumno") idAlumno: Long,
         @Header("Authorization") token: String
-    ): Response<String>
+    ): Response<BajaCursoResponse>
 
+    @GET("api/cursos/{idCronograma}/{idAlumno}/calcular-reintegro")
+    suspend fun calcularReintegro(
+        @Path("idCronograma") idCronograma: Long,
+        @Path("idAlumno") idAlumno: Long
+    ): Response<BajaCursoResponse>
 
 
 
@@ -63,8 +69,23 @@ object CursoRepository {
         return api.inscribirseACurso("Bearer $token", idCronograma, idAlumno)
     }
 
-    suspend fun darseDeBaja(token: String, idCronograma: Long, idAlumno: Long): Response<String> {
+    suspend fun darseDeBaja(token: String, idCronograma: Long, idAlumno: Long): Response<BajaCursoResponse> {
         return api.darseDeBaja(idCronograma, idAlumno, "Bearer $token")
+    }
+
+
+    suspend fun calcularReintegro(idCronograma: Long, idAlumno: Long): Result<BajaCursoResponse> {
+        return try {
+            val response = api.calcularReintegro(idCronograma, idAlumno)
+            if (response.isSuccessful) {
+                response.body()?.let { Result.success(it) }
+                    ?: Result.failure(Exception("Respuesta vacía"))
+            } else {
+                Result.failure(Exception("Error: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
 
