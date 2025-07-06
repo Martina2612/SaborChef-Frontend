@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.example.saborchef.model.PerfilUsuarioDTO
+import com.example.saborchef.models.AlumnoActualizarDTO
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -51,6 +52,28 @@ object UsuarioRepository {
         }
     }
 
+    suspend fun convertirEnAlumno(userId: String, alumnoDto: AlumnoActualizarDTO, token: String): Result<String> {
+        return try {
+            // CORRECCIÓN: Usar 'api' en lugar de 'UsuarioapiService'
+            val response = api.convertirEnAlumno(
+                userId = userId.toInt(),
+                alumnoDto = alumnoDto,
+                authorization = "Bearer $token"
+            )
+
+            if (response.isSuccessful) {
+                Log.d("UsuarioRepository", "✅ Usuario convertido a alumno exitosamente")
+                Result.success("Usuario convertido a alumno exitosamente")
+            } else {
+                val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                Log.e("UsuarioRepository", "❌ Error al convertir: ${response.code()} - $errorBody")
+                Result.failure(Exception("Error al convertir usuario: ${response.code()} - $errorBody"))
+            }
+        } catch (e: Exception) {
+            Log.e("UsuarioRepository", "❌ Excepción en convertirEnAlumno", e)
+            Result.failure(e)
+        }
+    }
     /**
      * Actualiza el perfil de un usuario
      */

@@ -84,7 +84,21 @@ class SharedAlumnoViewModel : ViewModel() {
             null
         }
     }
-
+    fun reset() {
+        alias = ""
+        email = ""
+        password = ""
+        rol = Rol.VISITANTE
+        nombre = ""
+        apellido = ""
+        frontUri = null
+        backUri = null
+        tramite = ""
+        cardNumber = ""
+        securityCode = ""
+        expiryDate = ""
+        tipoTarjeta = ""
+    }
     // Conversión final a DTO
     fun toRegisterRequest(context: Context): RegisterRequest {
         return RegisterRequest(
