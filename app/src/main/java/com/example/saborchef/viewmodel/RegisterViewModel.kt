@@ -54,13 +54,15 @@ class RegisterViewModel : ViewModel() {
     val emailState: StateFlow<FieldState> = _emailState
     private var emailJob: Job? = null
 
-    // ✅ Método original para registro completo
+    // ✅ Método original para registro completo - SIN BASE64
     fun register(context: Context, sharedAlumnoViewModel: SharedAlumnoViewModel) {
         _uiState.value = RegisterUiState.Loading
 
         viewModelScope.launch {
             try {
+                // Crear request con números aleatorios en lugar de base64
                 val request = sharedAlumnoViewModel.toRegisterRequest(context)
+
                 val result = withContext(Dispatchers.IO) {
                     AuthRepository.registerUser(request)
                 }
@@ -91,12 +93,12 @@ class RegisterViewModel : ViewModel() {
                     tipoTarjeta = sharedAlumnoViewModel.tipoTarjeta,
                     vencimiento = sharedAlumnoViewModel.expiryDate,
                     codigoSeguridad = sharedAlumnoViewModel.securityCode,
-                    dniFrente = sharedAlumnoViewModel.frontUri?.let { uriToBase64(context, it) },
-                    dniDorso = sharedAlumnoViewModel.backUri?.let { uriToBase64(context, it) },
+                    dniFrente = null, // No enviar nada
+                    dniDorso = null,  // No enviar nada
                     numeroTramite = sharedAlumnoViewModel.tramite
                 )
 
-                Log.d("RegisterVM", "📋 DTO creado: numeroTarjeta=${alumnoDto.numeroTarjeta}, dniFrente=${alumnoDto.dniFrente?.take(50)}..., dniDorso=${alumnoDto.dniDorso?.take(50)}...")
+                Log.d("RegisterVM", "📋 DTO creado: numeroTarjeta=${alumnoDto.numeroTarjeta}, dniFrente=null, dniDorso=null")
 
                 val result = withContext(Dispatchers.IO) {
                     UsuarioRepository.convertirEnAlumno(userId, alumnoDto, token)
@@ -183,7 +185,7 @@ class RegisterViewModel : ViewModel() {
         }
     }
 
-    // Función auxiliar para convertir URI a base64
+    // Función auxiliar para convertir URI a base64 (ya no se usa pero la dejo por compatibilidad)
     private fun uriToBase64(context: Context, uri: Uri): String? {
         return try {
             val inputStream = context.contentResolver.openInputStream(uri)
