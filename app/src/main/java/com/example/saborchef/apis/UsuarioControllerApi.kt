@@ -11,6 +11,7 @@ import com.example.saborchef.models.AlumnoActualizarDTO
 import com.example.saborchef.models.ConfirmacionCodigoDTO
 import com.example.saborchef.models.ResetPasswordDto
 import com.example.saborchef.models.Usuario
+import okhttp3.MultipartBody
 
 interface UsuarioControllerApi {
     /**
@@ -83,5 +84,13 @@ interface UsuarioControllerApi {
      */
     @POST("api/usuarios/password/reset")
     fun resetearContrasea(@Body resetPasswordDto: ResetPasswordDto): Call<kotlin.String>
+
+    @Multipart
+    @POST("api/usuarios/perfil/{userId}/foto")
+    fun subirFotoPerfil(
+        @Path("userId") userId: Long,
+        @Part foto: MultipartBody.Part,
+        @Header("Authorization") token: String
+    ): Call<Map<String, String>>
 
 }

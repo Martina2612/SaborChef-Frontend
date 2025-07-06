@@ -223,7 +223,7 @@ class MainActivity : ComponentActivity() {
                             SuccessfulRegisterScreen(
                                 onContinue = {
                                     alias = sharedAlumnoViewModel.alias
-                                    navController.navigate("simple_home") {
+                                    navController.navigate("login") {
                                         popUpTo("auth") { inclusive = true }
                                     }
                                 }
