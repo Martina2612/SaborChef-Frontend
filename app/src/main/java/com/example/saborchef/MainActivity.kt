@@ -677,7 +677,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// ✅ PANTALLAS DE RESULTADO PARA CONVERSIÓN
+
 @Composable
 fun SuccessfulConversionScreen(
     onContinue: () -> Unit

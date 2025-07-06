@@ -152,7 +152,9 @@ fun ProfileScreen(
                     ProfileOption(Icons.Default.Book, "Mis recetas") { onOptionClick("Mis recetas") },
                 ).apply {
                     if (role == Rol.ALUMNO) {
-                        add(ProfileOption(Icons.Default.OndemandVideo, "Mis cursos") { onOptionClick("Mis cursos") })
+                        add(ProfileOption(Icons.Default.OndemandVideo, "Mis cursos") {
+                            navController.navigate("mis_cursos")
+                        })
                         add(ProfileOption(Icons.Default.Payment, "Medio de pago") { onOptionClick("Medios de pago") })
                     }
                     add(ProfileOption(Icons.Default.OutlinedFlag, "Términos y condiciones") { onOptionClick("Términos y condiciones") })
