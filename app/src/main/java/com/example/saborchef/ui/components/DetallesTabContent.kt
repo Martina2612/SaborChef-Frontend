@@ -9,91 +9,88 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+// import androidx.compose.ui.layout.ContentScale // Removing unused import
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.saborchef.model.CursoInscripto
+import com.example.saborchef.model.BajaCursoResponse
 import com.example.saborchef.ui.theme.Orange
 import com.example.saborchef.viewmodel.CursoViewModel
+import com.example.saborchef.viewmodel.BajaUiState
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.launch
 import com.example.saborchef.data.DataStoreManager
+import android.widget.Toast
 
 @Composable
 fun DetallesTabContent(
     curso: CursoInscripto,
     navController: NavController,
     viewModel: CursoViewModel = viewModel()
-)
- {
+) {
     val context = LocalContext.current
-     val dataStore = DataStoreManager(context)
-     val scope = rememberCoroutineScope()
+    val dataStore = DataStoreManager(context)
 
-    var token by remember { mutableStateOf<String?>(null) }
-    var userId by remember { mutableStateOf<Long?>(null) }
+    // Estados del ViewModel
+    val bajaUiState by viewModel.bajaUiState.collectAsState()
 
-    val bajaExitosa by viewModel.bajaExitosa
+    // Estados del DataStore
+    val token by dataStore.token.collectAsState(initial = "")
+    val userId by dataStore.userId.collectAsState(initial = null)
 
-     var mostrarDialogo by remember { mutableStateOf(false) }
+    var showBajaDialog by remember { mutableStateOf(false) }
 
-     // Leer token y userId desde DataStore
-     LaunchedEffect(Unit) {
-         launch {
-             dataStore.token.collect { t -> if (!t.isNullOrBlank()) token = t }
-         }
-         launch {
-             dataStore.userId.collect { id -> if (id != null) userId = id }
-         }
-     }
+    // Manejar estados de baja - Usar variable local para evitar smart cast
+    LaunchedEffect(bajaUiState) {
+        val currentState = bajaUiState
+        when (currentState) {
+            is BajaUiState.ReintegroCalculado -> {
+                showBajaDialog = true
+            }
+            is BajaUiState.BajaExitosa -> {
+                showBajaDialog = false
+                Toast.makeText(context, currentState.mensaje, Toast.LENGTH_LONG).show()
+                navController.navigate("mis_cursos") {
+                    popUpTo("mis_cursos") { inclusive = true }
+                }
+            }
+            is BajaUiState.Error -> {
+                showBajaDialog = false
+                Toast.makeText(context, currentState.mensaje, Toast.LENGTH_LONG).show()
+            }
+            else -> { /* No hacer nada */ }
+        }
+    }
 
+    // Dialog con información de reintegro - Usar when expression
+    val currentBajaState = bajaUiState
+    when (currentBajaState) {
+        is BajaUiState.ReintegroCalculado -> {
+            BajaCursoDialog(
+                isVisible = showBajaDialog,
+                onDismiss = {
+                    showBajaDialog = false
+                    viewModel.limpiarEstadoBaja()
+                },
+                onConfirm = {
+                    // Ejecutar la baja - Fix token nullability
+                    userId?.let { id ->
+                        val userToken = token.takeIf { !it.isNullOrBlank() } ?: ""
+                        viewModel.ejecutarBaja(curso.idCronograma, id, userToken)
+                    }
+                },
+                reintegroInfo = currentBajaState.reintegroInfo,
+                isLoading = currentBajaState is BajaUiState.EjecutandoBaja // Fix condition
+            )
+        }
+        else -> { /* No mostrar dialog */ }
+    }
 
-     if (mostrarDialogo) {
-         AlertDialog(
-             onDismissRequest = { mostrarDialogo = false },
-             confirmButton = {
-                 Button(
-                     onClick = {
-                         mostrarDialogo = false
-                         if (token != null && userId != null) {
-                             scope.launch {
-                                 viewModel.darseDeBaja(curso.idCronograma, userId!!, token!!)
-                                 navController.navigate("mis_cursos") {
-                                     popUpTo("mis_cursos") { inclusive = true }
-                                 }
-                             }
-                         }
-                     },
-                     colors = ButtonDefaults.buttonColors(containerColor = Orange)
-                 ) {
-                     Text("Sí, confirmar", color = Color.White)
-                 }
-             },
-             dismissButton = {
-                 OutlinedButton(onClick = { mostrarDialogo = false }) {
-                     Text("No, regresar")
-                 }
-             },
-             title = {
-                 Text("¿Está seguro que desea darse de baja del curso?", fontWeight = FontWeight.Bold)
-             },
-             text = {
-                 Text("Si ya pagaste, el reintegro será procesado automáticamente.", fontSize = 14.sp)
-             },
-             shape = RoundedCornerShape(20.dp),
-             containerColor = Color.White
-         )
-     }
-
-
-
-
-     Column(modifier = Modifier.padding(16.dp)) {
+    Column(modifier = Modifier.padding(16.dp)) {
         // Progreso
         LinearProgressIndicator(
             progress = curso.progreso / 100f,
@@ -127,15 +124,14 @@ fun DetallesTabContent(
             Spacer(modifier = Modifier.width(8.dp))
             Column {
                 Text("  ${curso.chef ?: "Desconocido"}", fontWeight = FontWeight.SemiBold)
-
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(curso.modalidad, fontSize = 14.sp)
+        Text(curso.modalidad ?: "Sin modalidad", fontSize = 14.sp) // Fix nullability
         Spacer(modifier = Modifier.height(6.dp))
-        Text("$ ${curso.precio}", fontSize = 14.sp)
+        Text("$ ${curso.precio ?: 0.0}", fontSize = 14.sp) // Fix nullability para precio
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -152,7 +148,6 @@ fun DetallesTabContent(
                 Text("Ver sede", color = Color.White)
             }
 
-
             Button(
                 onClick = { },
                 shape = RoundedCornerShape(6.dp),
@@ -163,24 +158,99 @@ fun DetallesTabContent(
             ) {
                 Text("Inscripto", color = Color(0xFF2E7D32))
             }
-
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text("Descripción y Requisitos", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF374957))
         Spacer(modifier = Modifier.height(6.dp))
-        Text(curso.descripcion, fontSize = 14.sp, color = Color(0xFF6C7A89))
-
+        Text(curso.descripcion ?: "Sin descripción", fontSize = 14.sp, color = Color(0xFF6C7A89)) // Fix nullability
 
         Spacer(modifier = Modifier.height(16.dp))
-         Button(
-             onClick = { mostrarDialogo = true },
-             colors = ButtonDefaults.buttonColors(containerColor = Orange),
-             modifier = Modifier.fillMaxWidth()
-         ) {
-             Text("Quiero darme de baja", color = Color.White)
-         }
 
-     }
+        // Botón con manejo correcto de estados
+        Button(
+            onClick = {
+                // PASO 1: Calcular reintegro antes de mostrar dialog
+                userId?.let { id ->
+                    viewModel.calcularReintegro(curso.idCronograma, id)
+                }
+            },
+            enabled = bajaUiState !is BajaUiState.CalculandoReintegro,
+            colors = ButtonDefaults.buttonColors(containerColor = Orange),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Usar variable local para evitar smart cast
+            val buttonState = bajaUiState
+            when (buttonState) {
+                is BajaUiState.CalculandoReintegro -> {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                else -> {
+                    Text("Quiero darme de baja", color = Color.White)
+                }
+            }
+        }
+    }
+}
+
+// Componente del dialog (mismo que antes)
+@Composable
+fun BajaCursoDialog(
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    reintegroInfo: BajaCursoResponse,
+    isLoading: Boolean = false
+) {
+    if (isVisible) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    text = "¿Está seguro que desea darse de baja del curso?",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = reintegroInfo.mensaje,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = onConfirm,
+                    enabled = !isLoading,
+                    colors = ButtonDefaults.buttonColors(containerColor = Orange)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "Sí, confirmar",
+                            color = Color.White
+                        )
+                    }
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    enabled = !isLoading
+                ) {
+                    Text("No, regresar")
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = Color.White
+        )
+    }
 }

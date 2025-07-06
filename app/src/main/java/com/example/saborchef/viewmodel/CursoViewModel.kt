@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saborchef.model.Cronograma
 import com.example.saborchef.model.Curso
+import com.example.saborchef.model.BajaCursoResponse // AGREGAR IMPORT
 import com.example.saborchef.network.CronogramaRepository
 import com.example.saborchef.network.CursoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,11 +13,20 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 
-
 sealed class CursoUiState {
     object Loading : CursoUiState()
     data class Success(val cursos: List<Curso>) : CursoUiState()
     data class Error(val message: String) : CursoUiState()
+}
+
+// AGREGAR: Estados para el flujo de baja con reintegro
+sealed class BajaUiState {
+    object Idle : BajaUiState()
+    object CalculandoReintegro : BajaUiState()
+    data class ReintegroCalculado(val reintegroInfo: BajaCursoResponse) : BajaUiState()
+    object EjecutandoBaja : BajaUiState()
+    data class BajaExitosa(val mensaje: String) : BajaUiState()
+    data class Error(val mensaje: String) : BajaUiState()
 }
 
 class CursoViewModel : ViewModel() {
@@ -32,10 +42,13 @@ class CursoViewModel : ViewModel() {
 
     private val _inscripcionExitosa = MutableStateFlow<Boolean?>(null)
     val inscripcionExitosa: StateFlow<Boolean?> = _inscripcionExitosa
+
     private val _cronogramaDetalle = MutableStateFlow<Cronograma?>(null)
     val cronogramaDetalle: StateFlow<Cronograma?> = _cronogramaDetalle
-    private val _bajaExitosa = mutableStateOf<Boolean?>(null)
-    val bajaExitosa: State<Boolean?> = _bajaExitosa
+
+    // CAMBIAR: Estados para el nuevo flujo de baja
+    private val _bajaUiState = MutableStateFlow<BajaUiState>(BajaUiState.Idle)
+    val bajaUiState: StateFlow<BajaUiState> = _bajaUiState
 
     fun getCursoPorId(id: Long) {
         viewModelScope.launch {
@@ -71,8 +84,6 @@ class CursoViewModel : ViewModel() {
         _mensajeError.value = null
     }
 
-
-
     fun fetchCursos(idUsuario: Long) {
         viewModelScope.launch {
             try {
@@ -84,10 +95,10 @@ class CursoViewModel : ViewModel() {
         }
     }
 
-
     suspend fun obtenerCursoPorId(id: Long): Curso {
         return CursoRepository.getCursoPorId(id)
     }
+
     fun cargarCurso(curso: Curso) {
         _cursoDetalle.value = curso
     }
@@ -103,21 +114,58 @@ class CursoViewModel : ViewModel() {
         }
     }
 
-    fun darseDeBaja(idCronograma: Long, idAlumno: Long, token: String) {
+
+    fun calcularReintegro(idCronograma: Long, idAlumno: Long) {
+        _bajaUiState.value = BajaUiState.CalculandoReintegro
         viewModelScope.launch {
             try {
-                val response = CursoRepository.darseDeBaja(token, idCronograma, idAlumno)
-                _bajaExitosa.value = response.isSuccessful
+                val result = CursoRepository.calcularReintegro(idCronograma, idAlumno)
+                result.fold(
+                    onSuccess = { reintegroInfo ->
+                        _bajaUiState.value = BajaUiState.ReintegroCalculado(reintegroInfo)
+                    },
+                    onFailure = { error ->
+                        _bajaUiState.value = BajaUiState.Error("Error al calcular reintegro: ${error.message}")
+                    }
+                )
             } catch (e: Exception) {
-                _bajaExitosa.value = false
+                _bajaUiState.value = BajaUiState.Error("Error inesperado: ${e.message}")
             }
         }
     }
 
-    fun limpiarEstadoBaja() {
-        _bajaExitosa.value = null
+
+    fun ejecutarBaja(idCronograma: Long, idAlumno: Long, token: String) {
+        _bajaUiState.value = BajaUiState.EjecutandoBaja
+        viewModelScope.launch {
+            try {
+                val response = CursoRepository.darseDeBaja(token, idCronograma, idAlumno)
+                if (response.isSuccessful) {
+                    val mensaje = response.body()?.mensaje ?: "Baja realizada exitosamente"
+                    _bajaUiState.value = BajaUiState.BajaExitosa(mensaje)
+                } else {
+                    _bajaUiState.value = BajaUiState.Error("Error ${response.code()}: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                _bajaUiState.value = BajaUiState.Error("Error de red: ${e.message}")
+            }
+        }
     }
 
+
+    fun limpiarEstadoBaja() {
+        _bajaUiState.value = BajaUiState.Idle
+    }
+
+
+    @Deprecated("Usar calcularReintegro() y ejecutarBaja() en su lugar")
+    fun darseDeBaja(idCronograma: Long, idAlumno: Long, token: String) {
+        ejecutarBaja(idCronograma, idAlumno, token)
+    }
+
+    @Deprecated("Usar bajaUiState en su lugar")
+    private val _bajaExitosa = mutableStateOf<Boolean?>(null)
+    val bajaExitosa: State<Boolean?> = _bajaExitosa
 }
 
 
