@@ -81,26 +81,52 @@ fun ProfileScreen(
                     currentPhotoUrl = currentPhotoUrl,
                     currentPhotoUri = selectedPhotoUri ?: photoUri,
                     onPhotoSelected = { uri ->
+                        println("📸 Foto seleccionada: $uri")
                         selectedPhotoUri = uri
                         isUploadingPhoto = true
+
                         coroutineScope.launch {
-                            val userId = dataStoreManager.userId.firstOrNull() ?: return@launch
-                            val token = dataStoreManager.token.firstOrNull() ?: return@launch
-                            val result = UsuarioRepository.subirFotoPerfil(
-                                context = context,
-                                userId = userId,
-                                imageUri = selectedPhotoUri!!,
-                                token = token
-                            )
-                            result.onSuccess { fotoUrl ->
-                                currentPhotoUrl = fotoUrl
-                                Toast.makeText(context, "Foto actualizada exitosamente", Toast.LENGTH_SHORT).show()
-                            }.onFailure {
-                                Toast.makeText(context, "Error al subir la foto", Toast.LENGTH_SHORT).show()
+                            try {
+                                val userId = dataStoreManager.userId.firstOrNull()
+                                val token = dataStoreManager.token.firstOrNull()
+
+                                println("🔍 userId: $userId")
+                                println("🔍 token: ${token?.take(20)}... (${token?.length ?: 0} caracteres)")
+
+                                if (userId == null || token.isNullOrBlank()) {
+                                    println("❌ userId o token no disponible. Abortando subida.")
+                                    Toast.makeText(context, "Error al subir: sesión inválida", Toast.LENGTH_SHORT).show()
+                                    isUploadingPhoto = false
+                                    return@launch
+                                }
+
+                                println("🚀 Iniciando subida de imagen...")
+                                val result = UsuarioRepository.subirFotoPerfil(
+                                    context = context,
+                                    userId = userId,
+                                    imageUri = uri,
+                                    token = token
+                                )
+
+                                result.onSuccess { fotoUrl ->
+                                    println("✅ Imagen subida con éxito. URL: $fotoUrl")
+                                    currentPhotoUrl = fotoUrl
+                                    Toast.makeText(context, "Foto actualizada exitosamente", Toast.LENGTH_SHORT).show()
+                                }.onFailure { e ->
+                                    println("❌ Fallo al subir la imagen: ${e.message}")
+                                    e.printStackTrace()
+                                    Toast.makeText(context, "Error al subir la foto", Toast.LENGTH_SHORT).show()
+                                }
+                            } catch (e: Exception) {
+                                println("🟥 Excepción inesperada al subir foto: ${e.message}")
+                                e.printStackTrace()
+                                Toast.makeText(context, "Error inesperado", Toast.LENGTH_SHORT).show()
+                            } finally {
+                                isUploadingPhoto = false
                             }
-                            isUploadingPhoto = false
                         }
                     }
+
                 )
 
                 if (isUploadingPhoto) {
