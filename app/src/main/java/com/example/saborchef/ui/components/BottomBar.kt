@@ -29,7 +29,7 @@ sealed class TabItem(
 ) {
     object Home : TabItem("simple_home", Icons.Default.Home)
     object Videos : TabItem("cursos", Icons.Default.OndemandVideo)
-    object Bookmarks : TabItem("favs", Icons.Default.BookmarkBorder)
+    object Bookmarks : TabItem("saved_recipes", Icons.Default.BookmarkBorder) // Cambiado a saved_recipes
     object Search : TabItem("search", Icons.Default.Search)
 }
 
@@ -73,7 +73,7 @@ fun BottomBar(navController: NavController, role: Rol) {
                         currentRoute?.startsWith("sucursal_detalle") == true ||
                         currentRoute?.startsWith("mis_cursos_detalle") == true
                 "search" -> currentRoute == "search" || currentRoute == "filter"
-                "favs" -> currentRoute == "favs"
+                "saved_recipes" -> currentRoute == "saved_recipes" || currentRoute == "favs" // Incluye ambas rutas
                 else -> currentRoute == tab.route
             }
 
