@@ -73,13 +73,21 @@ fun InscripcionExitosaDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Construir el texto de detalles condicionalmente
+                val detallesTexto = buildString {
+                    append("Curso: ${curso.nombre}\n")
+                    // Solo mostrar sede si el curso NO es virtual
+                    if (curso.modalidad.lowercase() != "virtual") {
+                        append("Sede: ${sede.nombreSede}\n")
+                    }
+                    append("Nivel: ${curso.nivel.name}\n")
+                    append("Precio: ${curso.precio}\n")
+                    append("Inicio de clases: ${cronograma.fechaInicio}\n")
+                    append("Modalidad: ${curso.modalidad}")
+                }
+
                 Text(
-                    text = "Curso: ${curso.nombre}\n" +
-                            "Sede: ${sede.nombreSede}\n" +
-                            "Nivel: ${curso.nivel.name}\n" +
-                            "Precio: $${curso.precio}\n" +
-                            "Inicio de clases: ${cronograma.fechaInicio}\n" +
-                            "Modalidad: ${curso.modalidad}",
+                    text = detallesTexto,
                     fontSize = 14.sp,
                     color = Color.DarkGray,
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -87,8 +95,15 @@ fun InscripcionExitosaDialog(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
+                // Mensaje diferente según la modalidad
+                val mensajeEmail = if (curso.modalidad.lowercase() == "virtual") {
+                    "Te enviamos el link de acceso y la factura por mail"
+                } else {
+                    "Te enviamos la factura por mail"
+                }
+
                 Text(
-                    text = "Te enviamos la factura por mail",
+                    text = mensajeEmail,
                     fontSize = 15.sp,
                     color = Color.Gray
                 )

@@ -138,10 +138,8 @@ fun CursosScreen(
             }
         },
         bottomBar = {
-
             // CAMBIO: Usar el rol real del usuario
             BottomBar(navController = navController, role = rolParaBottomBar)
-
         }
     ) { paddingValues ->
         when (val state = uiState) {
@@ -258,7 +256,7 @@ fun CursosScreen(
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                                         ) {
                                             Text(
-                                                text = curso.modalidad,
+                                                text = nivelToText(curso.nivel), // CAMBIO: mostrar nivel en lugar de modalidad
                                                 color = Color.White,
                                                 fontWeight = FontWeight.Medium,
                                                 fontSize = 14.sp

@@ -18,12 +18,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.saborchef.data.DataStoreManager
 import com.example.saborchef.model.Curso
 import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.components.BottomBar
@@ -46,14 +48,37 @@ fun CursoDetalleScreen(
 ) {
     val scope = rememberCoroutineScope()
     var selectedTab by remember { mutableStateOf(0) }
+    var showInscripcionDialog by remember { mutableStateOf(false) }
+
+    // Estados para manejar token y alumnoId (solo para cursos virtuales)
+    val context = LocalContext.current
+    val dataStore = remember { DataStoreManager(context) }
+    var token by remember { mutableStateOf<String?>(null) }
+    var alumnoId by remember { mutableStateOf<Long?>(null) }
+
+    // Observar el estado de inscripción
+    val inscripcionExitosa by cursoViewModel.inscripcionExitosa.collectAsState()
 
     LaunchedEffect(cursoId) {
         scope.launch { cursoViewModel.getCursoPorId(cursoId) }
     }
 
+    // Cargar token y alumnoId (solo necesario para cursos virtuales)
+    LaunchedEffect(Unit) {
+        dataStore.token.collect { if (!it.isNullOrBlank()) token = it }
+    }
+    LaunchedEffect(Unit) {
+        dataStore.userId.collect { if (it != null) alumnoId = it }
+    }
+
+    // Mostrar dialog cuando la inscripción es exitosa para cursos virtuales
+    LaunchedEffect(inscripcionExitosa) {
+        if (inscripcionExitosa == true) {
+            showInscripcionDialog = true
+        }
+    }
+
     val cursoDetalle by cursoViewModel.cursoDetalle.collectAsState()
-
-
 
     if (userRole == Rol.USUARIO) {
         // Vista bloqueada para usuarios sin rol de alumno
@@ -125,267 +150,297 @@ fun CursoDetalleScreen(
                 BottomBar(navController = navController, role = userRole)
             }
         ) { paddingValues ->
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                // Box para superponer la flecha sobre la imagen
-                Box {
-                    // Imagen del curso
-                    Image(
-                        painter = rememberAsyncImagePainter(curso.imagenUrl),
-                        contentDescription = curso.nombre,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(240.dp),
-                        contentScale = ContentScale.Crop
-                    )
-
-                    // Flecha de navegación hacia atrás
-                    IconButton(
-                        onClick = { navController.popBackStack() },
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color.Black.copy(alpha = 0.5f))
-                    ) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = Color.White
-                        )
-                    }
-                }
-
-                // Card con la información del curso
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    Column(
+                    // Box para superponer la flecha sobre la imagen
+                    Box {
+                        // Imagen del curso
+                        Image(
+                            painter = rememberAsyncImagePainter(curso.imagenUrl),
+                            contentDescription = curso.nombre,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(240.dp),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        // Flecha de navegación hacia atrás
+                        IconButton(
+                            onClick = { navController.popBackStack() },
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.Black.copy(alpha = 0.5f))
+                        ) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Volver",
+                                tint = Color.White
+                            )
+                        }
+                    }
+
+                    // Card con la información del curso
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp)
+                            .padding(16.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        // Título del curso
-                        Text(
-                            text = curso.nombre,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = BlueDark
-                        )
-
-                        // Línea decorativa naranja
-                        HorizontalDivider(
-                            thickness = 3.dp,
-                            color = Orange,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Primera fila de información
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp)
                         ) {
-                            Column {
-                                Text(
-                                    text = "Duración: ${curso.duracion}",
-                                    color = Color.Gray,
-                                    fontSize = 14.sp
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "120 min c/u",
-                                    color = Color.Gray,
-                                    fontSize = 12.sp
-                                )
-                            }
+                            // Título del curso
+                            Text(
+                                text = curso.nombre,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = BlueDark
+                            )
 
-                            // Badge de modalidad
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = Orange
+                            // Línea decorativa naranja
+                            HorizontalDivider(
+                                thickness = 3.dp,
+                                color = Orange,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Primera fila de información
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = curso.modalidad,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    fontSize = 12.sp
-                                )
-                            }
-                        }
+                                Column {
+                                    Text(
+                                        text = "Duración: ${curso.duracion}",
+                                        color = Color.Gray,
+                                        fontSize = 14.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "120 min c/u",
+                                        color = Color.Gray,
+                                        fontSize = 12.sp
+                                    )
+                                }
 
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Información del chef
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Avatar del chef (puedes usar una imagen por defecto o la imagen del curso)
-                            Surface(
-                                shape = CircleShape,
-                                modifier = Modifier.size(40.dp),
-                                color = Orange.copy(alpha = 0.2f)
-                            ) {
-                                // Aquí podrías poner la imagen del chef si la tienes
-                                Box(
-                                    contentAlignment = Alignment.Center
+                                // Badge de modalidad
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = Orange
                                 ) {
                                     Text(
-                                        text = curso.chef.first().toString(),
+                                        text = curso.modalidad,
+                                        color = Color.White,
                                         fontWeight = FontWeight.Bold,
-                                        color = Orange
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                        fontSize = 12.sp
                                     )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                            Column {
-                                Text(
-                                    text = "Chef ${curso.chef}",
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.DarkGray,
-                                    fontSize = 14.sp
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            val cronograma = curso.cronogramas.firstOrNull()
-                            val diaSemana = cronograma?.fechaInicio?.let {
-                                try {
-                                    val fecha = LocalDate.parse(it.toString())
-                                    fecha.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("es"))
-                                        .replaceFirstChar { c -> c.uppercase() }
-                                } catch (e: Exception) {
-                                    ""
-                                }
-                            } ?: ""
-
-                            val fechaFormateada = cronograma?.fechaInicio?.let {
-                                try {
-                                    val fecha = LocalDate.parse(it.toString())
-                                    "${fecha.dayOfMonth.toString().padStart(2, '0')}/${fecha.monthValue.toString().padStart(2, '0')}"
-                                } catch (e: Exception) {
-                                    ""
-                                }
-                            } ?: ""
-
-                            Column(horizontalAlignment = Alignment.End) {
-                                if (diaSemana.isNotBlank()) {
-                                    Text(text = diaSemana, color = Color.Gray, fontSize = 12.sp)
-                                }
-                                if (fechaFormateada.isNotBlank()) {
-                                    Text(text = "Inicio: $fechaFormateada", color = Color.Gray, fontSize = 12.sp)
-                                }
-                            }
-
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Nivel y precio
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Nivel: ${curso.nivel.name.lowercase().replaceFirstChar { it.uppercase() }}",
-                                color = Color.Gray,
-                                fontSize = 14.sp
-                            )
-                            Text(
-                                text = "$ ${curso.precio}",
-                                fontWeight = FontWeight.Bold,
-                                color = BlueDark,
-                                fontSize = 16.sp
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // Tabs de Descripción y Cronograma
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            TabButton("Descripción", selectedTab == 0) { selectedTab = 0 }
-                            TabButton("Cronograma", selectedTab == 1) { selectedTab = 1 }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Contenido de las tabs
-                        if (selectedTab == 0) {
-                            Text(
-                                text = curso.descripcion,
-                                color = Color.DarkGray,
-                                fontSize = 14.sp,
-                                lineHeight = 20.sp
-                            )
-                        } else {
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                curso.contenidos.split(",").forEach { tema ->
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.fillMaxWidth()
+                            // Información del chef
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Avatar del chef
+                                Surface(
+                                    shape = CircleShape,
+                                    modifier = Modifier.size(40.dp),
+                                    color = Orange.copy(alpha = 0.2f)
+                                ) {
+                                    Box(
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Surface(
-                                            shape = CircleShape,
-                                            color = Orange,
-                                            modifier = Modifier.size(24.dp)
-                                        ) {
-                                            Icon(
-                                                Icons.Default.PlayArrow,
-                                                contentDescription = null,
-                                                tint = Color.White,
-                                                modifier = Modifier.padding(4.dp)
-                                            )
-                                        }
-                                        Spacer(modifier = Modifier.width(12.dp))
                                         Text(
-                                            text = tema.trim(),
-                                            color = BlueDark,
-                                            fontSize = 14.sp
+                                            text = curso.chef.first().toString(),
+                                            fontWeight = FontWeight.Bold,
+                                            color = Orange
                                         )
                                     }
                                 }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column {
+                                    Text(
+                                        text = "Chef ${curso.chef}",
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.DarkGray,
+                                        fontSize = 14.sp
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.weight(1f))
+
+                                val cronograma = curso.cronogramas.firstOrNull()
+                                val diaSemana = cronograma?.fechaInicio?.let {
+                                    try {
+                                        val fecha = LocalDate.parse(it.toString())
+                                        fecha.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("es"))
+                                            .replaceFirstChar { c -> c.uppercase() }
+                                    } catch (e: Exception) {
+                                        ""
+                                    }
+                                } ?: ""
+
+                                val fechaFormateada = cronograma?.fechaInicio?.let {
+                                    try {
+                                        val fecha = LocalDate.parse(it.toString())
+                                        "${fecha.dayOfMonth.toString().padStart(2, '0')}/${fecha.monthValue.toString().padStart(2, '0')}"
+                                    } catch (e: Exception) {
+                                        ""
+                                    }
+                                } ?: ""
+
+                                Column(horizontalAlignment = Alignment.End) {
+                                    if (diaSemana.isNotBlank()) {
+                                        Text(text = diaSemana, color = Color.Gray, fontSize = 12.sp)
+                                    }
+                                    if (fechaFormateada.isNotBlank()) {
+                                        Text(text = "Inicio: $fechaFormateada", color = Color.Gray, fontSize = 12.sp)
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Nivel y precio
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Nivel: ${curso.nivel.name.lowercase().replaceFirstChar { it.uppercase() }}",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = "$ ${curso.precio}",
+                                    fontWeight = FontWeight.Bold,
+                                    color = BlueDark,
+                                    fontSize = 16.sp
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            // Tabs de Descripción y Cronograma
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                TabButton("Descripción", selectedTab == 0) { selectedTab = 0 }
+                                TabButton("Cronograma", selectedTab == 1) { selectedTab = 1 }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Contenido de las tabs
+                            if (selectedTab == 0) {
+                                Text(
+                                    text = curso.descripcion,
+                                    color = Color.DarkGray,
+                                    fontSize = 14.sp,
+                                    lineHeight = 20.sp
+                                )
+                            } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    curso.contenidos.split(",").forEach { tema ->
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Surface(
+                                                shape = CircleShape,
+                                                color = Orange,
+                                                modifier = Modifier.size(24.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.PlayArrow,
+                                                    contentDescription = null,
+                                                    tint = Color.White,
+                                                    modifier = Modifier.padding(4.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Text(
+                                                text = tema.trim(),
+                                                color = BlueDark,
+                                                fontSize = 14.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // Botón de inscripción
+                            Button(
+                                onClick = {
+                                    if (curso.modalidad.lowercase() == "virtual") {
+                                        // Para cursos virtuales, realizar inscripción directamente
+                                        if (userRole == Rol.ALUMNO && alumnoId != null && token != null) {
+                                            val cronogramaId = curso.cronogramas.firstOrNull()?.idCronograma
+                                            if (cronogramaId != null) {
+                                                cursoViewModel.inscribirse(
+                                                    idCronograma = cronogramaId,
+                                                    idAlumno = alumnoId!!,
+                                                    token = token!!
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        // Para cursos presenciales, navegar a sedes disponibles (flujo original)
+                                        sharedCursoViewModel.cronogramas = curso.cronogramas
+                                        navController.navigate("sedes_disponibles")
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Orange),
+                                shape = RoundedCornerShape(25.dp)
+                            ) {
+                                Text(
+                                    text = "Quiero inscribirme!",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        // Botón de inscripción
-                        Button(
-                            onClick = {
-                                sharedCursoViewModel.cronogramas = curso.cronogramas
-                                navController.navigate("sedes_disponibles")
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Orange),
-                            shape = RoundedCornerShape(25.dp)
-                        ) {
-                            Text(
-                                text = "Quiero inscribirme!",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 4.dp)
-                            )
-                        }
-
                     }
+                }
+
+                // Dialog de inscripción exitosa para cursos virtuales
+                if (showInscripcionDialog) {
+                    InscripcionExitosaDialog(
+                        onCerrar = {
+                            showInscripcionDialog = false
+                            cursoViewModel.limpiarEstadoInscripcion()
+                            navController.navigate("mis_cursos") {
+                                popUpTo("curso_detalle") { inclusive = true }
+                            }
+                        },
+                        curso = curso,
+                        cronograma = curso.cronogramas.first(),
+                        sede = curso.cronogramas.first().sede
+                    )
                 }
             }
         }
