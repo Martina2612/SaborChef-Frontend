@@ -52,8 +52,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.saborchef.model.CursoInscripto
+import com.example.saborchef.models.RecetaDetalleResponse
 import com.example.saborchef.ui.components.AppButton
-import com.example.saborchef.ui.publish.EditRecipeScreen
+import com.example.saborchef.ui.screens.EditRecipeScreen
 import com.example.saborchef.ui.theme.*
 import com.google.gson.Gson
 
@@ -199,7 +200,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // ✅ NUEVAS RUTAS PARA CONVERSIÓN A ALUMNO
                         composable("add_payment_conversion") {
                             AddPaymentScreen(
                                 sharedAlumnoViewModel = sharedAlumnoViewModel,
@@ -555,18 +555,19 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        composable(
-                            route = "editRecipe/{recipeId}",
-                            arguments = listOf(navArgument("recipeId") { type = NavType.LongType })
-                        ) { backStackEntry ->
-                            val recipeId = backStackEntry.arguments?.getLong("recipeId")
-                            if (recipeId != null && recipeId > 0L) {
-                                EditRecipeScreen(recipeId = recipeId, navController = navController)
+                        composable("edit_recipe") {
+                            val receta = navController.previousBackStackEntry
+                                ?.savedStateHandle
+                                ?.get<RecetaDetalleResponse>("recetaSeleccionada")
+
+                            if (receta != null) {
+                                EditRecipeScreen(navController = navController, receta = receta)
                             } else {
-                                // Mostrar un error o redirigir
-                                Text("Error: ID de receta inválido")
+                                // En caso de que algo falle, podrías volver atrás:
+                                LaunchedEffect(Unit) { navController.popBackStack() }
                             }
                         }
+
 
 
                         composable("cursos") {

@@ -185,12 +185,11 @@ fun MyRecipesScreen(
                                     IconButton(
                                         onClick = {
                                             Log.d("MyRecipes", "Editando receta con ID: ${r.idReceta}")
-                                            r.idReceta?.let {
-                                                navController.navigate("editRecipe/$it")
-                                            }
+                                            navController.currentBackStackEntry?.savedStateHandle?.set("recetaSeleccionada", r)
+                                            navController.navigate("edit_recipe")
                                         }
-
-                                    ) {
+                                    )
+                                    {
                                         Icon(
                                             imageVector = Icons.Default.Edit,
                                             contentDescription = "Editar",

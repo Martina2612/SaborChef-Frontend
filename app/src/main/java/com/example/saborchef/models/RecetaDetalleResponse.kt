@@ -20,6 +20,7 @@ import com.example.saborchef.models.IngredienteDetalle
 import com.example.saborchef.models.PasoDetalle
 
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 /**
  * 
@@ -81,8 +82,4 @@ data class RecetaDetalleResponse (
     @SerializedName("duracion")
     val duracion: kotlin.Int? = null
 
-) {
-
-
-}
-
+): Serializable
