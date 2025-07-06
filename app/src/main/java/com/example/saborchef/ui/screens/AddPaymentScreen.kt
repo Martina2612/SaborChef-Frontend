@@ -28,13 +28,13 @@ import com.example.saborchef.ui.theme.Poppins
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material3.CardDefaults.cardColors
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPaymentScreen(
     sharedAlumnoViewModel: SharedAlumnoViewModel,
     navController: NavController,
-    viewModel: RegisterViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: RegisterViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    isConversion: Boolean = false // ✅ NUEVO parámetro para conversión
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -69,7 +69,7 @@ fun AddPaymentScreen(
 
         Spacer(Modifier.height(16.dp))
         Text(
-            "Ingresa un medio de pago\npara tus futuros cursos",
+            text = if (isConversion) "Ingresa tu medio de pago\npara convertirte en alumno" else "Ingresa un medio de pago\npara tus futuros cursos",
             fontFamily = Poppins,
             fontSize = 20.sp,
             color = BlueDark,
@@ -199,17 +199,20 @@ fun AddPaymentScreen(
                 }
                 if (!valid) return@Button
 
-                // Solo guardar datos de pago y navegar a DNI
+                // Guardar datos de pago
                 sharedAlumnoViewModel.setCardInfo(cardNum, code, expiry, tipoTarjeta)
 
-                // Verificar que sea alumno
-                if (sharedAlumnoViewModel.rol != Rol.ALUMNO) {
-                    formError = "Solo los alumnos deben registrar tarjeta"
-                    return@Button
+                if (isConversion) {
+                    // ✅ NUEVO: Para conversión, ir directamente a subir DNI
+                    navController.navigate("upload_dni_conversion")
+                } else {
+                    // Para registro normal (código existente)
+                    if (sharedAlumnoViewModel.rol != Rol.ALUMNO) {
+                        formError = "Solo los alumnos deben registrar tarjeta"
+                        return@Button
+                    }
+                    navController.navigate("upload_dni")
                 }
-
-                // Navegar a upload_dni
-                navController.navigate("upload_dni")
             },
             modifier = Modifier
                 .fillMaxWidth()

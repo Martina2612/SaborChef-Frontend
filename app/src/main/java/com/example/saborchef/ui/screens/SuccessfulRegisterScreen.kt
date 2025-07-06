@@ -11,7 +11,7 @@ fun SuccessfulRegisterScreen(
     SuccessScreen(
         title = "Registro exitoso!",
         subtitle = "",
-        buttonText = "Siguiente",
+        buttonText = "Volver",
         imageResId = R.drawable.icon_check,
         onButtonClick = onContinue
     )

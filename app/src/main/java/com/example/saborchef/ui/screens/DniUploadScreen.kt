@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.saborchef.R
+import com.example.saborchef.data.DataStoreManager
 import com.example.saborchef.ui.components.AppButton
 import com.example.saborchef.ui.components.FileSlot
 import com.example.saborchef.ui.theme.BlueDark
@@ -36,13 +37,16 @@ import com.example.saborchef.ui.theme.OrangeDark
 import com.example.saborchef.ui.theme.Poppins
 import com.example.saborchef.viewmodel.SharedAlumnoViewModel
 import com.example.saborchef.viewmodel.RegisterViewModel
+import kotlinx.coroutines.flow.firstOrNull
 
 @Composable
 fun DniUploadScreen(
     onBack: () -> Unit,
     onFinish: (frontUri: Uri, backUri: Uri, tramite: String) -> Unit,
     sharedAlumnoViewModel: SharedAlumnoViewModel,
-    registerViewModel: RegisterViewModel
+    registerViewModel: RegisterViewModel,
+    isConversion: Boolean = false, // NUEVO parámetro
+    dataStoreManager: DataStoreManager? = null // NUEVO parámetro para conversión
 ) {
     val context = LocalContext.current
 
@@ -51,6 +55,19 @@ fun DniUploadScreen(
     var tramite  by remember { mutableStateOf("") }
     var tramiteError by remember { mutableStateOf<String?>(null) }
     var imageError by remember { mutableStateOf<String?>(null) }
+
+    // Para conversión, obtener datos del DataStore
+    var userId by remember { mutableStateOf<String?>(null) }
+    var token by remember { mutableStateOf<String?>(null) }
+
+    if (isConversion && dataStoreManager != null) {
+        LaunchedEffect(Unit) {
+            val userIdLong = dataStoreManager.userId.firstOrNull()
+            userId = userIdLong?.toString() // Convertir Long a String
+            token = dataStoreManager.token.firstOrNull()
+            println("🔍 Datos para conversión - userId: $userId, token: ${token?.take(20)}...")
+        }
+    }
 
     val pickFront = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
         frontUri = it
@@ -94,7 +111,7 @@ fun DniUploadScreen(
 
             Spacer(Modifier.height(16.dp))
             Text(
-                "¡Último paso!",
+                text = if (isConversion) "¡Último paso para ser alumno!" else "¡Último paso!",
                 fontFamily = Poppins,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 24.sp,
@@ -187,7 +204,7 @@ fun DniUploadScreen(
 
             Spacer(Modifier.height(32.dp))
             AppButton(
-                text = "Finalizar",
+                text = if (isConversion) "Convertir a Alumno" else "Finalizar",
                 onClick = {
                     // Validaciones
                     when {
@@ -201,8 +218,19 @@ fun DniUploadScreen(
                             // Guardar los datos del DNI en el ViewModel
                             sharedAlumnoViewModel.setDniInfo(frontUri, backUri, tramite)
 
-                            // Aquí es donde ahora se hace el registro final
-                            registerViewModel.register(context, sharedAlumnoViewModel)
+                            if (isConversion) {
+                                // NUEVO: Para conversión, llamar a convertirEnAlumno
+                                if (userId != null && token != null) {
+                                    println("🚀 Iniciando conversión con userId: $userId")
+                                    registerViewModel.convertirEnAlumno(context, sharedAlumnoViewModel, userId!!, token!!)
+                                } else {
+                                    imageError = "Error: sesión inválida. Inicia sesión nuevamente."
+                                    return@AppButton
+                                }
+                            } else {
+                                // Para registro normal (código existente)
+                                registerViewModel.register(context, sharedAlumnoViewModel)
+                            }
 
                             // Llamar a onFinish para la navegación
                             onFinish(frontUri!!, backUri!!, tramite)

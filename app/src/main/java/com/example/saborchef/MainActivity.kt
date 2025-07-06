@@ -10,7 +10,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import com.example.saborchef.data.SessionManager
 
-
 import androidx.compose.ui.platform.LocalContext
 
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,7 +21,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.example.saborchef.data.DataStoreManager
-
 
 import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.screens.MisDatosScreen
@@ -43,9 +41,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.saborchef.model.CursoInscripto
-import com.example.saborchef.ui.theme.OrangeDark
-import com.example.saborchef.ui.theme.Orange
+import com.example.saborchef.ui.components.AppButton
+import com.example.saborchef.ui.theme.*
 import com.google.gson.Gson
 
 class MainActivity : ComponentActivity() {
@@ -189,6 +197,96 @@ class MainActivity : ComponentActivity() {
                                 viewModel = registerViewModel
                             )
                         }
+
+                        // ✅ NUEVAS RUTAS PARA CONVERSIÓN A ALUMNO
+                        composable("add_payment_conversion") {
+                            AddPaymentScreen(
+                                sharedAlumnoViewModel = sharedAlumnoViewModel,
+                                navController = navController,
+                                viewModel = registerViewModel,
+                                isConversion = true
+                            )
+                        }
+
+                        composable("upload_dni_conversion") {
+                            val dataStore = remember { DataStoreManager(this@MainActivity) }
+
+                            DniUploadScreen(
+                                onBack = { navController.popBackStack() },
+                                onFinish = { frontUri: Uri?, backUri: Uri?, tramite: String ->
+                                    // Para conversión, ir directo a verificar resultado
+                                    navController.navigate("conversion_result") {
+                                        popUpTo("add_payment_conversion") { inclusive = true }
+                                    }
+                                },
+                                sharedAlumnoViewModel = sharedAlumnoViewModel,
+                                registerViewModel = registerViewModel,
+                                isConversion = true,
+                                dataStoreManager = dataStore
+                            )
+                        }
+
+                        composable("conversion_result") {
+                            val registerState by registerViewModel.uiState.collectAsState()
+                            val dataStore = remember { DataStoreManager(this@MainActivity) }
+
+                            // Crear variable local para evitar smart cast issues
+                            val currentState = registerState
+
+                            when (currentState) {
+                                is RegisterUiState.Loading -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            CircularProgressIndicator(color = OrangeDark)
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                            Text("Procesando conversión...", fontFamily = Poppins, color = BlueDark)
+                                        }
+                                    }
+                                }
+                                is RegisterUiState.SuccessUnit -> {
+                                    // Conversión exitosa
+                                    SuccessfulConversionScreen {
+                                        scope.launch {
+                                            // Actualizar rol en DataStore
+                                            dataStore.updateUserRole(Rol.ALUMNO)
+                                            // Resetear el ViewModel para futuras conversiones
+                                            sharedAlumnoViewModel.reset()
+                                            // Volver al perfil
+                                            navController.navigate("profile") {
+                                                popUpTo("conversion_result") { inclusive = true }
+                                            }
+                                        }
+                                    }
+                                }
+                                is RegisterUiState.Error -> {
+                                    ErrorConversionScreen(
+                                        error = currentState.message,
+                                        onRetry = {
+                                            navController.navigate("add_payment_conversion") {
+                                                popUpTo("conversion_result") { inclusive = true }
+                                            }
+                                        },
+                                        onBack = {
+                                            navController.navigate("profile") {
+                                                popUpTo("conversion_result") { inclusive = true }
+                                            }
+                                        }
+                                    )
+                                }
+                                else -> {
+                                    // Estado inicial - redirigir al inicio del flujo
+                                    LaunchedEffect(Unit) {
+                                        navController.navigate("add_payment_conversion") {
+                                            popUpTo("conversion_result") { inclusive = true }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         composable(
                             "verify_registration/{email}/{role}",
                             arguments = listOf(
@@ -218,12 +316,11 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-
                         composable("successful_register") {
                             SuccessfulRegisterScreen(
                                 onContinue = {
                                     alias = sharedAlumnoViewModel.alias
-                                    navController.navigate("simple_home") {
+                                    navController.navigate("login") {
                                         popUpTo("auth") { inclusive = true }
                                     }
                                 }
@@ -408,7 +505,12 @@ class MainActivity : ComponentActivity() {
                                         "Contáctanos" -> navController.navigate("contact")
                                     }
                                 },
-                                onBecomeStudent = { navController.navigate("course_enroll") },
+                                // ✅ CAMBIO IMPORTANTE: Navegar a la conversión
+                                onBecomeStudent = {
+                                    // Limpiar datos previos y empezar conversión
+                                    sharedAlumnoViewModel.reset()
+                                    navController.navigate("add_payment_conversion")
+                                },
                                 onLogout = { /* Se maneja dentro del ProfileScreen */ },
                                 dataStoreManager = dataStore,
                                 navController = navController
@@ -532,8 +634,6 @@ class MainActivity : ComponentActivity() {
                             MisCursosDetalleScreen(curso, navController)
                         }
 
-
-
                         composable("upgrade_to_student") {
 
                             val dataStore = remember { DataStoreManager(this@MainActivity) }
@@ -556,15 +656,126 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-
-
-
-
                     }
-
-
                 }
             }
+        }
+    }
+}
+
+// ✅ PANTALLAS DE RESULTADO PARA CONVERSIÓN
+@Composable
+fun SuccessfulConversionScreen(
+    onContinue: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // Icono de éxito
+        Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = null,
+            tint = Color.Green,
+            modifier = Modifier.size(80.dp)
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "¡Felicitaciones!",
+            fontFamily = Poppins,
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp,
+            color = BlueDark,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Ya eres alumno de SaborChef.\nAhora puedes inscribirte a cursos y acceder a contenido exclusivo.",
+            fontFamily = Poppins,
+            fontSize = 16.sp,
+            color = BlueDark.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        AppButton(
+            text = "Continuar",
+            onClick = onContinue,
+            primary = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun ErrorConversionScreen(
+    error: String,
+    onRetry: () -> Unit,
+    onBack: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // Icono de error
+        Icon(
+            imageVector = Icons.Default.Error,
+            contentDescription = null,
+            tint = Color.Red,
+            modifier = Modifier.size(80.dp)
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Error en la conversión",
+            fontFamily = Poppins,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = BlueDark,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = error,
+            fontFamily = Poppins,
+            fontSize = 14.sp,
+            color = Color.Red,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            AppButton(
+                text = "Volver",
+                onClick = onBack,
+                primary = false,
+                modifier = Modifier.weight(1f)
+            )
+
+            AppButton(
+                text = "Reintentar",
+                onClick = onRetry,
+                primary = true,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }

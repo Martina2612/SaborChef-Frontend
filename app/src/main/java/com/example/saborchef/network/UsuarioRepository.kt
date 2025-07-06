@@ -1,15 +1,20 @@
 package com.example.saborchef.network
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import com.example.saborchef.model.PerfilUsuarioDTO
+import com.example.saborchef.models.AlumnoActualizarDTO
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.HttpException
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
 
 object UsuarioRepository {
 
@@ -47,6 +52,28 @@ object UsuarioRepository {
         }
     }
 
+    suspend fun convertirEnAlumno(userId: String, alumnoDto: AlumnoActualizarDTO, token: String): Result<String> {
+        return try {
+            // CORRECCIÓN: Usar 'api' en lugar de 'UsuarioapiService'
+            val response = api.convertirEnAlumno(
+                userId = userId.toInt(),
+                alumnoDto = alumnoDto,
+                authorization = "Bearer $token"
+            )
+
+            if (response.isSuccessful) {
+                Log.d("UsuarioRepository", "✅ Usuario convertido a alumno exitosamente")
+                Result.success("Usuario convertido a alumno exitosamente")
+            } else {
+                val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                Log.e("UsuarioRepository", "❌ Error al convertir: ${response.code()} - $errorBody")
+                Result.failure(Exception("Error al convertir usuario: ${response.code()} - $errorBody"))
+            }
+        } catch (e: Exception) {
+            Log.e("UsuarioRepository", "❌ Excepción en convertirEnAlumno", e)
+            Result.failure(e)
+        }
+    }
     /**
      * Actualiza el perfil de un usuario
      */
@@ -70,28 +97,34 @@ object UsuarioRepository {
     /**
      * Sube una foto de perfil CON TOKEN
      */
-    suspend fun subirFotoPerfil(userId: Long, imageBase64: String, token: String): Result<String> {
+    suspend fun subirFotoPerfil(context: Context, userId: Long, imageUri: Uri, token: String): Result<String> {
         return try {
-            Log.d("UsuarioRepository", "Subiendo foto para usuario $userId")
+            Log.d("UsuarioRepository", "📤 Subiendo imagen desde Uri: $imageUri")
 
-            // Convertir Base64 a ByteArray
-            val imageBytes = android.util.Base64.decode(imageBase64, android.util.Base64.DEFAULT)
+            // 1. Crear archivo temporal desde URI
+            val contentResolver = context.contentResolver
+            val inputStream = contentResolver.openInputStream(imageUri) ?: return Result.failure(Exception("No se pudo abrir el archivo"))
+            val tempFile = File.createTempFile("upload", ".jpg", context.cacheDir)
+            tempFile.outputStream().use { fileOut ->
+                inputStream.copyTo(fileOut)
+            }
 
-            // Crear MultipartBody.Part
-            val requestFile = imageBytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
-            val body = MultipartBody.Part.createFormData("foto", "profile.jpg", requestFile)
+            // 2. Convertir a RequestBody + Multipart
+            val requestFile = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+            val body = MultipartBody.Part.createFormData("foto", tempFile.name, requestFile)
 
-            // Agregar Bearer al token
+            // 3. Enviar con token
             val authToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
-
             val response = api.subirFotoPerfil(userId, body, authToken)
+
+            // 4. Procesar respuesta
             if (response.isSuccessful) {
                 val fotoUrl = response.body()?.get("fotoUrl") ?: ""
                 Log.d("UsuarioRepository", "✅ Foto subida exitosamente: $fotoUrl")
                 Result.success(fotoUrl)
             } else {
                 Log.e("UsuarioRepository", "❌ Error HTTP ${response.code()}: ${response.message()}")
-                Log.e("UsuarioRepository", "❌ Error body: ${response.errorBody()?.string()}")
+                Log.e("UsuarioRepository", "❌ Body: ${response.errorBody()?.string()}")
                 Result.failure(HttpException(response))
             }
         } catch (e: Exception) {
@@ -99,4 +132,5 @@ object UsuarioRepository {
             Result.failure(e)
         }
     }
+
 }

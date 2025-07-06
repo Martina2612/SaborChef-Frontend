@@ -1,6 +1,7 @@
 package com.example.saborchef.network
 
 import com.example.saborchef.model.PerfilUsuarioDTO
+import com.example.saborchef.models.AlumnoActualizarDTO
 import retrofit2.Response
 import retrofit2.http.*
 import okhttp3.MultipartBody
@@ -37,4 +38,11 @@ interface UsuarioApiService {
         @Part foto: MultipartBody.Part,
         @Header("Authorization") token: String
     ): Response<Map<String, String>>
+
+    @POST("usuarios/{userId}/convertir-alumno")
+    suspend fun convertirEnAlumno(
+        @Path("userId") userId: Int,
+        @Body alumnoDto: AlumnoActualizarDTO,
+        @Header("Authorization") authorization: String
+    ): Response<Unit>
 }

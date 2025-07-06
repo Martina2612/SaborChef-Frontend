@@ -1,8 +1,10 @@
 package com.example.saborchef.data
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.saborchef.model.Rol
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.Flow
 
@@ -53,6 +55,18 @@ class DataStoreManager(private val context: Context) {
         }
     }
 
+    // ✅ NUEVA FUNCIÓN: Actualizar rol de usuario (para conversión a alumno)
+    suspend fun updateUserRole(newRole: Rol) {
+        try {
+            context.dataStore.edit { prefs ->
+                prefs[ROLE_KEY] = newRole.name
+            }
+            Log.d("DataStoreManager", "✅ Rol actualizado a: $newRole")
+        } catch (e: Exception) {
+            Log.e("DataStoreManager", "❌ Error actualizando rol: ${e.message}", e)
+        }
+    }
+
     // Limpiar todos los datos
     suspend fun clearUserData() {
         context.dataStore.edit { prefs ->
@@ -62,4 +76,3 @@ class DataStoreManager(private val context: Context) {
         // SessionManager.token = null
     }
 }
-

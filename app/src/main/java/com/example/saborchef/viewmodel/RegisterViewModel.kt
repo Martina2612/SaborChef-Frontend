@@ -1,6 +1,8 @@
 package com.example.saborchef.viewmodel
 
 import android.content.Context
+import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,8 +10,10 @@ import com.example.saborchef.model.AuthResponse
 import com.example.saborchef.model.ConfirmacionCodigoDTO
 import com.example.saborchef.model.RegisterRequest
 import com.example.saborchef.model.Rol
+import com.example.saborchef.models.AlumnoActualizarDTO
 import com.example.saborchef.models.AuthenticationResponse
 import com.example.saborchef.network.AuthRepository
+import com.example.saborchef.network.UsuarioRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -50,7 +54,7 @@ class RegisterViewModel : ViewModel() {
     val emailState: StateFlow<FieldState> = _emailState
     private var emailJob: Job? = null
 
-    // ✅ Nuevo método que usa SharedAlumnoViewModel y context
+    // ✅ Método original para registro completo
     fun register(context: Context, sharedAlumnoViewModel: SharedAlumnoViewModel) {
         _uiState.value = RegisterUiState.Loading
 
@@ -68,6 +72,45 @@ class RegisterViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("RegisterVM", "Excepción al registrar", e)
+                _uiState.value = RegisterUiState.Error(e.localizedMessage ?: "Error inesperado")
+            }
+        }
+    }
+
+    // ✅ Nueva función para convertir usuario existente a alumno
+    fun convertirEnAlumno(context: Context, sharedAlumnoViewModel: SharedAlumnoViewModel, userId: String, token: String) {
+        _uiState.value = RegisterUiState.Loading
+
+        viewModelScope.launch {
+            try {
+                Log.d("RegisterVM", "🔄 Iniciando conversión a alumno para userId: $userId")
+
+                // Crear el DTO usando los datos del SharedAlumnoViewModel
+                val alumnoDto = AlumnoActualizarDTO(
+                    numeroTarjeta = sharedAlumnoViewModel.cardNumber,
+                    tipoTarjeta = sharedAlumnoViewModel.tipoTarjeta,
+                    vencimiento = sharedAlumnoViewModel.expiryDate,
+                    codigoSeguridad = sharedAlumnoViewModel.securityCode,
+                    dniFrente = sharedAlumnoViewModel.frontUri?.let { uriToBase64(context, it) },
+                    dniDorso = sharedAlumnoViewModel.backUri?.let { uriToBase64(context, it) },
+                    numeroTramite = sharedAlumnoViewModel.tramite
+                )
+
+                Log.d("RegisterVM", "📋 DTO creado: numeroTarjeta=${alumnoDto.numeroTarjeta}, dniFrente=${alumnoDto.dniFrente?.take(50)}..., dniDorso=${alumnoDto.dniDorso?.take(50)}...")
+
+                val result = withContext(Dispatchers.IO) {
+                    UsuarioRepository.convertirEnAlumno(userId, alumnoDto, token)
+                }
+
+                result.onSuccess { message ->
+                    Log.d("RegisterVM", "✅ Conversión exitosa: $message")
+                    _uiState.value = RegisterUiState.SuccessUnit(message)
+                }.onFailure { e ->
+                    Log.e("RegisterVM", "❌ Error en conversión: ${e.localizedMessage}", e)
+                    _uiState.value = RegisterUiState.Error(e.localizedMessage ?: "Error inesperado")
+                }
+            } catch (e: Exception) {
+                Log.e("RegisterVM", "🟥 Excepción al convertir", e)
                 _uiState.value = RegisterUiState.Error(e.localizedMessage ?: "Error inesperado")
             }
         }
@@ -138,5 +181,23 @@ class RegisterViewModel : ViewModel() {
                 _emailState.value = FieldState.Error("Error de red: ${e.localizedMessage}")
             }
         }
+    }
+
+    // Función auxiliar para convertir URI a base64
+    private fun uriToBase64(context: Context, uri: Uri): String? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val bytes = inputStream?.readBytes()
+            inputStream?.close()
+            Base64.encodeToString(bytes, Base64.NO_WRAP)
+        } catch (e: Exception) {
+            Log.e("RegisterVM", "Error convirtiendo URI a base64", e)
+            null
+        }
+    }
+
+    // Función para resetear el estado de la UI (útil para limpiar errores)
+    fun resetUiState() {
+        _uiState.value = RegisterUiState.Idle
     }
 }
