@@ -88,9 +88,12 @@ class RegisterViewModel : ViewModel() {
                 // Crear el DTO usando los datos del SharedAlumnoViewModel
                 val alumnoDto = AlumnoActualizarDTO(
                     numeroTarjeta = sharedAlumnoViewModel.cardNumber,
+                    tipoTarjeta = sharedAlumnoViewModel.tipoTarjeta,
+                    vencimiento = sharedAlumnoViewModel.expiryDate,
+                    codigoSeguridad = sharedAlumnoViewModel.securityCode,
                     dniFrente = sharedAlumnoViewModel.frontUri?.let { uriToBase64(context, it) },
                     dniDorso = sharedAlumnoViewModel.backUri?.let { uriToBase64(context, it) },
-                    cuentaCorriente = null // O si tienes cuenta corriente en el SharedViewModel
+                    numeroTramite = sharedAlumnoViewModel.tramite
                 )
 
                 Log.d("RegisterVM", "📋 DTO creado: numeroTarjeta=${alumnoDto.numeroTarjeta}, dniFrente=${alumnoDto.dniFrente?.take(50)}..., dniDorso=${alumnoDto.dniDorso?.take(50)}...")
