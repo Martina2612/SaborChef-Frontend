@@ -477,7 +477,12 @@ class MainActivity : ComponentActivity() {
                         composable("saved_recipes") {
                             SavedRecipesScreen(
                                 navController = navController,
-                                onBack = { navController.popBackStack() }
+                                onBack = {
+                                    navController.navigate("simple_home") {
+                                        popUpTo("simple_home") { inclusive = false }
+                                        launchSingleTop = true
+                                    }
+                                }
                             )
                         }
                         composable("profile") {

@@ -84,7 +84,13 @@ fun SearchScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        navController.navigate("simple_home") {
+                            // Evita duplicar destinos en el back stack
+                            popUpTo("simple_home") { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }) {
                         Icon(
                             Icons.Default.ArrowBack,
                             contentDescription = "Volver",
