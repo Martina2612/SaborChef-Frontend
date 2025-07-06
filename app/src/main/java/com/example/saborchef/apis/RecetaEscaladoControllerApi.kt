@@ -67,7 +67,7 @@ interface RecetaEscaladoControllerApi {
      * @return [Call]<[RecetaEscaladaResponse]>
      */
     @GET("api/recetas/{id}/escalar/porciones")
-    fun escalarPorPorciones(@Path("id") id: kotlin.Long, @Query("porcionesDeseadas") porcionesDeseadas: kotlin.Int): Call<RecetaEscaladaResponse>
+    fun escalarPorPorciones(@Path("id") id: kotlin.Long, @Query("porciones") porcionesDeseadas: kotlin.Int): Call<RecetaEscaladaResponse>
 
     /**
      * POST api/recetas/{id}/guardar
