@@ -72,18 +72,7 @@ class SharedAlumnoViewModel : ViewModel() {
         this.tipoTarjeta = tipo
     }
 
-    private fun uriToBase64(context: Context, uri: Uri?): String? {
-        return try {
-            uri?.let {
-                val inputStream = context.contentResolver.openInputStream(it)
-                val bytes = inputStream?.readBytes()
-                inputStream?.close()
-                Base64.encodeToString(bytes, Base64.NO_WRAP)
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
+    // ✅ Función para resetear todos los datos
     fun reset() {
         alias = ""
         email = ""
@@ -99,7 +88,21 @@ class SharedAlumnoViewModel : ViewModel() {
         expiryDate = ""
         tipoTarjeta = ""
     }
-    // Conversión final a DTO
+
+    private fun uriToBase64(context: Context, uri: Uri?): String? {
+        return try {
+            uri?.let {
+                val inputStream = context.contentResolver.openInputStream(it)
+                val bytes = inputStream?.readBytes()
+                inputStream?.close()
+                Base64.encodeToString(bytes, Base64.NO_WRAP)
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    // ✅ Conversión final a DTO enviando null para DNI
     fun toRegisterRequest(context: Context): RegisterRequest {
         return RegisterRequest(
             // Solo enviar nombre y apellido si no están vacíos
@@ -113,8 +116,8 @@ class SharedAlumnoViewModel : ViewModel() {
             tipoTarjeta = tipoTarjeta.ifBlank { null },
             vencimiento = expiryDate.ifBlank { null },
             codigoSeguridad = securityCode.ifBlank { null },
-            dniFrente = uriToBase64(context, frontUri),
-            dniDorso = uriToBase64(context, backUri),
+            dniFrente = null, // No enviar nada
+            dniDorso = null,  // No enviar nada
             numeroTramite = tramite.ifBlank { null }
         )
     }
