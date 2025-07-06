@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.saborchef.model.CursoInscripto
 import com.example.saborchef.ui.components.AppButton
+import com.example.saborchef.ui.publish.EditRecipeScreen
 import com.example.saborchef.ui.theme.*
 import com.google.gson.Gson
 
@@ -505,7 +506,6 @@ class MainActivity : ComponentActivity() {
                                         "Contáctanos" -> navController.navigate("contact")
                                     }
                                 },
-                                // ✅ CAMBIO IMPORTANTE: Navegar a la conversión
                                 onBecomeStudent = {
                                     // Limpiar datos previos y empezar conversión
                                     sharedAlumnoViewModel.reset()
@@ -554,6 +554,20 @@ class MainActivity : ComponentActivity() {
                                 onBack = { navController.popBackStack() }
                             )
                         }
+
+                        composable(
+                            route = "editRecipe/{recipeId}",
+                            arguments = listOf(navArgument("recipeId") { type = NavType.LongType })
+                        ) { backStackEntry ->
+                            val recipeId = backStackEntry.arguments?.getLong("recipeId")
+                            if (recipeId != null && recipeId > 0L) {
+                                EditRecipeScreen(recipeId = recipeId, navController = navController)
+                            } else {
+                                // Mostrar un error o redirigir
+                                Text("Error: ID de receta inválido")
+                            }
+                        }
+
 
                         composable("cursos") {
                             CursosScreen(navController = navController)

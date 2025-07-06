@@ -407,17 +407,16 @@ fun PublishRecipeScreen(
                         showPasoError
                     ).none { it }
 
-                    if (isValid) {
-                        viewModel.submitRecipe(
-                            photos = mainPhotos,
-                            nombre = nombre,
-                            descripcion = descripcion,
-                            duracion = duracion.toInt(),
-                            porciones = porciones,
-                            tipo = tipo,
-                            ingredientes = ingredientes.toList()
-                        )
-                    }
+                    viewModel.submitRecipe(
+                        photos = mainPhotos,
+                        nombre = nombre,
+                        descripcion = descripcion,
+                        duracion = duracion.toInt(),
+                        porciones = porciones,
+                        tipo = tipo,
+                        ingredientes = ingredientes.toList(),
+                        pasos = viewModel.steps.toList()
+                    )
                 },
                     modifier = Modifier
                         .height(48.dp)
@@ -506,7 +505,16 @@ fun PublishRecipeScreen(
                         Button(
                             onClick = {
                                 showDuplicateDialog = false
-                                viewModel.confirmReplace()
+                                viewModel.submitRecipe(
+                                    photos = mainPhotos,
+                                    nombre = nombre,
+                                    descripcion = descripcion,
+                                    duracion = duracion.toInt(),
+                                    porciones = porciones,
+                                    tipo = tipo,
+                                    ingredientes = ingredientes.toList(),
+                                    pasos = viewModel.steps.toList()
+                                )
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = OrangeDark)
                         ) {
@@ -517,6 +525,7 @@ fun PublishRecipeScreen(
             }
         }
     }
+
 
     // Success dialog
     if (showSuccessDialog) {

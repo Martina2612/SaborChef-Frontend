@@ -183,7 +183,13 @@ fun MyRecipesScreen(
                                         .padding(8.dp)
                                 ) {
                                     IconButton(
-                                        onClick = { navController.navigate("editRecipe/${r.idReceta}") }
+                                        onClick = {
+                                            Log.d("MyRecipes", "Editando receta con ID: ${r.idReceta}")
+                                            r.idReceta?.let {
+                                                navController.navigate("editRecipe/$it")
+                                            }
+                                        }
+
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Edit,

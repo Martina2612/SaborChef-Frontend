@@ -5,7 +5,6 @@ import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.ui.text.toUpperCase
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saborchef.apis.RecetaControllerApi
@@ -13,15 +12,14 @@ import com.example.saborchef.data.DataStoreManager
 import com.example.saborchef.data.url
 import com.example.saborchef.infrastructure.ApiClient
 import com.example.saborchef.models.*
-import com.example.saborchef.ui.screens.uriToBase64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-// StepItem top-level
+import java.io.File
+import kotlin.io.path.createTempFile
 
 data class StepItem(
     val description: String = "",
@@ -29,11 +27,11 @@ data class StepItem(
 )
 
 class PublishRecipeViewModel(application: Application) : AndroidViewModel(application) {
+
     private val dataStore = DataStoreManager(application)
+
     private val api by lazy {
-        ApiClient
-            .createAuthenticatedClient(url)
-            .createService(RecetaControllerApi::class.java)
+        ApiClient.createAuthenticatedClient(url).createService(RecetaControllerApi::class.java)
     }
 
     sealed class PublishUiState {
@@ -45,13 +43,19 @@ class PublishRecipeViewModel(application: Application) : AndroidViewModel(applic
     }
 
     private val _uiState = MutableStateFlow<PublishUiState>(PublishUiState.Idle)
-    val uiState: StateFlow<PublishUiState>
-        get() = _uiState
+    val uiState: StateFlow<PublishUiState> get() = _uiState
 
+    // Campos para edición
+    var editingRecipeId: Long? = null
+
+    var nombreReceta = ""
+    var descripcionReceta = ""
+    var porcionesReceta = 1
+    var duracionReceta = 1
+    var tipoReceta = "OTRO"
+    var fotoPrincipalBase64: String? = null
+    var ingredientesList = mutableStateListOf<IngredienteCantidad>()
     var steps = mutableStateListOf(StepItem())
-
-    private var lastRequest: RecetaCrearRequest? = null
-    private var lastExistingRecipeId: Long? = null
 
     private fun uriToBase64(uri: Uri?): String? {
         return try {
@@ -67,6 +71,13 @@ class PublishRecipeViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    private fun base64ToTempUri(context: Application, base64: String): Uri {
+        val bytes = Base64.decode(base64, Base64.DEFAULT)
+        val tempFile = createTempFile(suffix = ".jpg").toFile()
+        tempFile.writeBytes(bytes)
+        return Uri.fromFile(tempFile)
+    }
+
     fun updateStepDescription(index: Int, text: String) {
         steps[index] = steps[index].copy(description = text)
     }
@@ -75,14 +86,18 @@ class PublishRecipeViewModel(application: Application) : AndroidViewModel(applic
         steps[index] = steps[index].copy(media = uris)
     }
 
-    fun submitRecipe(
+    /**
+     * Método para crear receta nueva (POST)
+     */
+    private fun createRecipe(
         photos: List<Uri>,
         nombre: String,
         descripcion: String,
         duracion: Int,
         porciones: Int,
         tipo: String,
-        ingredientes: List<IngredienteCantidad>
+        ingredientes: List<IngredienteCantidad>,
+        pasos: List<StepItem>
     ) {
         viewModelScope.launch {
             val userId = dataStore.userId.firstOrNull() ?: 0L
@@ -90,9 +105,11 @@ class PublishRecipeViewModel(application: Application) : AndroidViewModel(applic
             try {
                 val fotoPrincipal = photos.firstOrNull()?.let { uriToBase64(it) }
                 val fotosDto = photos.mapNotNull { uri ->
-                    uriToBase64(uri)?.let { FotoCrear(urlFoto = it, descripcion = null) }
+                    uriToBase64(uri)?.let { base64 ->
+                        FotoCrear(urlFoto = base64, descripcion = null)
+                    }
                 }
-                val pasosDto = steps.mapIndexed { idx, step ->
+                val pasosDto = pasos.mapIndexed { idx, step ->
                     val contenidos = step.media.mapNotNull { uri ->
                         uriToBase64(uri)?.let { base64 ->
                             val extension = uri.lastPathSegment?.substringAfterLast('.') ?: ""
@@ -113,28 +130,22 @@ class PublishRecipeViewModel(application: Application) : AndroidViewModel(applic
                     fotoPrincipal = fotoPrincipal,
                     duracion = duracion,
                     porciones = porciones,
-                    tipo = tipo.toUpperCase(),
+                    tipo = tipo.uppercase(),
                     ingredientes = ingredientes,
                     pasos = pasosDto,
                     fotos = fotosDto
                 )
-                lastRequest = request
 
                 val response = withContext(Dispatchers.IO) {
                     api.crearReceta(request).execute()
                 }
-                when {
-                    response.isSuccessful -> {
-                        _uiState.value = PublishUiState.Success
-                    }
-                    response.code() == 409 || response.code() == 403 -> {
-                        lastExistingRecipeId = response.headers()["X-Existing-Recipe-Id"]?.toLongOrNull()
-                        Log.d("PublishVM", "Duplicate! existingId = $lastExistingRecipeId")
-                        _uiState.value = PublishUiState.Duplicate
-                    }
-                    else -> {
-                        _uiState.value = PublishUiState.Error("Error ${response.code()}")
-                    }
+                if (response.isSuccessful) {
+                    _uiState.value = PublishUiState.Success
+                } else if (response.code() == 409 || response.code() == 403) {
+                    // Manejo de duplicados si quieres usarlo
+                    _uiState.value = PublishUiState.Duplicate
+                } else {
+                    _uiState.value = PublishUiState.Error("Error ${response.code()}")
                 }
             } catch (e: Exception) {
                 Log.e("PublishVM", "Error publishing", e)
@@ -144,41 +155,153 @@ class PublishRecipeViewModel(application: Application) : AndroidViewModel(applic
     }
 
     /**
-     * Llamado cuando el usuario confirma reemplazo en el diálogo
+     * Método para actualizar receta existente (PUT)
      */
-    fun confirmReplace() {
-        val req = lastRequest
-        val recetaId = lastExistingRecipeId
-        if (req == null || recetaId == null) {
-            Log.e("PublishVM", "confirmReplace fue llamado con req=$req, recetaId=$recetaId")
-            return
-        }
-
+    fun updateRecipe(
+        recipeId: Long,
+        photos: List<Uri>,
+        nombre: String,
+        descripcion: String,
+        duracion: Int,
+        porciones: Int,
+        tipo: String,
+        ingredientes: List<IngredienteCantidad>,
+        pasos: List<StepItem>
+    ) {
         viewModelScope.launch {
             _uiState.value = PublishUiState.Loading
             try {
-                Log.d("PublishVM", "Calling PUT api/recetas/$recetaId …")
-                // Llamada a actualizar receta
-                val response = withContext(Dispatchers.IO) {
-                    api.actualizar(recetaId, req).execute()
+                val fotoPrincipal = photos.firstOrNull()?.let { uriToBase64(it) }
+                val fotosDto = photos.mapNotNull { uri ->
+                    uriToBase64(uri)?.let { base64 ->
+                        FotoCrear(urlFoto = base64, descripcion = null)
+                    }
                 }
-                Log.d("PublishVM", "update response code=${response.code()}, body=${response.errorBody()?.string()}")
-                _uiState.value = if (response.isSuccessful) {
-                    PublishUiState.Success
+                val pasosDto = pasos.mapIndexed { idx, step ->
+                    val contenidos = step.media.mapNotNull { uri ->
+                        uriToBase64(uri)?.let { base64 ->
+                            val extension = uri.lastPathSegment?.substringAfterLast('.') ?: ""
+                            MultimediaCrear(
+                                tipoContenido = if (uri.toString().endsWith(".mp4")) "video" else "image",
+                                extension = extension,
+                                urlContenido = base64
+                            )
+                        }
+                    }
+                    PasoCrear(nroPaso = idx + 1, texto = step.description, contenidos = contenidos)
+                }
+
+                val request = RecetaCrearRequest(
+                    idUsuario = dataStore.userId.firstOrNull() ?: 0L,
+                    nombreReceta = nombre,
+                    descripcionReceta = descripcion,
+                    fotoPrincipal = fotoPrincipal,
+                    duracion = duracion,
+                    porciones = porciones,
+                    tipo = tipo.uppercase(),
+                    ingredientes = ingredientes,
+                    pasos = pasosDto,
+                    fotos = fotosDto
+                )
+
+                val response = withContext(Dispatchers.IO) {
+                    api.actualizar(recipeId, request).execute()
+                }
+
+                if (response.isSuccessful) {
+                    _uiState.value = PublishUiState.Success
                 } else {
-                    PublishUiState.Error("Error al reemplazar: ${response.code()}")
+                    _uiState.value = PublishUiState.Error("Error actualizando receta: ${response.code()}")
                 }
             } catch (e: Exception) {
-                Log.e("PublishVM", "Error replacing recipe", e)
+                Log.e("PublishVM", "Error updating recipe", e)
                 _uiState.value = PublishUiState.Error(e.localizedMessage ?: "Error inesperado")
             }
         }
     }
 
+    /**
+     * Método público para crear o actualizar según el estado editingRecipeId
+     */
+    fun submitRecipe(
+        photos: List<Uri>,
+        nombre: String,
+        descripcion: String,
+        duracion: Int,
+        porciones: Int,
+        tipo: String,
+        ingredientes: List<IngredienteCantidad>,
+        pasos: List<StepItem>
+    ) {
+        val recipeId = editingRecipeId
+        if (recipeId == null) {
+            createRecipe(photos, nombre, descripcion, duracion, porciones, tipo, ingredientes, pasos)
+        } else {
+            updateRecipe(recipeId, photos, nombre, descripcion, duracion, porciones, tipo, ingredientes, pasos)
+        }
+    }
+
+    /**
+     * Cargar receta por ID para edición
+     */
+    fun loadRecipeById(recipeId: Long) {
+        editingRecipeId = recipeId
+        viewModelScope.launch {
+            _uiState.value = PublishUiState.Loading
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    api.obtener(recipeId).execute()
+                }
+
+                if (response.isSuccessful) {
+                    val receta = response.body()
+                    receta?.let {
+                        nombreReceta = it.nombre.orEmpty()
+                        descripcionReceta = it.descripcion.orEmpty()
+                        porcionesReceta = it.porciones ?: 1
+                        duracionReceta = it.duracion ?: 1
+                        tipoReceta = it.tipo.orEmpty()
+                        fotoPrincipalBase64 = it.fotoPrincipal
+
+                        ingredientesList.clear()
+                        ingredientesList.addAll(
+                            it.ingredientes.orEmpty().map { ing ->
+                                IngredienteCantidad(
+                                    nombreIngrediente = ing.nombre.toString(),
+                                    cantidad = (ing.cantidad ?: 0.0).toFloat(),
+                                    unidad = ing.unidad.orEmpty(),
+                                    observaciones = ing.observaciones
+                                )
+                            }
+                        )
+
+                        steps.clear()
+                        steps.addAll(
+                            it.pasos.orEmpty().map { paso ->
+                                StepItem(
+                                    description = paso.texto.orEmpty(),
+                                    media = paso.contenidos.orEmpty().mapNotNull { contenido ->
+                                        contenido.url?.let { base64 ->
+                                            base64ToTempUri(getApplication(), base64)
+                                        }
+                                    }
+                                )
+                            }
+                        )
+
+                        _uiState.value = PublishUiState.Idle
+                    }
+                } else {
+                    _uiState.value = PublishUiState.Error("Error al cargar la receta: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("PublishVM", "Error loading recipe", e)
+                _uiState.value = PublishUiState.Error(e.localizedMessage ?: "Error inesperado")
+            }
+        }
+    }
 
     fun resetState() {
         _uiState.value = PublishUiState.Idle
     }
-
-
 }

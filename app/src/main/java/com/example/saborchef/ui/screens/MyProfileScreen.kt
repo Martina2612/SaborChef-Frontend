@@ -126,9 +126,7 @@ fun ProfileScreen(
                             }
                         }
                     }
-
                 )
-
                 if (isUploadingPhoto) {
                     Box(
                         modifier = Modifier.size(95.dp).background(Color.Black.copy(alpha = 0.5f), CircleShape),
