@@ -2,6 +2,7 @@ package com.example.saborchef.network
 
 import com.example.saborchef.model.Clase
 import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -27,7 +28,7 @@ interface ClaseApi {
         @Header("Authorization") token: String,
         @Path("claseId") claseId: Long,
         @Query("alumnoId") alumnoId: Long
-    ): ResponseBody
+    ): Response<ResponseBody>
 }
 
 

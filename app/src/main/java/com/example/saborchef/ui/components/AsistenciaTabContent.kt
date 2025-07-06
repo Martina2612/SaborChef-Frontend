@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.saborchef.model.Clase
 import com.example.saborchef.viewmodel.ClasesViewModel
 import java.time.LocalDate
@@ -24,8 +25,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.platform.LocalContext
 
-
-
 @Composable
 fun AsistenciaTabContent(
     clases: List<Clase>,
@@ -36,6 +35,10 @@ fun AsistenciaTabContent(
     val asistencias = viewModel.asistencias
     val hoy = LocalDate.now()
     val contextLocal = LocalContext.current
+    var claseParaQR by remember { mutableStateOf<Clase?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var mensajeAsistencia by remember { mutableStateOf<String?>(null) }
+
     val tienePermisoCamara = remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -51,7 +54,6 @@ fun AsistenciaTabContent(
         tienePermisoCamara.value = granted
     }
 
-
     LaunchedEffect(clases) {
         clases.forEach { clase ->
             viewModel.verificarAsistenciaParaClase(context, clase.idClase)
@@ -59,6 +61,24 @@ fun AsistenciaTabContent(
     }
 
     Column(modifier = Modifier.padding(16.dp)) {
+        // Mostrar mensaje de resultado
+        mensajeAsistencia?.let { mensaje ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                backgroundColor = if (mensaje.contains("exitosa", true)) Color(0xFFC8E6C9) else Color(0xFFFFCDD2)
+            ) {
+                Text(
+                    text = mensaje,
+                    modifier = Modifier.padding(16.dp),
+                    color = if (mensaje.contains("exitosa", true)) Color(0xFF388E3C) else Color(0xFFD32F2F),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
         clases.sortedBy { it.numeroClase }.forEach { clase ->
             val fecha = LocalDate.parse(clase.fechaClase)
             val asistio = asistencias[clase.idClase]
@@ -85,17 +105,25 @@ fun AsistenciaTabContent(
                     ) {
                         Text("Asistencia", color = Color(0xFF388E3C), fontWeight = FontWeight.SemiBold)
                     }
-                    puedeEscanearQR -> IconButton(onClick = {
-                        if (tienePermisoCamara.value) {
-                            mostrarScanner.value = true
+                    puedeEscanearQR -> {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color(0xFF388E3C)
+                            )
                         } else {
-                            solicitarPermisoCamara.launch(android.Manifest.permission.CAMERA)
+                            IconButton(onClick = {
+                                if (tienePermisoCamara.value) {
+                                    claseParaQR = clase
+                                    mostrarScanner.value = true
+                                } else {
+                                    solicitarPermisoCamara.launch(android.Manifest.permission.CAMERA)
+                                }
+                            }) {
+                                Icon(Icons.Default.QrCodeScanner, contentDescription = "Escanear QR", tint = Color.Black)
+                            }
                         }
-                    }) {
-                        Icon(Icons.Default.QrCodeScanner, contentDescription = "Escanear QR", tint = Color.Black)
                     }
-
-
                     else -> Box(
                         modifier = Modifier
                             .background(color = Color(0xFFFFCDD2), shape = MaterialTheme.shapes.small)
@@ -105,19 +133,43 @@ fun AsistenciaTabContent(
                     }
                 }
             }
-
             Divider()
         }
     }
 
-    if (mostrarScanner.value) {
+    // Scanner con lógica de asistencia
+    if (mostrarScanner.value && claseParaQR != null) {
         QrScannerScreen(
             onCodeScanned = { qrCode ->
                 mostrarScanner.value = false
-                Log.d("QR_RESULTADO", "Código escaneado: $qrCode")
-                // Podés procesar el código, enviar asistencia, etc.
+                isLoading = true
+                mensajeAsistencia = null
+
+                Log.d("QR_ESCANEADO", "Código escaneado: '$qrCode' para clase: ${claseParaQR!!.idClase}")
+
+                // Registrar asistencia - Cualquier QR sirve
+                viewModel.registrarAsistenciaConQR(
+                    context = context,
+                    claseId = claseParaQR!!.idClase,
+                    qrCode = qrCode,
+                    onResult = { success, mensaje ->
+                        isLoading = false
+                        mensajeAsistencia = mensaje
+                        if (success) {
+                            // Actualizar estado de asistencia
+                            viewModel.verificarAsistenciaParaClase(context, claseParaQR!!.idClase)
+                        }
+                        // Limpiar mensaje después de 5 segundos
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            mensajeAsistencia = null
+                        }, 5000)
+                    }
+                )
             },
-            onClose = { mostrarScanner.value = false }
+            onClose = {
+                mostrarScanner.value = false
+                claseParaQR = null
+            }
         )
     }
 }
