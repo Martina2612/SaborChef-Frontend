@@ -74,6 +74,11 @@ import coil.imageLoader
 import coil.request.ImageRequest
 import coil.compose.rememberAsyncImagePainter
 import com.example.saborchef.ui.components.Base64Image
+import com.example.saborchef.ui.components.PortionSelector
+import com.example.saborchef.ui.components.ScaledIngredientsDisplay
+import com.example.saborchef.viewmodel.ScaledRecipesViewModel
+import com.example.saborchef.viewmodel.ScaledRecipeUiState
+import com.example.saborchef.viewmodel.SaveState
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -130,7 +135,6 @@ fun RecipeDetailContent(
     navController: NavController,
     onBack: () -> Unit = {}
 ) {
-
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -140,6 +144,22 @@ fun RecipeDetailContent(
     val role by dataStore.role.collectAsState(initial = "")
     val favoritesViewModel: FavoritesViewModel = viewModel()
     val favorites by favoritesViewModel.favorites.collectAsState(initial = emptyList())
+
+    // ✅ NUEVO: ViewModel para recetas escaladas
+    val scaledRecipesViewModel: ScaledRecipesViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                @Suppress("UNCHECKED_CAST")
+                return ScaledRecipesViewModel(context.applicationContext as Application) as T
+            }
+        }
+    )
+
+    // ✅ NUEVO: Estados del escalado
+    val scaledRecipeState by scaledRecipesViewModel.scaledRecipeState.collectAsState()
+    val saveState by scaledRecipesViewModel.saveState.collectAsState()
+    val savedCount by scaledRecipesViewModel.savedCount.collectAsState()
+    var selectedPortions by remember { mutableStateOf(recipe.porciones ?: 1) }
 
     LaunchedEffect(role) {
         Log.d("RecipeDetail", "Rol actual: $role")
@@ -218,7 +238,6 @@ fun RecipeDetailContent(
                         base64String = fotos[page],
                         modifier = Modifier.fillMaxSize()
                     )
-
                 }
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -321,26 +340,115 @@ fun RecipeDetailContent(
                         }
                     }
 
-                    // Fila: duración y porciones
+                    // REEMPLAZO: Fila de duración y porciones con selector
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "⏱ ${recipe.duracion} minutos",
                             fontSize = 16.sp,
                             color = BlueDark
                         )
-                        Text(
-                            text = "👥 ${recipe.porciones} porciones",
-                            fontSize = 16.sp,
-                            color = BlueDark
+
+                        // ✅ NUEVO: Selector de porciones clickeable
+                        PortionSelector(
+                            currentPortions = selectedPortions,
+                            onPortionsSelected = { newPortions ->
+                                selectedPortions = newPortions
+                                recipe.idReceta?.let { recipeId ->
+                                    scaledRecipesViewModel.scaleRecipeByPortions(recipeId, newPortions)
+                                }
+                            }
                         )
                     }
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            // ✅ NUEVO: Mostrar receta escalada si existe
+            when (scaledRecipeState) {
+                is ScaledRecipeUiState.Loading -> {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = OrangeDark,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Calculando ingredientes...",
+                                color = BlueDark,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                is ScaledRecipeUiState.Success -> {
+                    ScaledIngredientsDisplay(
+                        scaledRecipe = (scaledRecipeState as ScaledRecipeUiState.Success).scaledRecipe,
+                        saveState = saveState,
+                        canSaveMore = scaledRecipesViewModel.canSaveMore(),
+                        savedCount = savedCount,
+                        onSaveRecipe = {
+                            recipe.idReceta?.let { recipeId ->
+                                scaledRecipesViewModel.saveScaledRecipe(recipeId, selectedPortions)
+                            }
+                        }
+                    )
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                is ScaledRecipeUiState.Error -> {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color.Red.copy(alpha = 0.1f))
+                    ) {
+                        Text(
+                            text = "Error: ${(scaledRecipeState as ScaledRecipeUiState.Error).message}",
+                            color = Color.Red,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                else -> {
+                    // Estado inicial - no mostrar nada
+                }
+            }
+
+            // ✅ Manejar efectos de guardado
+            LaunchedEffect(saveState) {
+                when (saveState) {
+                    is SaveState.Success -> {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar((saveState as SaveState.Success).message)
+                            scaledRecipesViewModel.resetSaveState()
+                        }
+                    }
+                    is SaveState.Error -> {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Error: ${(saveState as SaveState.Error).message}")
+                            scaledRecipesViewModel.resetSaveState()
+                        }
+                    }
+                    else -> {}
+                }
+            }
 
             // Título "Descripción" antes del texto
             Text(
@@ -559,6 +667,3 @@ fun RecipeDetailContent(
         }
     }
 }
-
-
-

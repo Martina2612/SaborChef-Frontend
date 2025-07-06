@@ -473,6 +473,13 @@ class MainActivity : ComponentActivity() {
                                 role = userRole
                             )
                         }
+                        // Agregar nueva ruta para escaladas
+                        composable("saved_recipes") {
+                            SavedRecipesScreen(
+                                navController = navController,
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
                         composable("profile") {
                             val dataStore = remember { DataStoreManager(this@MainActivity) }
 
