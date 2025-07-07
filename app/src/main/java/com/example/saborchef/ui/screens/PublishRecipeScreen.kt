@@ -706,7 +706,7 @@ fun IngredientsSection(
                             .width(90.dp)
                             .background(Color.White)
                     ) {
-                        listOf("gr", "kg", "ml", "l", "unid.").forEach { u ->
+                        listOf("gr", "kg", "ml", "litros", "unidad").forEach { u ->
                             DropdownMenuItem(
                                 text = { Text(u, color = BlueDark) },
                                 onClick = {

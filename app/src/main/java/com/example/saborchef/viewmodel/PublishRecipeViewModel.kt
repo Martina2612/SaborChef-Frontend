@@ -56,13 +56,28 @@ class PublishRecipeViewModel(application: Application) : AndroidViewModel(applic
     private fun uriToBase64(uri: Uri?): String? {
         return try {
             uri?.let {
-                val inputStream = getApplication<Application>().contentResolver.openInputStream(it)
-                val bytes = inputStream?.readBytes()
-                inputStream?.close()
-                bytes?.let { b -> Base64.encodeToString(b, Base64.NO_WRAP) }
+                Log.d("PublishVM", "Processing URI: $it (scheme: ${it.scheme})")
+
+                // Si es una URL de internet (http/https), devolverla tal como está
+                if (it.scheme == "http" || it.scheme == "https") {
+                    Log.d("PublishVM", "Returning web URL as-is: $it")
+                    return it.toString()
+                }
+
+                // Solo convertir URIs locales (content://) a Base64
+                if (it.scheme == "content") {
+                    Log.d("PublishVM", "Converting content URI to Base64: $it")
+                    val inputStream = getApplication<Application>().contentResolver.openInputStream(it)
+                    val bytes = inputStream?.readBytes()
+                    inputStream?.close()
+                    bytes?.let { b -> Base64.encodeToString(b, Base64.NO_WRAP) }
+                } else {
+                    Log.w("PublishVM", "Unknown URI scheme: ${it.scheme}, skipping")
+                    null
+                }
             }
         } catch (e: Exception) {
-            Log.e("PublishVM", "Error converting URI to Base64", e)
+            Log.e("PublishVM", "Error converting URI to Base64: $uri", e)
             null
         }
     }
@@ -178,6 +193,80 @@ class PublishRecipeViewModel(application: Application) : AndroidViewModel(applic
 
     fun resetState() {
         _uiState.value = PublishUiState.Idle
+    }
+
+
+    fun updateRecipe(
+        recetaId: Long,
+        photos: List<Uri>,
+        nombre: String,
+        descripcion: String,
+        duracion: Int,
+        porciones: Int,
+        tipo: String,
+        ingredientes: List<IngredienteCantidad>
+    ) {
+        viewModelScope.launch {
+            try {
+                val userId = dataStore.userId.firstOrNull() ?: 0L
+                _uiState.value = PublishUiState.Loading
+                Log.d("PublishVM", "URL base: $url")
+                Log.d("PublishVM", "ID de receta: $recetaId")
+                Log.d("PublishVM", "URL completa sería: ${url}api/recetas/$recetaId")
+
+                // Mismo mapeo que en submitRecipe
+                val fotoPrincipal = photos.firstOrNull()?.let { uriToBase64(it) }
+                val fotosDto = photos.mapNotNull { uri ->
+                    uriToBase64(uri)?.let { FotoCrear(urlFoto = it, descripcion = null) }
+                }
+                val pasosDto = steps.mapIndexed { idx, step ->
+                    val contenidos = step.media.mapNotNull { uri ->
+                        uriToBase64(uri)?.let { base64 ->
+                            val extension = uri.lastPathSegment?.substringAfterLast('.') ?: ""
+                            MultimediaCrear(
+                                tipoContenido = if (uri.toString().endsWith(".mp4")) "video" else "image",
+                                extension = extension,
+                                urlContenido = base64
+                            )
+                        }
+                    }
+                    PasoCrear(nroPaso = idx + 1, texto = step.description, contenidos = contenidos)
+                }
+
+                val request = RecetaCrearRequest(
+                    idUsuario = userId,
+                    nombreReceta = nombre,
+                    descripcionReceta = descripcion,
+                    fotoPrincipal = fotoPrincipal,
+                    duracion = duracion,
+                    porciones = porciones,
+                    tipo = tipo.uppercase(), // Cambié toUpperCase() por uppercase()
+                    ingredientes = ingredientes,
+                    pasos = pasosDto,
+                    fotos = fotosDto
+                )
+
+
+                val response = withContext(Dispatchers.IO) {
+                    Log.d("PublishVM", "Llamando PUT a: api/recetas/$recetaId")
+                    api.actualizar(recetaId, request).execute()
+                }
+                Log.d("PublishVM", "Response code: ${response.code()}")
+                Log.d("PublishVM", "Response message: ${response.message()}")
+                if (!response.isSuccessful) {
+                    Log.d("PublishVM", "Error body: ${response.errorBody()?.string()}")
+                }
+
+                if (response.isSuccessful) {
+                    _uiState.value = PublishUiState.Success
+                } else {
+                    _uiState.value = PublishUiState.Error("Error al actualizar la receta: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("PublishVM", "Error updating recipe", e)
+                _uiState.value = PublishUiState.Error(e.localizedMessage ?: "Error desconocido")
+            }
+        }
     }
 
 

@@ -2,6 +2,7 @@ package com.example.saborchef.ui.screens
 
 import android.app.Application
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -38,6 +39,8 @@ fun EditRecipeScreen(
     val viewModel: PublishRecipeViewModel = viewModel(
         factory = PublishRecipeViewModelFactory(context.applicationContext as Application)
     )
+
+    Log.d("EditScreen", "ID de receta recibido: ${receta.idReceta}")
 
     // Inicializar estados con datos de la receta
     var nombre by remember { mutableStateOf(receta.nombre.orEmpty()) }
@@ -186,7 +189,8 @@ fun EditRecipeScreen(
             Spacer(Modifier.height(24.dp))
 
             Button(onClick = {
-                viewModel.submitRecipe(
+                viewModel.updateRecipe(  // <- Cambiar a updateRecipe
+                    recetaId = receta.idReceta ?: 0L,  // <- Agregar el ID de la receta
                     photos = mainPhotos,
                     nombre = nombre,
                     descripcion = descripcion,
