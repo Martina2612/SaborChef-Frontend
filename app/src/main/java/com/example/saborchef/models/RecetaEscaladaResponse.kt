@@ -57,6 +57,9 @@ data class RecetaEscaladaResponse (
     @SerializedName("porcionesEscaladas")
     val porcionesEscaladas: kotlin.Int? = null,
 
+    @SerializedName("idRecetaGuardada")
+    val idRecetaGuardada: kotlin.Long? = null,
+
     @SerializedName("factorEscalado")
     val factorEscalado: kotlin.Double? = null,
 

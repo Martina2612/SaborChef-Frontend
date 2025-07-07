@@ -1,6 +1,7 @@
 package com.example.saborchef.ui.screens
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,7 +30,9 @@ import com.example.saborchef.ui.theme.BlueDark
 import com.example.saborchef.ui.theme.OrangeDark
 import com.example.saborchef.ui.theme.Poppins
 import com.example.saborchef.viewmodel.ScaledRecipesViewModel
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+
 //creada recientemente, para probar ya estaba la de FavoriteRecipesScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +41,7 @@ fun SavedRecipesScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     val scaledRecipesViewModel: ScaledRecipesViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
@@ -61,7 +65,7 @@ fun SavedRecipesScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Mis Recetas",
+                            text = "Mis recetas editadas",
                             fontFamily = Poppins,
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
@@ -107,8 +111,29 @@ fun SavedRecipesScreen(
                     items(savedRecipes) { recipe ->
                         SavedRecipeCard(
                             recipe = recipe,
-                            onDelete = { recipeId ->
-                                scaledRecipesViewModel.deleteSavedRecipe(recipeId)
+                            onDelete = { _ ->
+                                Log.d("SavedRecipes", "=== DEBUG ELIMINACIÓN ===")
+                                Log.d("SavedRecipes", "idRecetaOriginal: ${recipe.idRecetaOriginal}")
+                                Log.d("SavedRecipes", "idRecetaGuardada: ${recipe.idRecetaGuardada}")
+                                Log.d("SavedRecipes", "nombreReceta: ${recipe.nombreReceta}")
+
+                                recipe.idRecetaGuardada?.let { idGuardada ->
+                                    Log.d("SavedRecipes", "Eliminando receta guardada con ID: $idGuardada")
+                                    scaledRecipesViewModel.deleteSavedRecipe(idGuardada)
+                                    coroutineScope.launch {
+                                        kotlinx.coroutines.delay(500)
+                                        scaledRecipesViewModel.loadSavedRecipes()
+                                    }
+                                } ?: run {
+                                    Log.e("SavedRecipes", "ERROR: idRecetaGuardada es null - usando idRecetaOriginal como fallback")
+                                    recipe.idRecetaOriginal?.let { idOriginal ->
+                                        scaledRecipesViewModel.deleteSavedRecipe(idOriginal)
+                                        coroutineScope.launch {
+                                            kotlinx.coroutines.delay(500)
+                                            scaledRecipesViewModel.loadSavedRecipes()
+                                        }
+                                    }
+                                }
                             },
                             onClick = { recipeId ->
                                 navController.navigate("recipe/$recipeId")
