@@ -473,18 +473,8 @@ class MainActivity : ComponentActivity() {
                                 role = userRole
                             )
                         }
-                        // Agregar nueva ruta para escaladas
-                        composable("saved_recipes") {
-                            SavedRecipesScreen(
-                                navController = navController,
-                                onBack = {
-                                    navController.navigate("simple_home") {
-                                        popUpTo("simple_home") { inclusive = false }
-                                        launchSingleTop = true
-                                    }
-                                }
-                            )
-                        }
+
+
                         composable("profile") {
                             val dataStore = remember { DataStoreManager(this@MainActivity) }
 
@@ -512,6 +502,7 @@ class MainActivity : ComponentActivity() {
                                     when(label) {
                                         "Mis datos" -> navController.navigate("my_data")
                                         "Mis recetas" -> navController.navigate("my_recipes")
+                                        "Recetas editadas"-> navController.navigate("saved_recipes")
                                         "Mis cursos" -> navController.navigate("my_courses")
                                         "Medios de pago" -> navController.navigate("payment_methods")
                                         "Términos y condiciones" -> navController.navigate("terms")
@@ -559,6 +550,10 @@ class MainActivity : ComponentActivity() {
                                 navController = navController,
                                 onBack = { navController.popBackStack() }
                             )
+                        }
+                        // Agregar nueva ruta para escaladas
+                        composable("saved_recipes") {
+                            SavedRecipesScreen(navController = navController, onBack = { navController.popBackStack() })
                         }
                         composable("my_recipes") {
                             MyRecipesScreen(

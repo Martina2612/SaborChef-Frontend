@@ -150,6 +150,7 @@ fun ProfileScreen(
                 mutableListOf(
                     ProfileOption(Icons.Default.Person, "Mis datos") { onOptionClick("Mis datos") },
                     ProfileOption(Icons.Default.Book, "Mis recetas") { onOptionClick("Mis recetas") },
+                    ProfileOption(Icons.Default.Edit, "Recetas editadas") { onOptionClick("Recetas editadas") },
                 ).apply {
                     if (role == Rol.ALUMNO) {
                         add(ProfileOption(Icons.Default.OndemandVideo, "Mis cursos") {
