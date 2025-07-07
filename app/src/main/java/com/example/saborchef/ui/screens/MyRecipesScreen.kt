@@ -79,23 +79,7 @@ fun MyRecipesScreen(
                 onBack = onBack
             )
         }
-        ,
-        floatingActionButton = {
-            if (!showConfirm && !showDeleted) {
-                Button(
-                    onClick = { navController.navigate("publish") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .padding(horizontal = 16.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = OrangeDark),
-                    shape = RoundedCornerShape(50)
-                ) {
-                    Text("Añadir receta", color = MaterialTheme.colors.onPrimary, fontFamily=Poppins)
-                }
-            }
-        },
-        floatingActionButtonPosition = FabPosition.Center
+
     ) {
         when (uiState) {
             MyRecipesUiState.Loading -> {
@@ -256,5 +240,6 @@ fun MyRecipesScreen(
             }
         }
     }
+
 }
 
