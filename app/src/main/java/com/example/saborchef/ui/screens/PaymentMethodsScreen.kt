@@ -189,19 +189,7 @@ fun PaymentMethodsScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Botón para añadir/editar medio de pago
-            Button(
-                onClick = { navController.navigate("add_payment_method") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = OrangeDark,
-                    contentColor = Color.White
-                )
-            ) {
-                Text("Editar medio de pago", fontFamily = Poppins)
-            }
+
         }
     }
 }
