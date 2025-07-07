@@ -473,7 +473,12 @@ class MainActivity : ComponentActivity() {
                                 role = userRole
                             )
                         }
+                        composable("payment_methods") {
+                            PaymentMethodsScreen(
+                                navController = navController,
 
+                            )
+                        }
 
                         composable("profile") {
                             val dataStore = remember { DataStoreManager(this@MainActivity) }

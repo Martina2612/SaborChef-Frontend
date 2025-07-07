@@ -156,7 +156,9 @@ fun ProfileScreen(
                         add(ProfileOption(Icons.Default.OndemandVideo, "Mis cursos") {
                             navController.navigate("mis_cursos")
                         })
-                        add(ProfileOption(Icons.Default.Payment, "Medio de pago") { onOptionClick("Medios de pago") })
+                        add(ProfileOption(Icons.Default.Payment, "Medios de pago") {
+                            navController.navigate("payment_methods")
+                        })
                     }
                     add(ProfileOption(Icons.Default.OutlinedFlag, "Términos y condiciones") { onOptionClick("Términos y condiciones") })
                     add(ProfileOption(Icons.Default.Phone, "Contáctanos") { onOptionClick("Contáctanos") })
@@ -208,7 +210,7 @@ fun ProfileScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                 modifier = Modifier.fillMaxWidth().height(50.dp).padding(horizontal = 24.dp)
             ) {
-                Text("CERRAR SESIÓN (Temporal)", color = Color.White)
+                Text("CERRAR SESIÓN ", color = Color.White)
             }
         }
     }

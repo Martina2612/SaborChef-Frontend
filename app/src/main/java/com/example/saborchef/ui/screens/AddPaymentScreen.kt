@@ -27,6 +27,8 @@ import com.example.saborchef.ui.theme.OrangeDark
 import com.example.saborchef.ui.theme.Poppins
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material3.CardDefaults.cardColors
+import com.example.saborchef.data.DataStoreManager
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,9 +36,10 @@ fun AddPaymentScreen(
     sharedAlumnoViewModel: SharedAlumnoViewModel,
     navController: NavController,
     viewModel: RegisterViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    isConversion: Boolean = false // ✅ NUEVO parámetro para conversión
+    isConversion: Boolean = false
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsState()
 
     var cardNum by remember { mutableStateOf("") }
@@ -202,11 +205,14 @@ fun AddPaymentScreen(
                 // Guardar datos de pago
                 sharedAlumnoViewModel.setCardInfo(cardNum, code, expiry, tipoTarjeta)
 
+                scope.launch {
+                    val dataStore = DataStoreManager(context)
+                    dataStore.saveCardInfo(cardNum, tipoTarjeta, expiry,)
+                }
+
                 if (isConversion) {
-                    // ✅ NUEVO: Para conversión, ir directamente a subir DNI
                     navController.navigate("upload_dni_conversion")
                 } else {
-                    // Para registro normal (código existente)
                     if (sharedAlumnoViewModel.rol != Rol.ALUMNO) {
                         formError = "Solo los alumnos deben registrar tarjeta"
                         return@Button

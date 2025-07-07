@@ -11,13 +11,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-/**
- * Estados posibles para el login:
- *   - Idle: sin hacer nada
- *   - Loading: esperando respuesta
- *   - Success(token): login exitoso (token no vacío)
- *   - Error(message): hubo algún error (HTTP 401, 403, etc.)
- */
 sealed class LoginState {
     object Idle : LoginState()
     object Loading : LoginState()
@@ -25,9 +18,6 @@ sealed class LoginState {
     data class Error(val message: String) : LoginState()
 }
 
-/**
- * ViewModel para manejo de login que guarda datos en DataStore.
- */
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
@@ -35,27 +25,21 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dataStoreManager = DataStoreManager(application)
 
-    /**
-     * Ejecuta login y almacena token, rol, userId y email en DataStore
-     */
     fun login(alias: String, password: String) {
         _loginState.value = LoginState.Loading
         viewModelScope.launch {
             try {
                 AuthRepository.login(alias, password)
                     .onSuccess { authResponse ->
-                        // Guarda la sesión completa en DataStore
-                        // CORRECCIÓN: Usar los nombres correctos de las propiedades
+                        // Guarda la sesión completa en DataStore (sin el campo nombre)
                         dataStoreManager.saveUserData(
-                            token = authResponse.access_token,
-                            role = authResponse.role.name, // .name para convertir Rol enum a String
+                            alias = authResponse.alias,
+                            email = authResponse.email,
                             userId = authResponse.user_id,
-                            email = authResponse.email ,
-                            alias=authResponse.alias
-
+                            role = authResponse.role.name,
+                            token = authResponse.access_token
                         )
 
-                        // Actualiza el SessionManager con el token
                         SessionManager.token = authResponse.access_token
 
                         _loginState.value = LoginState.Success(authResponse.access_token)
@@ -71,4 +55,3 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
-
