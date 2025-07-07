@@ -34,16 +34,28 @@ fun PaymentMethodsScreen(
     val context = LocalContext.current
     val dataStore = remember { DataStoreManager(context) }
 
-    // Manejo seguro de valores nulos
-    val alias by dataStore.alias.collectAsState(initial = "")
+    // Manejo seguro de valores con valores por defecto
+    val alias by dataStore.alias.collectAsState(initial = null)
+    val numeroTarjeta by dataStore.numeroTarjeta.collectAsState(initial = "")
     val medioPago by dataStore.tipoTarjeta.collectAsState(initial = "VISA")
+    val fechaVencimiento by dataStore.fechaVencimiento.collectAsState(initial = "")
 
-    // PaymentMethod con manejo de nulabilidad
-    val paymentMethod = remember(alias, medioPago) {
+    // Depuración de valores
+    LaunchedEffect(alias, numeroTarjeta, medioPago) {
+        println("Datos de pago actuales:")
+        println("Alias: $alias")
+        println("Número tarjeta: $numeroTarjeta")
+        println("Tipo tarjeta: $medioPago")
+        println("Fecha vencimiento: $fechaVencimiento")
+    }
+
+    // PaymentMethod con manejo robusto de nulabilidad
+    val paymentMethod = remember(alias, medioPago, numeroTarjeta) {
         PaymentMethod(
             id = 1L,
-            alias = alias ?: "Usuario",
-            tipo = medioPago?.takeIf { it.isNotBlank() }?.uppercase() ?: "VISA"
+            alias = alias ?: "Usuario", // Valor por defecto
+            tipo = medioPago.ifBlank { "VISA" }.uppercase(),
+            numeroTarjeta = numeroTarjeta.ifBlank { "**** **** **** 1234" } // Valor por defecto
         )
     }
 
@@ -126,7 +138,7 @@ fun PaymentMethodsScreen(
                         )
                     }
 
-                    // Alias del usuario
+                    // Alias del usuario (con valor por defecto si es null)
                     Text(
                         text = paymentMethod.alias,
                         color = Color.White,
@@ -136,9 +148,9 @@ fun PaymentMethodsScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Número de tarjeta simulado (últimos 4 dígitos)
+                    // Número de tarjeta (usando el valor real o el por defecto)
                     Text(
-                        text = "**** **** **** 1234",
+                        text = paymentMethod.numeroTarjeta ?: "**** **** **** ****", // Solución 1
                         color = Color.White.copy(alpha = 0.8f),
                         fontFamily = Poppins,
                         fontSize = 16.sp,
@@ -169,13 +181,27 @@ fun PaymentMethodsScreen(
 
                     InfoRow("Titular:", paymentMethod.alias)
                     InfoRow("Tipo:", paymentMethod.tipo)
+                    InfoRow("Número:", paymentMethod.numeroTarjeta)
+                    InfoRow("Vencimiento:", fechaVencimiento.ifBlank { "MM/AA" })
                     InfoRow("Estado:", "Activo")
                 }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-
+            // Botón para añadir/editar medio de pago
+            Button(
+                onClick = { navController.navigate("add_payment_method") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = OrangeDark,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Editar medio de pago", fontFamily = Poppins)
+            }
         }
     }
 }
