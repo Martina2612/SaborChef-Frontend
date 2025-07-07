@@ -65,12 +65,23 @@ class HomeViewModel(
                     ?.let { Rol.valueOf(it) }
                     ?: Rol.VISITANTE
 
-                // 2) Hacemos las llamadas de red en I/O
+                // 2) Hacemos las llamadas de red en I/O - CON MANEJO DE MEMORIA
                 val topCall = withContext(Dispatchers.IO) {
-                    calificacionService.obtenerTopRecetas(12).execute()
+                    try {
+                        calificacionService.obtenerTopRecetas(6).execute() // Reducir de 12 a 6
+                    } catch (e: OutOfMemoryError) {
+                        Log.e("HomeViewModel", "OOM en topRecetas")
+                        throw Exception("Error de memoria al cargar recetas destacadas")
+                    }
                 }
+
                 val ultimasCall = withContext(Dispatchers.IO) {
-                    recetaService.getUltimasRecetas().execute()
+                    try {
+                        recetaService.obtenerUltimas3Recetas().execute() // Usar el endpoint de 3 en lugar de todas
+                    } catch (e: OutOfMemoryError) {
+                        Log.e("HomeViewModel", "OOM en ultimasRecetas")
+                        throw Exception("Error de memoria al cargar últimas recetas")
+                    }
                 }
 
                 if (!topCall.isSuccessful) {

@@ -21,6 +21,7 @@ import com.example.saborchef.ui.theme.BlueLight
 import com.example.saborchef.model.Rol
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
+import android.util.Log
 
 // SIMPLIFICADO: Sin matcher complejo, como en tu otra rama
 sealed class TabItem(
@@ -87,22 +88,26 @@ fun BottomBar(navController: NavController, role: Rol) {
                 },
                 selected = selected,
                 onClick = {
+                    Log.d("BottomBar", "=== CLICK EN TAB ===")
+                    Log.d("BottomBar", "Tab clickeado: ${tab.route}")
+                    Log.d("BottomBar", "Ruta actual: $currentRoute")
+                    Log.d("BottomBar", "Selected: $selected")
+
                     if (!selected) {
-                        navController.navigate(tab.route) {
-                            // Limpia el stack hasta el destino inicial, manteniendo el estado
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
+                        Log.d("BottomBar", "Navegando a: ${tab.route}")
+
+                        try {
+                            // Navegación simple sin configuraciones complejas
+                            navController.navigate(tab.route)
+                            Log.d("BottomBar", "Navegación ejecutada exitosamente")
+                        } catch (e: Exception) {
+                            Log.e("BottomBar", "Error en navegación: ${e.message}")
                         }
+                    } else {
+                        Log.d("BottomBar", "Tab ya está seleccionado, no navegando")
                     }
                 }
             )
         }
     }
 }
-
-
-
-
-
-

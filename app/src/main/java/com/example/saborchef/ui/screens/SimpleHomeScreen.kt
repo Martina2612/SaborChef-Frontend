@@ -47,6 +47,9 @@ fun SimpleHomeScreen(
     role: Rol,
     dataStoreManager: DataStoreManager
 ) {
+    android.util.Log.d("SimpleHomeScreen", "=== SIMPLE HOME CARGADA ===")
+    android.util.Log.d("SimpleHomeScreen", "Nombre: $nombre")
+    android.util.Log.d("SimpleHomeScreen", "Role: $role")
     val scope = rememberCoroutineScope()
     var showLogoutDialog by remember { mutableStateOf(false) }
 
