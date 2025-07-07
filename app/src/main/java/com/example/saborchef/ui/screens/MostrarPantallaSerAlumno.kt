@@ -12,7 +12,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.saborchef.ui.theme.BlueDark
-import com.example.saborchef.ui.theme.BlueLight
 import com.example.saborchef.ui.theme.OrangeDark
 import com.example.saborchef.ui.theme.Poppins
 
@@ -20,6 +19,7 @@ import com.example.saborchef.ui.theme.Poppins
 fun MostrarPantallaSerAlumno(
     onQuieroSerAlumno: () -> Unit,
     onContinuar: () -> Unit,
+    onBecomeStudent: () -> Unit, // Este es el callback que necesitas
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -56,7 +56,7 @@ fun MostrarPantallaSerAlumno(
 
         // Botón principal - Quiero ser Alumno
         Button(
-            onClick = onQuieroSerAlumno,
+            onClick = onBecomeStudent, // Usar el callback limpio
             colors = ButtonDefaults.buttonColors(containerColor = OrangeDark),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
