@@ -64,7 +64,7 @@ import androidx.compose.material3.TextFieldDefaults as texto
 fun PublishRecipeScreen(
     navController: NavController,
 
-) {
+    ) {
     val viewModel: PublishRecipeViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
@@ -317,14 +317,14 @@ fun PublishRecipeScreen(
                     listOf(
                         "Snacks",
                         "Postres",
-                        "Carne",
+                        "Vegano",
+                        "Carnes",
                         "Bebidas",
                         "Pastas",
-                        "Tartas",
-                        "Ensalada",
-                        "Sopas",
                         "Vegetariano",
-                        "Vegano"
+                        "Tartas",
+                        "Ensaladas",
+                        "Sopa"
                     ).forEach { option ->
                         DropdownMenuItem(
                             text = { Text(option, color = BlueDark, fontFamily = Poppins) },
@@ -407,16 +407,17 @@ fun PublishRecipeScreen(
                         showPasoError
                     ).none { it }
 
-                    viewModel.submitRecipe(
-                        photos = mainPhotos,
-                        nombre = nombre,
-                        descripcion = descripcion,
-                        duracion = duracion.toInt(),
-                        porciones = porciones,
-                        tipo = tipo,
-                        ingredientes = ingredientes.toList(),
-                        pasos = viewModel.steps.toList()
-                    )
+                    if (isValid) {
+                        viewModel.submitRecipe(
+                            photos = mainPhotos,
+                            nombre = nombre,
+                            descripcion = descripcion,
+                            duracion = duracion.toInt(),
+                            porciones = porciones,
+                            tipo = tipo,
+                            ingredientes = ingredientes.toList()
+                        )
+                    }
                 },
                     modifier = Modifier
                         .height(48.dp)
@@ -505,16 +506,7 @@ fun PublishRecipeScreen(
                         Button(
                             onClick = {
                                 showDuplicateDialog = false
-                                viewModel.submitRecipe(
-                                    photos = mainPhotos,
-                                    nombre = nombre,
-                                    descripcion = descripcion,
-                                    duracion = duracion.toInt(),
-                                    porciones = porciones,
-                                    tipo = tipo,
-                                    ingredientes = ingredientes.toList(),
-                                    pasos = viewModel.steps.toList()
-                                )
+                                viewModel.confirmReplace()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = OrangeDark)
                         ) {
@@ -525,7 +517,6 @@ fun PublishRecipeScreen(
             }
         }
     }
-
 
     // Success dialog
     if (showSuccessDialog) {
@@ -715,7 +706,7 @@ fun IngredientsSection(
                             .width(90.dp)
                             .background(Color.White)
                     ) {
-                        listOf("gr", "kg", "ml", "l", "unid.").forEach { u ->
+                        listOf("gr", "kg", "ml", "litros", "unidad").forEach { u ->
                             DropdownMenuItem(
                                 text = { Text(u, color = BlueDark) },
                                 onClick = {
