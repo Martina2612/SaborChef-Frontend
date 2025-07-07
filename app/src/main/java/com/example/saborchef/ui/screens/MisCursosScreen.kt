@@ -33,6 +33,7 @@ import com.example.saborchef.ui.components.TopBarConLogo
 import com.example.saborchef.viewmodel.MisCursosViewModel
 import com.google.gson.Gson
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.example.saborchef.ui.theme.OrangeDark
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +64,7 @@ fun MisCursosScreen(navController: NavController) {
     ) { padding ->
         if (isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Orange)
+                CircularProgressIndicator(color = OrangeDark)
             }
         } else if (cursosCompletos.isEmpty() && cursosEnProgreso.isEmpty()) {
             Column(
@@ -76,7 +77,7 @@ fun MisCursosScreen(navController: NavController) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(150.dp)
-                        .background(Orange)
+                        .background(OrangeDark)
                 ) {
                     // Logo centrado (ya incluye el texto SaborChef)
                     Image(
@@ -110,7 +111,7 @@ fun MisCursosScreen(navController: NavController) {
                     // Botón redondeado
                     Button(
                         onClick = { navController.navigate("cursos") },
-                        colors = ButtonDefaults.buttonColors(containerColor = Orange),
+                        colors = ButtonDefaults.buttonColors(containerColor = OrangeDark),
                         shape = RoundedCornerShape(25.dp),
                         modifier = Modifier
                             .height(50.dp)
@@ -136,7 +137,7 @@ fun MisCursosScreen(navController: NavController) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Orange)
+                            .background(OrangeDark)
                             .padding(vertical = 16.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -192,7 +193,7 @@ fun MisCursosScreen(navController: NavController) {
                             .padding(horizontal = 24.dp)
                             .fillMaxWidth()
                             .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Orange)
+                        colors = ButtonDefaults.buttonColors(containerColor = OrangeDark)
                     ) {
                         Text("Descubre más cursos aquí!", color = Color.White)
                     }

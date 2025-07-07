@@ -79,7 +79,7 @@ fun SedesDisponiblesScreen(
                 text = "Sucursales disponibles",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Orange,
+                color = OrangeDark,
                 modifier = Modifier.padding(vertical = 16.dp)
             )
 

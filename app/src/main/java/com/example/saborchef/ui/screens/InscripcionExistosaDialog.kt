@@ -11,7 +11,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.saborchef.model.Curso
 import com.example.saborchef.model.Sede
-import com.example.saborchef.ui.theme.Orange
 import androidx.compose.foundation.Image
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
@@ -20,6 +19,8 @@ import androidx.compose.ui.res.painterResource
 import coil.compose.rememberAsyncImagePainter
 import com.example.saborchef.model.Cronograma
 import com.example.saborchef.ui.theme.BlueDark
+import com.example.saborchef.ui.theme.OrangeDark
+import com.example.saborchef.R
 
 
 @Composable
@@ -49,7 +50,7 @@ fun InscripcionExitosaDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
-                    painter = rememberAsyncImagePainter("https://img.freepik.com/vector-premium/diseno-personajes-dibujos-animados-profesionales-ilustracion-vectorial-hermosa_1253044-23589.jpg?semt=ais_items_boosted&w=740"),
+                    painter = painterResource(id = R.drawable.chef_popup),
                     contentDescription = null,
                     modifier = Modifier
                         .height(120.dp)
@@ -112,7 +113,7 @@ fun InscripcionExitosaDialog(
 
                 Button(
                     onClick = onCerrar,
-                    colors = ButtonDefaults.buttonColors(containerColor = Orange),
+                    colors = ButtonDefaults.buttonColors(containerColor = OrangeDark),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)

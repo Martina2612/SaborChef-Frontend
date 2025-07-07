@@ -27,6 +27,7 @@ import com.example.saborchef.model.Rol
 import com.example.saborchef.ui.components.AsistenciaTabContent
 import com.example.saborchef.ui.components.CronogramaTabContent
 import com.example.saborchef.ui.theme.Orange
+import com.example.saborchef.ui.theme.OrangeDark
 import com.example.saborchef.viewmodel.ClasesViewModel
 import com.example.saborchef.viewmodel.CursoViewModel
 
@@ -72,7 +73,7 @@ fun MisCursosDetalleScreen(curso: CursoInscripto, navController: NavController) 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Orange)
+                    .background(OrangeDark)
                     .padding(vertical = 12.dp)
             ) {
                 Row(
@@ -117,7 +118,7 @@ fun MisCursosDetalleScreen(curso: CursoInscripto, navController: NavController) 
                             text = { Text(title) },
                             selected = selectedTabIndex == index,
                             onClick = { selectedTabIndex = index },
-                            selectedContentColor = Orange,
+                            selectedContentColor = OrangeDark,
                             unselectedContentColor = Color.Gray
                         )
                     }
@@ -129,7 +130,7 @@ fun MisCursosDetalleScreen(curso: CursoInscripto, navController: NavController) 
                         cursoCompleto?.let {
                             CronogramaTabContent(clases = clases)
                         } ?: Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = Orange)
+                            CircularProgressIndicator(color = OrangeDark)
                         }
                     }
                     2 -> AsistenciaTabContent(

@@ -30,6 +30,7 @@ import com.example.saborchef.viewmodel.SedeViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.ui.window.Dialog
 import com.example.saborchef.ui.components.BottomBar
+import com.example.saborchef.ui.theme.OrangeDark
 
 @Composable
 fun SucursalDetalleScreen(
@@ -79,7 +80,7 @@ fun SucursalDetalleScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 32.dp)
-                        .background(Orange)
+                        .background(OrangeDark)
                         .padding(vertical = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -189,7 +190,7 @@ fun SucursalDetalleScreen(
                                 }
                             },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Orange)
+                            colors = ButtonDefaults.buttonColors(containerColor = OrangeDark)
                         ) {
                             Text("Confirmar", color = Color.White)
                         }
@@ -202,7 +203,7 @@ fun SucursalDetalleScreen(
         }
     } ?: run {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = Orange)
+            CircularProgressIndicator(color = OrangeDark)
         }
     }
 }

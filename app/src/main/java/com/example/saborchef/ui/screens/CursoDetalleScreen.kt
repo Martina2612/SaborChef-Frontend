@@ -211,7 +211,7 @@ fun CursoDetalleScreen(
                             // Línea decorativa naranja
                             HorizontalDivider(
                                 thickness = 3.dp,
-                                color = Orange,
+                                color = OrangeDark,
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
 
@@ -240,7 +240,7 @@ fun CursoDetalleScreen(
                                 // Badge de modalidad
                                 Surface(
                                     shape = RoundedCornerShape(16.dp),
-                                    color = Orange
+                                    color = OrangeDark
                                 ) {
                                     Text(
                                         text = curso.modalidad,
@@ -262,7 +262,7 @@ fun CursoDetalleScreen(
                                 Surface(
                                     shape = CircleShape,
                                     modifier = Modifier.size(40.dp),
-                                    color = Orange.copy(alpha = 0.2f)
+                                    color = OrangeDark.copy(alpha = 0.2f)
                                 ) {
                                     Box(
                                         contentAlignment = Alignment.Center
@@ -270,7 +270,7 @@ fun CursoDetalleScreen(
                                         Text(
                                             text = curso.chef.first().toString(),
                                             fontWeight = FontWeight.Bold,
-                                            color = Orange
+                                            color = OrangeDark
                                         )
                                     }
                                 }
@@ -368,7 +368,7 @@ fun CursoDetalleScreen(
                                         ) {
                                             Surface(
                                                 shape = CircleShape,
-                                                color = Orange,
+                                                color = OrangeDark,
                                                 modifier = Modifier.size(24.dp)
                                             ) {
                                                 Icon(
@@ -413,7 +413,7 @@ fun CursoDetalleScreen(
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(containerColor = Orange),
+                                colors = ButtonDefaults.buttonColors(containerColor = OrangeDark),
                                 shape = RoundedCornerShape(25.dp)
                             ) {
                                 Text(
@@ -457,7 +457,7 @@ fun CursoDetalleScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Orange)
+                CircularProgressIndicator(color = OrangeDark)
             }
         }
     }
@@ -467,7 +467,7 @@ fun CursoDetalleScreen(
 private fun RowScope.TabButton(text: String, selected: Boolean, onClick: () -> Unit) {
     val background = if (selected) Color.White else Color.LightGray.copy(alpha = 0.3f)
     val fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-    val textColor = if (selected) Orange else BlueDark
+    val textColor = if (selected) OrangeDark else BlueDark
 
     Box(
         modifier = Modifier
