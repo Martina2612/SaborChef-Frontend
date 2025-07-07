@@ -77,7 +77,11 @@ fun SimpleHomeScreen(
                     IconButton(onClick = { navController.navigate("profile") }) {
                         Icon(Icons.Default.Person, contentDescription = "Mi perfil", tint = Color.White)
                     }}else{
-                        IconButton(onClick = { navController.popBackStack() }) {
+                        IconButton(onClick = {
+                            navController.navigate("welcome") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = Color.White)
                         }
                     }

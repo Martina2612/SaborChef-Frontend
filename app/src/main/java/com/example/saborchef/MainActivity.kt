@@ -662,24 +662,29 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("upgrade_to_student") {
-
                             val dataStore = remember { DataStoreManager(this@MainActivity) }
                             val currentRole by dataStore.role.collectAsState(initial = "")
                             val scope = rememberCoroutineScope()
 
                             MostrarPantallaSerAlumno(
                                 onQuieroSerAlumno = {
-
-                                    if (currentRole == Rol.VISITANTE.name) {
-                                        navController.navigate("auth")
-                                    } else {
-                                        navController.navigate("register")
-
-                                    }
+                                    // Ya no se usa, pero manténlo por compatibilidad
                                 },
                                 onContinuar = {
-
                                     navController.popBackStack()
+                                },
+                                onBecomeStudent = {
+                                    // Aquí pones la lógica que quieras:
+                                    // Opción 1: Copiar exactamente lo de ProfileScreen
+                                    sharedAlumnoViewModel.reset()
+                                    navController.navigate("add_payment_conversion")
+
+                                    // Opción 2: O mantener tu lógica actual
+                                    // if (currentRole == Rol.VISITANTE.name) {
+                                    //     navController.navigate("auth")
+                                    // } else {
+                                    //     navController.navigate("register")
+                                    // }
                                 }
                             )
                         }

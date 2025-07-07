@@ -352,7 +352,7 @@ fun RecipeDetailContent(
                             color = BlueDark
                         )
 
-                        // ✅ NUEVO: Selector de porciones clickeable
+                        if (role == "USUARIO" || role == "ALUMNO") {
                         PortionSelector(
                             currentPortions = selectedPortions,
                             onPortionsSelected = { newPortions ->
@@ -361,7 +361,7 @@ fun RecipeDetailContent(
                                     scaledRecipesViewModel.scaleRecipeByPortions(recipeId, newPortions)
                                 }
                             }
-                        )
+                        )}
                     }
                 }
             }
